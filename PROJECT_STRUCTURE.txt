@@ -1,0 +1,92 @@
+.
+├── app.json
+├── App.tsx
+├── assets
+│   ├── adaptive-icon.png
+│   ├── favicon.png
+│   ├── icon.png
+│   └── splash-icon.png
+├── index.ts
+├── package-lock.json
+├── package.json
+├── PROJECT_STRUCTURE.txt
+├── src
+│   ├── assets
+│   │   ├── animations
+│   │   ├── fonts
+│   │   └── images
+│   ├── components
+│   │   ├── Button.tsx
+│   │   ├── Card.tsx
+│   │   ├── Checkbox.tsx
+│   │   ├── Container.tsx
+│   │   ├── DateTimePicker.tsx
+│   │   ├── Divider.tsx
+│   │   ├── EmptyState.tsx
+│   │   ├── ErrorBoundary.tsx
+│   │   ├── Icon.tsx
+│   │   ├── index.ts
+│   │   ├── Input.tsx
+│   │   ├── LoadingSpinner.tsx
+│   │   ├── Pressable.tsx
+│   │   ├── Screen.tsx
+│   │   ├── SearchBar.tsx
+│   │   ├── Text.tsx
+│   │   └── Toast.tsx
+│   ├── constants
+│   │   ├── config.ts
+│   │   └── theme.ts
+│   ├── hooks
+│   │   ├── useCamera.ts
+│   │   ├── usePatterns.ts
+│   │   ├── useProjects.ts
+│   │   └── useReminders.ts
+│   ├── navigation
+│   │   ├── AppNavigator.tsx
+│   │   ├── HomeStackNavigator.tsx
+│   │   ├── index.ts
+│   │   ├── MainTabNavigator.tsx
+│   │   ├── PatternsStackNavigator.tsx
+│   │   ├── ProjectsStackNavigator.tsx
+│   │   ├── RemindersStackNavigator.tsx
+│   │   ├── RootStackNavigator.tsx
+│   │   ├── SettingsStackNavigator.tsx
+│   │   └── TabNavigator.tsx
+│   ├── screens
+│   │   ├── CreateProjectScreen.tsx
+│   │   ├── CreateReminderScreen.tsx
+│   │   ├── EditProjectScreen.tsx
+│   │   ├── EditReminderScreen.tsx
+│   │   ├── HomeScreen.tsx
+│   │   ├── modals
+│   │   │   ├── AIReviewModal.tsx
+│   │   │   └── CameraModal.tsx
+│   │   ├── PatternLibraryScreen.tsx
+│   │   ├── PatternsScreen.tsx
+│   │   ├── ProjectAnalyticsScreen.tsx
+│   │   ├── ProjectDetailScreen.tsx
+│   │   ├── ProjectListScreen.tsx
+│   │   ├── ProjectsScreen.tsx
+│   │   ├── ReminderDetailScreen.tsx
+│   │   ├── ReminderListScreen.tsx
+│   │   ├── RemindersScreen.tsx
+│   │   └── SettingsScreen.tsx
+│   ├── services
+│   │   ├── gemini.service.ts
+│   │   ├── image.service.ts
+│   │   ├── notification.service.ts
+│   │   └── storage.service.ts
+│   ├── types
+│   │   ├── common.types.ts
+│   │   ├── navigation.types.ts
+│   │   ├── pattern.types.ts
+│   │   ├── project.types.ts
+│   │   └── reminder.types.ts
+│   └── utils
+│       ├── dateUtils.ts
+│       ├── formatters.ts
+│       ├── helpers.ts
+│       └── validators.ts
+└── tsconfig.json
+
+16 directories, 74 files
