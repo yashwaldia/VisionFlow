@@ -30,8 +30,25 @@ yarn-error.*
 .DS_Store
 *.pem
 
-# local env files
-.env*.local
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Editors (VS Code, IntelliJ, etc.)
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# Environment files (Security Critical)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
 
 # typescript
 *.tsbuildinfo
@@ -39,3 +56,6 @@ yarn-error.*
 # generated native folders
 /ios
 /android
+
+# Logs
+*.log
