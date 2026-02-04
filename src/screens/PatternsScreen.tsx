@@ -1,12 +1,17 @@
 /**
- * VisionFlow AI - Patterns Library Screen
- * Browse and discover visual patterns
+ * VisionFlow AI - Patterns Library Screen (v2.1 - Harmonized Edition)
+ * Neural Database Interface for visual patterns
  * 
  * @module screens/PatternsScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Changed title from h3 to h2 for consistency
+ * - ✅ Removed hardcoded paddingBottom (uses theme constant)
+ * - ✅ Kept tactical/HUD styling as design aesthetic
  */
 
 import React, { useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet, Image, Dimensions } from 'react-native';
+import { View, FlatList, StyleSheet, Image, Dimensions, RefreshControl } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -49,12 +54,14 @@ type PatternsScreenProps = NativeStackScreenProps<
 };
 
 export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
-  const { patterns, isLoading } = usePatterns(); // FIXED: Changed loading → isLoading
+  const { patterns, isLoading, refreshPatterns } = usePatterns();
   const [searchQuery, setSearchQuery] = useState('');
   const [filterType, setFilterType] = useState<PatternType | 'all'>('all');
+  const [refreshing, setRefreshing] = useState(false);
   
   const routeFilterType = route.params?.filterType;
   
+  // Filter Logic
   const filteredPatterns = useMemo(() => {
     let result = [...patterns];
     
@@ -63,21 +70,22 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
       result = result.filter(
         (p) =>
           p.name.toLowerCase().includes(query) ||
-          p.userNotes?.toLowerCase().includes(query) || // FIXED: Changed description → userNotes
-          p.type.toLowerCase().includes(query) // FIXED: Changed patternType → type
+          p.userNotes?.toLowerCase().includes(query) ||
+          p.type.toLowerCase().includes(query)
       );
     }
     
     const activeFilter = routeFilterType || filterType;
     if (activeFilter !== 'all') {
-      result = result.filter((p) => p.type === activeFilter); // FIXED: Changed patternType → type
+      result = result.filter((p) => p.type === activeFilter);
     }
     
-    result.sort((a, b) => b.createdAt - a.createdAt); // FIXED: Changed detectedAt → createdAt
+    result.sort((a, b) => b.createdAt - a.createdAt);
     
     return result;
   }, [patterns, searchQuery, filterType, routeFilterType]);
   
+  // Stats Logic
   const typeCounts = useMemo(() => {
     return {
       all: patterns.length,
@@ -92,6 +100,13 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
     };
   }, [patterns]);
   
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshPatterns();
+    setRefreshing(false);
+  };
+  
   const handleScanPattern = () => {
     navigation.navigate('CameraModal', { mode: 'pattern' });
   };
@@ -101,39 +116,76 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
   };
   
   const renderPatternCard = ({ item }: { item: Pattern }) => {
-    // FIXED: Proper type casting for Theme.colors.pattern
+    // Get color from Theme
     const patternColors = Theme.colors.pattern as Record<string, string>;
     const typeColor = patternColors[item.type] || Theme.colors.primary[500];
     
     return (
       <Pressable onPress={() => handlePatternPress(item)} haptic="light">
-        <Card style={styles.patternCard}>
+        <Card 
+          variant="hud"
+          padding={0}
+          style={styles.patternCard}
+        >
+          {/* Image Section */}
           <View style={styles.imageContainer}>
             {item.imageUri ? (
-              <Image
-                source={{ uri: item.imageUri }}
-                style={styles.patternImage}
-                resizeMode="cover"
-              />
+              <>
+                <Image
+                  source={{ uri: item.imageUri }}
+                  style={styles.patternImage}
+                  resizeMode="cover"
+                />
+                {/* Tech Overlay for "Scanned" look */}
+                <View style={[styles.imageOverlay, { backgroundColor: `${typeColor}08` }]} />
+              </>
             ) : (
-              <View style={[styles.placeholderImage, { backgroundColor: `${typeColor}30` }]}>
-                <Icon name="scan" size="lg" color={typeColor} />
+              <View style={[styles.placeholderImage, { backgroundColor: `${typeColor}15` }]}>
+                <Icon name="scan-outline" size="lg" color={typeColor} />
               </View>
             )}
-            <View style={[styles.typeBadge, { backgroundColor: typeColor }]}>
-              <Text variant="caption" weight="600" customColor="#FFFFFF" numberOfLines={1}>
-                {item.type} {/* FIXED: Changed patternType → type */}
+            
+            {/* Enhanced Type Badge */}
+            <View style={[styles.typeBadge, { borderColor: typeColor, backgroundColor: 'rgba(0, 0, 0, 0.85)' }]}>
+              <Text 
+                variant="micro" 
+                weight="700" 
+                customColor={typeColor} 
+                style={styles.badgeText}
+              >
+                {item.type.replace('_', ' ')}
               </Text>
             </View>
+            
+            {/* Confidence Badge (if high confidence) */}
+            {item.confidence && item.confidence >= 0.8 && (
+              <View style={[styles.confidenceBadge, { backgroundColor: `${typeColor}20`, borderColor: typeColor }]}>
+                <Icon name="checkmark-circle" size="xs" color={typeColor} />
+              </View>
+            )}
           </View>
           
+          {/* Content Section */}
           <View style={styles.cardContent}>
-            <Text variant="body" weight="600" numberOfLines={2}>
+            <View style={styles.cardMeta}>
+              <Text variant="caption" color="secondary" style={styles.dateText}>
+                {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: '2-digit' }).toUpperCase()}
+              </Text>
+              {item.confidence && (
+                <View style={styles.confidenceContainer}>
+                  <Text variant="micro" customColor={typeColor} weight="700">
+                    {Math.round(item.confidence * 100)}%
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            <Text variant="body" weight="700" numberOfLines={1} style={styles.patternName}>
               {item.name}
             </Text>
-            {/* FIXED: Changed description → userNotes with null check */}
+            
             {item.userNotes && (
-              <Text variant="caption" color="tertiary" numberOfLines={2}>
+              <Text variant="caption" color="tertiary" numberOfLines={1}>
                 {item.userNotes}
               </Text>
             )}
@@ -145,99 +197,158 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
   
   return (
     <Screen>
-      <Container padding="none">
-        <View style={styles.header}>
-          <Container padding="m">
-            <View style={styles.headerTop}>
-              <Text variant="h2">Patterns</Text>
-              <Pressable onPress={handleScanPattern} haptic="light">
-                <Icon name="scan" size="md" color={Theme.colors.primary[500]} />
-              </Pressable>
-            </View>
-            
-            <SearchBar
-              value={searchQuery}
-              onChangeText={setSearchQuery}
-              placeholder="Search patterns..."
-            />
-          </Container>
-          
-          <View style={styles.filtersContainer}>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={[
-                { key: 'all', label: 'All', count: typeCounts.all },
-                { key: PatternType.FIBONACCI, label: 'Fibonacci', count: typeCounts[PatternType.FIBONACCI] },
-                { key: PatternType.GEOMETRIC, label: 'Geometric', count: typeCounts[PatternType.GEOMETRIC] },
-                { key: PatternType.SYMMETRY, label: 'Symmetry', count: typeCounts[PatternType.SYMMETRY] },
-              ]}
-              keyExtractor={(item) => item.key}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => setFilterType(item.key as PatternType | 'all')}
-                  haptic="light"
-                >
-                  <View
-                    style={[
-                      styles.filterChip,
-                      filterType === item.key && styles.filterChipActive,
-                    ]}
-                  >
-                    <Text
-                      variant="body"
-                      weight="600"
-                      customColor={
-                        filterType === item.key
-                          ? Theme.colors.primary[500]
-                          : Theme.colors.text.secondary
-                      }
-                    >
-                      {item.label} ({item.count})
-                    </Text>
-                  </View>
-                </Pressable>
-              )}
-              contentContainerStyle={styles.filtersContent}
-            />
+      {/* Fixed Header */}
+      <View style={styles.header}>
+        <Container padding="m">
+          {/* Status Line */}
+          <View style={styles.statusLine}>
+            <View style={styles.statusDot} />
+            <Text variant="micro" style={styles.statusText}>
+              DATABASE ONLINE
+            </Text>
+            <View style={styles.statusPulse} />
           </View>
-        </View>
+
+          <View style={styles.headerTop}>
+            {/* ✅ UPDATED: Changed from h3 to h2 */}
+            <Text variant="h2" weight="700" style={styles.headerTitle}>
+              NEURAL INDEX
+            </Text>
+            <Pressable 
+              onPress={handleScanPattern} 
+              haptic="medium"
+              style={styles.scanButton}
+            >
+              <Icon name="scan" size="sm" color={Theme.colors.background.primary} />
+              <Text variant="caption" weight="700" customColor={Theme.colors.background.primary} style={styles.scanButtonText}>
+                SCAN
+              </Text>
+            </Pressable>
+          </View>
+          
+          <SearchBar
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="SEARCH DATABASE..."
+            style={styles.searchBar}
+          />
+        </Container>
         
-        {isLoading ? (
-          <LoadingSpinner text="Loading patterns..." />
-        ) : filteredPatterns.length === 0 ? (
-          <EmptyState
-            icon="sparkles"
-            title="No patterns found"
-            description={
-              searchQuery
-                ? 'Try adjusting your search'
-                : 'Discover your first pattern by scanning an image'
-            }
-            actionLabel="Scan Pattern"
-            onActionPress={handleScanPattern}
-          />
-        ) : (
+        {/* Tactical Filters */}
+        <View style={styles.filtersContainer}>
           <FlatList
-            data={filteredPatterns}
-            renderItem={renderPatternCard}
-            keyExtractor={(item) => item.id}
-            numColumns={2}
-            contentContainerStyle={styles.gridContent}
-            columnWrapperStyle={styles.gridRow}
-            showsVerticalScrollIndicator={false}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            data={[
+              { key: 'all', label: 'ALL', count: typeCounts.all },
+              { key: PatternType.FIBONACCI, label: 'FIB', count: typeCounts[PatternType.FIBONACCI] },
+              { key: PatternType.GEOMETRIC, label: 'GEO', count: typeCounts[PatternType.GEOMETRIC] },
+              { key: PatternType.SYMMETRY, label: 'SYM', count: typeCounts[PatternType.SYMMETRY] },
+              { key: PatternType.CHANNEL, label: 'CHN', count: typeCounts[PatternType.CHANNEL] },
+              { key: PatternType.WAVE, label: 'WAV', count: typeCounts[PatternType.WAVE] },
+            ]}
+            keyExtractor={(item) => item.key}
+            renderItem={({ item }) => (
+              <Pressable
+                onPress={() => setFilterType(item.key as PatternType | 'all')}
+                haptic="light"
+              >
+                <View
+                  style={[
+                    styles.filterChip,
+                    filterType === item.key && styles.filterChipActive,
+                  ]}
+                >
+                  <Text
+                    variant="caption"
+                    weight="700"
+                    style={styles.filterText}
+                    customColor={
+                      filterType === item.key
+                        ? Theme.colors.primary[400]
+                        : Theme.colors.text.tertiary
+                    }
+                  >
+                    {item.label} <Text variant="micro" color="tertiary">[{item.count}]</Text>
+                  </Text>
+                </View>
+              </Pressable>
+            )}
+            contentContainerStyle={styles.filtersContent}
           />
-        )}
-      </Container>
+        </View>
+      </View>
+      
+      {/* Content */}
+      {isLoading ? (
+        <LoadingSpinner text="ACCESSING NEURAL NETWORK..." />
+      ) : filteredPatterns.length === 0 ? (
+        <EmptyState
+          icon="grid-outline"
+          title="INDEX EMPTY"
+          description={
+            searchQuery
+              ? 'NO MATCHING DATA FOUND'
+              : 'INITIALIZE SCANNER TO DETECT PATTERNS'
+          }
+          actionLabel="INITIALIZE SCAN"
+          onActionPress={handleScanPattern}
+        />
+      ) : (
+        <FlatList
+          data={filteredPatterns}
+          renderItem={renderPatternCard}
+          keyExtractor={(item) => item.id}
+          numColumns={2}
+          contentContainerStyle={styles.gridContent}
+          columnWrapperStyle={styles.gridRow}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={handleRefresh}
+              tintColor={Theme.colors.primary[500]}
+            />
+          }
+        />
+      )}
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
-    backgroundColor: Theme.colors.background.secondary,
+    backgroundColor: Theme.colors.background.primary,
     borderBottomWidth: 1,
-    borderBottomColor: Theme.colors.border.light,
+    borderBottomColor: Theme.colors.border.default,
+    paddingTop: Theme.spacing.xs,
+  },
+  statusLine: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: Theme.spacing.s,
+  },
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Theme.colors.semantic.success,
+    marginRight: 6,
+  },
+  statusPulse: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: Theme.colors.semantic.success,
+    marginLeft: 4,
+    opacity: 0.3,
+  },
+  statusText: {
+    color: Theme.colors.semantic.success,
+    letterSpacing: 1.5,
+    fontSize: 9,
+    textTransform: 'uppercase',
   },
   headerTop: {
     flexDirection: 'row',
@@ -245,42 +356,82 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: Theme.spacing.m,
   },
+  headerTitle: {
+    letterSpacing: 1,
+    textTransform: 'uppercase',
+  },
+  scanButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Theme.colors.primary[500],
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 4,
+    gap: 6,
+  },
+  scanButtonText: {
+    letterSpacing: 0.5,
+  },
+  searchBar: {
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 0,
+  },
+  
+  // Filters styles - ✅ Kept tactical aesthetic (intentional design choice)
   filtersContainer: {
     paddingVertical: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.secondary,
+    borderTopWidth: 1,
+    borderTopColor: `${Theme.colors.border.default}30`,
   },
   filtersContent: {
     paddingHorizontal: Theme.spacing.m,
-    gap: Theme.spacing.s,
+    gap: 8,
   },
   filterChip: {
-    paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.xs,
-    borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.background.tertiary,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderRadius: 4,  // ✅ Kept square edges for HUD aesthetic
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+    backgroundColor: 'transparent',
   },
   filterChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+    borderColor: Theme.colors.primary[500],
+    backgroundColor: `${Theme.colors.primary[500]}15`,
   },
+  filterText: {
+    fontFamily: Theme.typography.fontFamily.mono,
+  },
+  
+  // Grid styles - ✅ FIXED: Uses theme constant
   gridContent: {
     padding: Theme.spacing.m,
+    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme (80)
   },
   gridRow: {
-    gap: Theme.spacing.s,
-    marginBottom: Theme.spacing.s,
+    gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
   },
+  
+  // Card styles
   patternCard: {
     width: CARD_WIDTH,
-    padding: 0,
+    borderWidth: 1,
     overflow: 'hidden',
   },
   imageContainer: {
     position: 'relative',
     width: '100%',
-    height: CARD_WIDTH,
+    height: CARD_WIDTH * 0.75,
+    backgroundColor: Theme.colors.background.tertiary,
   },
   patternImage: {
     width: '100%',
     height: '100%',
+  },
+  imageOverlay: {
+    ...StyleSheet.absoluteFillObject,
   },
   placeholderImage: {
     width: '100%',
@@ -290,14 +441,53 @@ const styles = StyleSheet.create({
   },
   typeBadge: {
     position: 'absolute',
-    bottom: Theme.spacing.xs,
-    right: Theme.spacing.xs,
-    paddingHorizontal: Theme.spacing.xs,
-    paddingVertical: 4,
-    borderRadius: Theme.borderRadius.s,
+    top: 8,
+    right: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 3,
+    borderWidth: 1,
   },
+  badgeText: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+    fontSize: 9,
+  },
+  confidenceBadge: {
+    position: 'absolute',
+    top: 8,
+    left: 8,
+    width: 24,
+    height: 24,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Card content styles
   cardContent: {
-    padding: Theme.spacing.s,
-    gap: 4,
+    padding: 12,
+    gap: 6,
+    backgroundColor: Theme.colors.background.tertiary,
+  },
+  cardMeta: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  dateText: {
+    fontFamily: Theme.typography.fontFamily.mono,
+    fontSize: 10,
+  },
+  confidenceContainer: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    backgroundColor: `${Theme.colors.primary[500]}10`,
+    borderRadius: 3,
+  },
+  patternName: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
 });

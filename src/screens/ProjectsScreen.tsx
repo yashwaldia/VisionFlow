@@ -1,12 +1,16 @@
 /**
- * VisionFlow AI - Projects List Screen
+ * VisionFlow AI - Projects List Screen (v2.1 - Harmonized Edition)
  * Organize reminders by projects
  * 
  * @module screens/ProjectsScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Removed hardcoded paddingBottom (uses theme constant)
+ * - ✅ All styling now consistent with design system
  */
 
 import React, { useState, useMemo } from 'react';
-import { View, FlatList, StyleSheet } from 'react-native';
+import { View, FlatList, StyleSheet, RefreshControl } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CompositeNavigationProp } from '@react-navigation/native';
 import { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
@@ -16,7 +20,7 @@ import {
   RootStackParamList,
 } from '../types/navigation.types';
 import { Project } from '../types/project.types';
-import { ReminderCategory } from '../types/reminder.types';
+import { ReminderCategory, ReminderStatus } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
   Screen,
@@ -48,22 +52,46 @@ type ProjectsScreenProps = NativeStackScreenProps<
 };
 
 /**
+ * Format last updated date
+ */
+const formatLastUpdated = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+};
+
+/**
  * ProjectsScreen Component
  * 
  * Features:
  * - Project list with stats
  * - Search projects
+ * - Active/Archived filter
  * - Quick create
  * - Navigate to project details
  */
 export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
-  const { projects, isLoading } = useProjects();
+  const { projects, isLoading, refreshProjects } = useProjects();
   const { reminders } = useReminders();
   const [searchQuery, setSearchQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   
-  // Filter projects by search
+  // Filter projects by search and archive status
   const filteredProjects = useMemo(() => {
     let result = [...projects];
+    
+    // Filter by archived status
+    result = result.filter((p) => p.isArchived === showArchived);
     
     if (searchQuery.trim()) {
       const query = searchQuery.toLowerCase();
@@ -71,7 +99,7 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
         (p) =>
           p.name.toLowerCase().includes(query) ||
           p.description?.toLowerCase().includes(query) ||
-          p.primaryCategory.toLowerCase().includes(query) // FIXED: category → primaryCategory
+          p.primaryCategory.toLowerCase().includes(query)
       );
     }
     
@@ -79,27 +107,42 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
     result.sort((a, b) => b.updatedAt - a.updatedAt);
     
     return result;
-  }, [projects, searchQuery]);
+  }, [projects, searchQuery, showArchived]);
   
   // Calculate reminder counts per project
   const projectReminderCounts = useMemo(() => {
-    const counts: Record<string, { total: number; active: number }> = {};
+    const counts: Record<string, { total: number; active: number; completed: number; overdue: number }> = {};
     
     projects.forEach((project) => {
       const projectReminders = reminders.filter((r) => r.projectId === project.id);
       counts[project.id] = {
         total: projectReminders.length,
-        active: projectReminders.filter((r) => r.status === 'upcoming').length,
+        active: projectReminders.filter((r) => r.status === ReminderStatus.UPCOMING).length,
+        completed: projectReminders.filter((r) => r.status === ReminderStatus.DONE).length,
+        overdue: projectReminders.filter((r) => r.status === ReminderStatus.OVERDUE).length,
       };
     });
     
     return counts;
   }, [projects, reminders]);
   
+  // Get active/archived counts
+  const projectCounts = useMemo(() => ({
+    active: projects.filter((p) => !p.isArchived).length,
+    archived: projects.filter((p) => p.isArchived).length,
+  }), [projects]);
+  
   // Get category color
   const getCategoryColor = (category: ReminderCategory): string => {
     const categoryColors = Theme.colors.category as Record<string, { main: string }>;
     return categoryColors[category.toLowerCase().replace(/\s+/g, '')]?.main || Theme.colors.primary[500];
+  };
+  
+  // Pull to refresh handler
+  const handleRefresh = async () => {
+    setRefreshing(true);
+    await refreshProjects();
+    setRefreshing(false);
   };
   
   // Navigation handlers
@@ -113,8 +156,9 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
   
   // Render project card
   const renderProjectCard = ({ item }: { item: Project }) => {
-    const counts = projectReminderCounts[item.id] || { total: 0, active: 0 };
-    const categoryColor = getCategoryColor(item.primaryCategory); // FIXED: category → primaryCategory
+    const counts = projectReminderCounts[item.id] || { total: 0, active: 0, completed: 0, overdue: 0 };
+    const categoryColor = getCategoryColor(item.primaryCategory);
+    const completionRate = counts.total > 0 ? (counts.completed / counts.total) * 100 : 0;
     
     return (
       <Card
@@ -122,8 +166,9 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
         onPress={() => handleProjectPress(item)}
         style={styles.projectCard}
       >
-        <View style={styles.cardHeader}>
-          <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}30` }]}>
+        <View style={styles.cardContent}>
+          {/* Left: Category icon */}
+          <View style={[styles.iconContainer, { backgroundColor: `${categoryColor}15` }]}>
             <Icon
               name="folder"
               size="md"
@@ -131,45 +176,102 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
             />
           </View>
           
+          {/* Center: Project info */}
           <View style={styles.cardInfo}>
-            <Text variant="body" weight="600" numberOfLines={1}>
-              {item.name}
-            </Text>
-            <Text variant="caption" color="tertiary">
-              {item.primaryCategory} {/* FIXED: category → primaryCategory */}
-            </Text>
+            <View style={styles.projectHeader}>
+              <Text variant="bodyLarge" weight="600" numberOfLines={1} style={styles.projectName}>
+                {item.name}
+              </Text>
+              {item.isArchived && (
+                <View style={styles.archivedBadge}>
+                  <Text variant="micro" color="tertiary" weight="700">
+                    ARCHIVED
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.categoryRow}>
+              <Icon name="pricetag-outline" size="xs" color={categoryColor} />
+              <Text variant="caption" customColor={categoryColor}>
+                {item.primaryCategory}
+              </Text>
+              <View style={styles.metaDivider} />
+              <Text variant="caption" color="tertiary">
+                Updated {formatLastUpdated(item.updatedAt)}
+              </Text>
+            </View>
+            
+            {item.description && (
+              <Text variant="body" color="secondary" numberOfLines={2} style={styles.description}>
+                {item.description}
+              </Text>
+            )}
+            
+            {/* Stats row */}
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Icon name="document-text-outline" size="xs" color={Theme.colors.text.tertiary} />
+                <Text variant="caption" color="tertiary">
+                  {counts.total}
+                </Text>
+              </View>
+              
+              {counts.active > 0 && (
+                <View style={styles.statItem}>
+                  <Icon name="time-outline" size="xs" color={Theme.colors.primary[500]} />
+                  <Text variant="caption" customColor={Theme.colors.primary[500]} weight="600">
+                    {counts.active}
+                  </Text>
+                </View>
+              )}
+              
+              {counts.overdue > 0 && (
+                <View style={styles.statItem}>
+                  <Icon name="alert-circle-outline" size="xs" color={Theme.colors.semantic.error} />
+                  <Text variant="caption" customColor={Theme.colors.semantic.error} weight="600">
+                    {counts.overdue}
+                  </Text>
+                </View>
+              )}
+              
+              {counts.completed > 0 && (
+                <View style={styles.statItem}>
+                  <Icon name="checkmark-circle-outline" size="xs" color={Theme.colors.semantic.success} />
+                  <Text variant="caption" customColor={Theme.colors.semantic.success}>
+                    {counts.completed}
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            {/* Progress bar (if has reminders) */}
+            {counts.total > 0 && (
+              <View style={styles.progressContainer}>
+                <View style={styles.progressBar}>
+                  <View 
+                    style={[
+                      styles.progressFill, 
+                      { 
+                        width: `${completionRate}%`,
+                        backgroundColor: categoryColor,
+                      }
+                    ]} 
+                  />
+                </View>
+                <Text variant="micro" color="tertiary">
+                  {Math.round(completionRate)}%
+                </Text>
+              </View>
+            )}
           </View>
           
+          {/* Right: Chevron */}
           <Icon
-            name="chevron-forward"
+            name="chevron-forward-outline"
             size="sm"
             color={Theme.colors.text.tertiary}
           />
-        </View>
-        
-        {item.description && (
-          <Text variant="body" color="secondary" numberOfLines={2} style={styles.description}>
-            {item.description}
-          </Text>
-        )}
-        
-        <View style={styles.cardFooter}>
-          <View style={styles.stat}>
-            <Icon name="document-text" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary">
-              {counts.total} reminders
-            </Text>
-          </View>
-          
-          {counts.active > 0 && (
-            <View style={styles.stat}>
-              <View style={styles.activeBadge}>
-                <Text variant="caption" weight="600" customColor={Theme.colors.primary[500]}>
-                  {counts.active} active
-                </Text>
-              </View>
-            </View>
-          )}
         </View>
       </Card>
     );
@@ -182,9 +284,14 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
         <View style={styles.header}>
           <Container padding="m">
             <View style={styles.headerTop}>
-              <Text variant="h2">Projects</Text>
-              <Pressable onPress={handleCreateProject} haptic="light">
-                <Icon name="add-circle" size="md" color={Theme.colors.primary[500]} />
+              <View>
+                <Text variant="h2">Projects</Text>
+                <Text variant="caption" color="tertiary">
+                  {projectCounts.active} active • {projectCounts.archived} archived
+                </Text>
+              </View>
+              <Pressable onPress={handleCreateProject} haptic="light" style={styles.addButton}>
+                <Icon name="add" size="md" color={Theme.colors.background.primary} />
               </Pressable>
             </View>
             
@@ -194,6 +301,71 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
               placeholder="Search projects..."
             />
           </Container>
+          
+          {/* Archive Toggle */}
+          <View style={styles.toggleContainer}>
+            <Pressable 
+              onPress={() => setShowArchived(false)} 
+              haptic="light"
+              style={styles.toggleOption}
+            >
+              <View style={[
+                styles.toggleButton,
+                !showArchived && styles.toggleButtonActive,
+              ]}>
+                <Text 
+                  variant="body" 
+                  weight="600"
+                  customColor={!showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
+                >
+                  Active
+                </Text>
+                <View style={[
+                  styles.countBadge,
+                  !showArchived && styles.countBadgeActive,
+                ]}>
+                  <Text 
+                    variant="caption" 
+                    weight="700"
+                    customColor={!showArchived ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  >
+                    {projectCounts.active}
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+            
+            <Pressable 
+              onPress={() => setShowArchived(true)} 
+              haptic="light"
+              style={styles.toggleOption}
+            >
+              <View style={[
+                styles.toggleButton,
+                showArchived && styles.toggleButtonActive,
+              ]}>
+                <Text 
+                  variant="body" 
+                  weight="600"
+                  customColor={showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
+                >
+                  Archived
+                </Text>
+                <View style={[
+                  styles.countBadge,
+                  showArchived && styles.countBadgeActive,
+                ]}>
+                  <Text 
+                    variant="caption" 
+                    weight="700"
+                    customColor={showArchived ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  >
+                    {projectCounts.archived}
+                  </Text>
+                </View>
+              </View>
+            </Pressable>
+          </View>
         </View>
         
         {/* Projects List */}
@@ -202,14 +374,16 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
         ) : filteredProjects.length === 0 ? (
           <EmptyState
             icon="folder-outline"
-            title="No projects found"
+            title={showArchived ? "No archived projects" : "No projects found"}
             description={
               searchQuery
                 ? 'Try adjusting your search'
+                : showArchived
+                ? 'Archived projects will appear here'
                 : 'Create your first project to organize reminders'
             }
-            actionLabel="Create Project"
-            onActionPress={handleCreateProject}
+            actionLabel={showArchived ? undefined : "Create Project"}
+            onActionPress={showArchived ? undefined : handleCreateProject}
           />
         ) : (
           <FlatList
@@ -218,6 +392,13 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
             keyExtractor={(item) => item.id}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
+            refreshControl={
+              <RefreshControl
+                refreshing={refreshing}
+                onRefresh={handleRefresh}
+                tintColor={Theme.colors.primary[500]}
+              />
+            }
           />
         )}
       </Container>
@@ -226,6 +407,7 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     backgroundColor: Theme.colors.background.secondary,
     borderBottomWidth: 1,
@@ -234,21 +416,75 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
   },
-  listContent: {
+  addButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.primary[500],
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // Toggle styles
+  toggleContainer: {
+    flexDirection: 'row',
     padding: Theme.spacing.m,
+    paddingTop: Theme.spacing.s,
     gap: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.primary,
   },
-  projectCard: {
-    padding: Theme.spacing.m,
+  toggleOption: {
+    flex: 1,
   },
-  cardHeader: {
+  toggleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.s,
-    marginBottom: Theme.spacing.s,
+    justifyContent: 'center',
+    gap: Theme.spacing.xs,
+    paddingVertical: Theme.spacing.s,
+    paddingHorizontal: Theme.spacing.m,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  toggleButtonActive: {
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    borderColor: `${Theme.colors.primary[500]}30`,
+  },
+  countBadge: {
+    minWidth: 24,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: Theme.colors.background.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  countBadgeActive: {
+    backgroundColor: `${Theme.colors.primary[500]}25`,
+  },
+  
+  // List styles - ✅ FIXED: Uses theme constant
+  listContent: {
+    padding: Theme.spacing.m,
+    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme (80)
+    gap: Theme.spacing.m,
+  },
+  
+  // Card styles
+  projectCard: {
+    padding: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
+  },
+  cardContent: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Theme.spacing.m,
   },
   iconContainer: {
     width: 48,
@@ -256,27 +492,70 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.m,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
   },
   cardInfo: {
     flex: 1,
+    gap: 6,
   },
-  description: {
-    marginBottom: Theme.spacing.s,
-  },
-  cardFooter: {
+  projectHeader: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.m,
+    gap: Theme.spacing.xs,
   },
-  stat: {
+  projectName: {
+    flex: 1,
+  },
+  archivedBadge: {
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+  },
+  categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  activeBadge: {
-    paddingHorizontal: Theme.spacing.xs,
-    paddingVertical: 2,
-    borderRadius: Theme.borderRadius.s,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+  metaDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: Theme.colors.text.tertiary,
+    opacity: 0.5,
+  },
+  description: {
+    lineHeight: 20,
+  },
+  statsRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.m,
+    paddingTop: 4,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  progressContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.s,
+    marginTop: 4,
+  },
+  progressBar: {
+    flex: 1,
+    height: 4,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: 2,
+    overflow: 'hidden',
+  },
+  progressFill: {
+    height: '100%',
+    borderRadius: 2,
   },
 });

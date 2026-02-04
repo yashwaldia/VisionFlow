@@ -1,11 +1,11 @@
 /**
- * VisionFlow AI - Project List Screen (100% ERROR-FREE)
+ * VisionFlow AI - Project List Screen (Professional v2.0)
  * Browse and manage all projects
  * 
  * @module screens/ProjectListScreen
  */
 
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProjectStackParamList } from '../types/navigation.types';
@@ -21,6 +21,7 @@ import {
   Pressable,
   EmptyState,
   LoadingSpinner,
+  SearchBar,
 } from '../components';
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
@@ -28,14 +29,45 @@ import * as Haptics from 'expo-haptics';
 type ProjectListScreenProps = NativeStackScreenProps<ProjectStackParamList, 'ProjectList'>;
 
 /**
+ * Format last updated timestamp
+ */
+const formatLastUpdated = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Updated today';
+  if (diffDays === 1) return 'Updated yesterday';
+  if (diffDays < 7) return `Updated ${diffDays}d ago`;
+  if (diffDays < 30) return `Updated ${Math.floor(diffDays / 7)}w ago`;
+  
+  return `Updated ${date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' })}`;
+};
+
+/**
+ * Get category icon (simple string return, cast at usage)
+ */
+const getCategoryIcon = (category: ReminderCategory | 'all'): string => {
+  const icons: Record<string, string> = {
+    all: 'apps-outline',
+    [ReminderCategory.PERSONAL]: 'home-outline',
+    [ReminderCategory.WORK]: 'briefcase-outline',
+    [ReminderCategory.HEALTH]: 'fitness-outline',
+    [ReminderCategory.MONEY]: 'cash-outline',
+  };
+  return icons[category] || 'folder-outline';
+};
+
+/**
  * ProjectListScreen Component
  * 
  * Features:
  * - List all projects with stats
+ * - Search projects
  * - Filter by category
+ * - Toggle archived projects
  * - Pull-to-refresh
- * - Archive/unarchive projects
- * - Stats overview
  */
 export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
   const {
@@ -48,6 +80,27 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ReminderCategory | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [showArchived, setShowArchived] = useState(false);
+
+  // Filter by search query
+  const searchFilteredProjects = useMemo(() => {
+    if (!searchQuery.trim()) return filteredProjects;
+    
+    const query = searchQuery.toLowerCase();
+    return filteredProjects.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.description?.toLowerCase().includes(query) ||
+        p.primaryCategory.toLowerCase().includes(query)
+    );
+  }, [filteredProjects, searchQuery]);
+
+  // Count stats
+  const projectCounts = useMemo(() => ({
+    active: filteredProjects.filter((p) => !p.isArchived).length,
+    archived: filteredProjects.filter((p) => p.isArchived).length,
+  }), [filteredProjects]);
 
   // Pull to refresh
   const handleRefresh = async () => {
@@ -61,7 +114,18 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
     setSelectedCategory(category);
     setFilters({ 
       category: category as any,
-      isArchived: false,
+      isArchived: showArchived,
+    });
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+  };
+
+  // Toggle archived
+  const handleToggleArchived = () => {
+    const newShowArchived = !showArchived;
+    setShowArchived(newShowArchived);
+    setFilters({
+      category: selectedCategory as any,
+      isArchived: newShowArchived,
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
   };
@@ -80,7 +144,9 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
   const renderProject = ({ item }: { item: any }) => {
     const completionRate = item.stats?.completionRate || 0;
     const totalReminders = item.stats?.totalReminders || 0;
+    const activeReminders = item.stats?.activeCount || 0;
     const doneCount = item.stats?.doneCount || 0;
+    const overdueCount = item.stats?.overdueCount || 0;
     
     return (
       <Card
@@ -91,51 +157,97 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
       >
         <View style={styles.projectContent}>
           {/* Project Icon */}
-          <View style={styles.projectIcon}>
-            <Icon name="folder" size="lg" color={Theme.colors.primary[500]} />
+          <View style={styles.projectIconContainer}>
+            <Icon 
+              name="folder" 
+              size="md" 
+              color={Theme.colors.primary[500]} 
+            />
+            {item.isArchived && (
+              <View style={styles.archivedBadge}>
+                <Icon name="archive" size="xs" color={Theme.colors.text.tertiary} />
+              </View>
+            )}
           </View>
 
           {/* Content */}
           <View style={styles.projectInfo}>
-            <Text variant="bodyLarge" weight="600">
-              {item.name}
-            </Text>
-            <Text variant="caption" color="secondary">
-              {item.primaryCategory}
-            </Text>
+            <View style={styles.projectHeader}>
+              <Text variant="bodyLarge" weight="700" numberOfLines={1} style={styles.projectName}>
+                {item.name}
+              </Text>
+              {totalReminders > 0 && (
+                <View style={styles.countBadge}>
+                  <Text variant="micro" weight="700" customColor={Theme.colors.primary[500]}>
+                    {totalReminders}
+                  </Text>
+                </View>
+              )}
+            </View>
+            
+            <View style={styles.categoryRow}>
+              <Icon 
+                name={getCategoryIcon(item.primaryCategory) as any}
+                size="xs" 
+                color={Theme.colors.text.secondary} 
+              />
+              <Text variant="caption" color="secondary">
+                {item.primaryCategory}
+              </Text>
+              <View style={styles.metaDivider} />
+              <Text variant="caption" color="tertiary">
+                {formatLastUpdated(item.updatedAt)}
+              </Text>
+            </View>
+
             {item.description && (
-              <Text variant="caption" color="tertiary" numberOfLines={1}>
+              <Text variant="caption" color="tertiary" numberOfLines={1} style={styles.description}>
                 {item.description}
               </Text>
             )}
 
             {/* Stats Row */}
-            <View style={styles.statsRow}>
-              <View style={styles.statBadge}>
-                <Icon name="list-outline" size="xs" color={Theme.colors.text.secondary} />
-                <Text variant="caption" color="secondary">
-                  {totalReminders}
-                </Text>
+            {totalReminders > 0 && (
+              <View style={styles.statsRow}>
+                {activeReminders > 0 && (
+                  <View style={styles.statItem}>
+                    <Icon name="time-outline" size="xs" color={Theme.colors.primary[500]} />
+                    <Text variant="caption" customColor={Theme.colors.primary[500]} weight="600">
+                      {activeReminders}
+                    </Text>
+                  </View>
+                )}
+                
+                {overdueCount > 0 && (
+                  <View style={styles.statItem}>
+                    <Icon name="alert-circle-outline" size="xs" color={Theme.colors.semantic.error} />
+                    <Text variant="caption" customColor={Theme.colors.semantic.error} weight="600">
+                      {overdueCount}
+                    </Text>
+                  </View>
+                )}
+                
+                {doneCount > 0 && (
+                  <View style={styles.statItem}>
+                    <Icon name="checkmark-circle-outline" size="xs" color={Theme.colors.semantic.success} />
+                    <Text variant="caption" customColor={Theme.colors.semantic.success}>
+                      {doneCount}
+                    </Text>
+                  </View>
+                )}
+                
+                <View style={styles.statItem}>
+                  <Icon name="analytics-outline" size="xs" color={Theme.colors.text.tertiary} />
+                  <Text variant="caption" color="tertiary">
+                    {Math.round(completionRate)}%
+                  </Text>
+                </View>
               </View>
-              
-              <View style={styles.statBadge}>
-                <Icon name="checkmark-circle-outline" size="xs" color={Theme.colors.semantic.success} />
-                <Text variant="caption" color="secondary">
-                  {doneCount}
-                </Text>
-              </View>
-
-              <View style={styles.statBadge}>
-                <Icon name="analytics-outline" size="xs" color={Theme.colors.primary[500]} />
-                <Text variant="caption" color="secondary">
-                  {Math.round(completionRate)}%
-                </Text>
-              </View>
-            </View>
+            )}
           </View>
 
           {/* Arrow */}
-          <Icon name="chevron-forward" size="sm" color={Theme.colors.text.tertiary} />
+          <Icon name="chevron-forward-outline" size="sm" color={Theme.colors.text.tertiary} />
         </View>
       </Card>
     );
@@ -146,17 +258,73 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
       {/* Header */}
       <Container padding="m" style={styles.header}>
         <View style={styles.headerTop}>
-          <Text variant="h2">Projects</Text>
-          <Button
-            label="New"
-            leftIcon="add-outline"
-            variant="primary"
-            size="small"
+          <View>
+            <Text variant="h2">Projects</Text>
+            <Text variant="caption" color="tertiary">
+              {projectCounts.active} active • {projectCounts.archived} archived
+            </Text>
+          </View>
+          <Pressable 
             onPress={handleCreateProject}
-          />
+            haptic="medium"
+            style={styles.createButton}
+          >
+            <Icon name="add" size="sm" color={Theme.colors.background.primary} />
+            <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+              NEW
+            </Text>
+          </Pressable>
         </View>
 
-        {/* Category Filter - FIXED: Use ternary with empty object */}
+        {/* Search Bar */}
+        <SearchBar
+          value={searchQuery}
+          onChangeText={setSearchQuery}
+          placeholder="Search projects..."
+          style={styles.searchBar}
+        />
+
+        {/* Archive Toggle */}
+        <View style={styles.toggleRow}>
+          <Pressable
+            onPress={() => !showArchived && handleToggleArchived()}
+            style={[
+              styles.toggleButton,
+              !showArchived ? styles.toggleButtonActive : {},
+            ]}
+          >
+            <Text
+              variant="caption"
+              weight="700"
+              customColor={!showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
+            >
+              ACTIVE
+            </Text>
+          </Pressable>
+          
+          <Pressable
+            onPress={() => showArchived && handleToggleArchived()}
+            style={[
+              styles.toggleButton,
+              showArchived ? styles.toggleButtonActive : {},
+            ]}
+          >
+            <Icon 
+              name="archive-outline" 
+              size="xs" 
+              color={showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
+            />
+            <Text
+              variant="caption"
+              weight="700"
+              customColor={showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
+            >
+              ARCHIVED
+            </Text>
+          </Pressable>
+        </View>
+
+        {/* Category Filter with Icons */}
         <View style={styles.categoryFilter}>
           <Pressable
             onPress={() => handleCategoryFilter('all')}
@@ -165,12 +333,17 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
               selectedCategory === 'all' ? styles.categoryChipActive : {},
             ]}
           >
+            <Icon 
+              name={getCategoryIcon('all') as any}
+              size="xs" 
+              color={selectedCategory === 'all' ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
+            />
             <Text
               variant="caption"
-              weight="600"
+              weight="700"
               customColor={
                 selectedCategory === 'all'
-                  ? Theme.colors.text.inverse
+                  ? Theme.colors.primary[500]
                   : Theme.colors.text.secondary
               }
             >
@@ -192,16 +365,21 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
                 selectedCategory === cat ? styles.categoryChipActive : {},
               ]}
             >
+              <Icon 
+                name={getCategoryIcon(cat) as any}
+                size="xs" 
+                color={selectedCategory === cat ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
+              />
               <Text
                 variant="caption"
-                weight="600"
+                weight="700"
                 customColor={
                   selectedCategory === cat
-                    ? Theme.colors.text.inverse
+                    ? Theme.colors.primary[500]
                     : Theme.colors.text.secondary
                 }
               >
-                {cat}
+                {cat.toUpperCase()}
               </Text>
             </Pressable>
           ))}
@@ -211,19 +389,25 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
       {/* List */}
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <LoadingSpinner size="large" />
+          <LoadingSpinner size="large" text="Loading projects..." />
         </View>
-      ) : filteredProjects.length === 0 ? (
+      ) : searchFilteredProjects.length === 0 ? (
         <EmptyState
           icon="folder-outline"
-          title="No projects found"
-          description="Create your first project to organize reminders!"
-          actionLabel="Create Project"
-          onActionPress={handleCreateProject}
+          title={searchQuery ? "No matching projects" : showArchived ? "No archived projects" : "No projects found"}
+          description={
+            searchQuery
+              ? "Try adjusting your search"
+              : showArchived
+              ? "Archived projects will appear here"
+              : "Create your first project to organize reminders!"
+          }
+          actionLabel={searchQuery || showArchived ? undefined : "Create Project"}
+          onActionPress={searchQuery || showArchived ? undefined : handleCreateProject}
         />
       ) : (
         <FlatList
-          data={filteredProjects}
+          data={searchFilteredProjects}
           renderItem={renderProject}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
@@ -237,19 +421,12 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
           showsVerticalScrollIndicator={false}
         />
       )}
-
-      {/* Floating Action Button */}
-      <Pressable
-        style={styles.fab}
-        onPress={handleCreateProject}
-      >
-        <Icon name="add" size="lg" color={Theme.colors.text.inverse} />
-      </Pressable>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
@@ -258,26 +435,68 @@ const styles = StyleSheet.create({
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
   },
+  createButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Theme.colors.primary[500],
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: Theme.borderRadius.m,
+  },
+  searchBar: {
+    marginBottom: Theme.spacing.m,
+  },
+  
+  // Toggle styles
+  toggleRow: {
+    flexDirection: 'row',
+    gap: Theme.spacing.s,
+    marginBottom: Theme.spacing.m,
+  },
+  toggleButton: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 6,
+    paddingVertical: Theme.spacing.s,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+  },
+  toggleButtonActive: {
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    borderColor: Theme.colors.primary[500],
+  },
+  
+  // Category filter styles
   categoryFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
     flexWrap: 'wrap',
   },
   categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full,
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 1,
-    borderColor: Theme.colors.border.medium,
+    borderColor: Theme.colors.border.default,
   },
   categoryChipActive: {
-    backgroundColor: Theme.colors.primary[500],
+    backgroundColor: `${Theme.colors.primary[500]}15`,
     borderColor: Theme.colors.primary[500],
   },
+  
+  // List styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -285,53 +504,89 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: 100, // Space for FAB
-    gap: Theme.spacing.s,
+    paddingBottom: 120, // Space for bottom tab bar
+    gap: Theme.spacing.m,
   },
+  
+  // Project card styles
   projectCard: {
-    marginBottom: Theme.spacing.s,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   projectContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Theme.spacing.m,
   },
-  projectIcon: {
-    width: 56,
-    height: 56,
+  projectIconContainer: {
+    width: 48,
+    height: 48,
     borderRadius: Theme.borderRadius.m,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}30`,
+    position: 'relative',
+  },
+  archivedBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 2,
+    borderColor: Theme.colors.background.secondary,
     alignItems: 'center',
     justifyContent: 'center',
   },
   projectInfo: {
     flex: 1,
+    gap: 6,
+  },
+  projectHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
     gap: Theme.spacing.xs,
   },
-  statsRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.m,
-    marginTop: Theme.spacing.xs,
+  projectName: {
+    flex: 1,
   },
-  statBadge: {
+  countBadge: {
+    minWidth: 24,
+    height: 20,
+    paddingHorizontal: 6,
+    borderRadius: 10,
+    backgroundColor: `${Theme.colors.primary[500]}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  fab: {
-    position: 'absolute',
-    bottom: Theme.spacing.l,
-    right: Theme.spacing.l,
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: Theme.colors.primary[500],
+  metaDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: Theme.colors.text.tertiary,
+    opacity: 0.5,
+  },
+  description: {
+    lineHeight: 16,
+  },
+  statsRow: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 8,
+    gap: Theme.spacing.m,
+    paddingTop: 4,
+  },
+  statItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
   },
 });

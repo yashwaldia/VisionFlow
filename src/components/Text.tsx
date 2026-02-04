@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Text Component
+ * VisionFlow AI - Text Component (v2.1 - Harmonized Edition)
  * Themeable text component with semantic variants
  * 
  * @module components/Text
+ * 
+ * CHANGELOG v2.1:
+ * - Now uses Theme.typography.variants for consistency
+ * - Simplified variant style logic
+ * - All headers use standardized font weights
  */
 
 import React from 'react';
@@ -49,6 +54,7 @@ export interface TextProps extends Omit<RNTextProps, 'style'> {
   
   /**
    * Font weight override
+   * NOTE: Only use this if you MUST override the variant's default weight
    */
   weight?: '400' | '500' | '600' | '700';
   
@@ -75,88 +81,92 @@ export interface TextProps extends Omit<RNTextProps, 'style'> {
 
 /**
  * Get text style for variant
+ * Now uses the centralized Typography.variants from theme
  */
 function getVariantStyle(variant: TextVariant): TextStyle {
   const { typography } = Theme;
   
+  // Use the new variants from theme.ts
   switch (variant) {
     case 'display':
       return {
-        fontSize: typography.fontSize.display,
-        lineHeight: typography.lineHeight.display,
-        fontWeight: typography.fontWeight.bold,
-        letterSpacing: typography.letterSpacing.tight,
+        fontSize: typography.variants.display.fontSize,
+        lineHeight: typography.variants.display.lineHeight,
+        fontWeight: typography.variants.display.fontWeight,
+        letterSpacing: typography.variants.display.letterSpacing,
       };
       
     case 'h1':
       return {
-        fontSize: typography.fontSize.h1,
-        lineHeight: typography.lineHeight.h1,
-        fontWeight: typography.fontWeight.bold,
-        letterSpacing: typography.letterSpacing.tight,
+        fontSize: typography.variants.h1.fontSize,
+        lineHeight: typography.variants.h1.lineHeight,
+        fontWeight: typography.variants.h1.fontWeight,
+        letterSpacing: typography.variants.h1.letterSpacing,
       };
       
     case 'h2':
       return {
-        fontSize: typography.fontSize.h2,
-        lineHeight: typography.lineHeight.h2,
-        fontWeight: typography.fontWeight.semibold,
-        letterSpacing: typography.letterSpacing.tight,
+        fontSize: typography.variants.h2.fontSize,
+        lineHeight: typography.variants.h2.lineHeight,
+        fontWeight: typography.variants.h2.fontWeight,
+        letterSpacing: typography.variants.h2.letterSpacing,
       };
       
     case 'h3':
       return {
-        fontSize: typography.fontSize.h3,
-        lineHeight: typography.lineHeight.h3,
-        fontWeight: typography.fontWeight.semibold,
-        letterSpacing: typography.letterSpacing.normal,
+        fontSize: typography.variants.h3.fontSize,
+        lineHeight: typography.variants.h3.lineHeight,
+        fontWeight: typography.variants.h3.fontWeight,
+        letterSpacing: typography.variants.h3.letterSpacing,
       };
       
     case 'h4':
       return {
-        fontSize: typography.fontSize.h4,
-        lineHeight: typography.lineHeight.h4,
-        fontWeight: typography.fontWeight.semibold,
-        letterSpacing: typography.letterSpacing.normal,
+        fontSize: typography.variants.h4.fontSize,
+        lineHeight: typography.variants.h4.lineHeight,
+        fontWeight: typography.variants.h4.fontWeight,
+        letterSpacing: typography.variants.h4.letterSpacing,
       };
       
     case 'bodyLarge':
       return {
-        fontSize: typography.fontSize.bodyLarge,
-        lineHeight: typography.lineHeight.bodyLarge,
-        fontWeight: typography.fontWeight.regular,
-        letterSpacing: typography.letterSpacing.normal,
+        fontSize: typography.variants.bodyLarge.fontSize,
+        lineHeight: typography.variants.bodyLarge.lineHeight,
+        fontWeight: typography.variants.bodyLarge.fontWeight,
+        letterSpacing: typography.variants.bodyLarge.letterSpacing,
       };
       
     case 'body':
       return {
-        fontSize: typography.fontSize.body,
-        lineHeight: typography.lineHeight.body,
-        fontWeight: typography.fontWeight.regular,
-        letterSpacing: typography.letterSpacing.normal,
+        fontSize: typography.variants.body.fontSize,
+        lineHeight: typography.variants.body.lineHeight,
+        fontWeight: typography.variants.body.fontWeight,
+        letterSpacing: typography.variants.body.letterSpacing,
       };
       
     case 'caption':
       return {
-        fontSize: typography.fontSize.caption,
-        lineHeight: typography.lineHeight.caption,
-        fontWeight: typography.fontWeight.medium,
-        letterSpacing: typography.letterSpacing.wide,
+        fontSize: typography.variants.caption.fontSize,
+        lineHeight: typography.variants.caption.lineHeight,
+        fontWeight: typography.variants.caption.fontWeight,
+        letterSpacing: typography.variants.caption.letterSpacing,
       };
       
     case 'micro':
       return {
-        fontSize: typography.fontSize.micro,
-        lineHeight: typography.lineHeight.micro,
-        fontWeight: typography.fontWeight.medium,
-        letterSpacing: typography.letterSpacing.wide,
+        fontSize: typography.variants.micro.fontSize,
+        lineHeight: typography.variants.micro.lineHeight,
+        fontWeight: typography.variants.micro.fontWeight,
+        letterSpacing: typography.variants.micro.letterSpacing,
       };
       
     default:
+      // Fallback to body
       return {
-        fontSize: typography.fontSize.body,
-        lineHeight: typography.lineHeight.body,
-        fontWeight: typography.fontWeight.regular,
+        fontSize: typography.variants.body.fontSize,
+        lineHeight: typography.variants.body.lineHeight,
+        fontWeight: typography.variants.body.fontWeight,
+        letterSpacing: typography.variants.body.letterSpacing,
       };
   }
 }
@@ -188,9 +198,23 @@ function getColorStyle(colorPreset: TextColor): string {
  * 
  * @example
  * ```tsx
- * <Text variant="h1">Welcome to VisionFlow AI</Text>
- * <Text variant="body" color="secondary">Subtitle text</Text>
- * <Text variant="caption" customColor="#6366F1">Custom color</Text>
+ * // Screen titles - always use h2
+ * <Text variant="h2">Reminders</Text>
+ * 
+ * // Large feature titles - rare, only for Home
+ * <Text variant="h1">VisionFlow AI</Text>
+ * 
+ * // Section headers
+ * <Text variant="h3">Quick Actions</Text>
+ * 
+ * // Body text
+ * <Text variant="body" color="secondary">Description text</Text>
+ * 
+ * // Small metadata
+ * <Text variant="caption" color="tertiary">2 days ago</Text>
+ * 
+ * // Tiny badges/labels
+ * <Text variant="micro">NEW</Text>
  * ```
  */
 export function Text({
@@ -215,7 +239,7 @@ export function Text({
     fontFamily: mono ? Theme.typography.fontFamily.mono : Theme.typography.fontFamily.primary,
   };
   
-  // Override font weight if provided
+  // Override font weight if provided (use sparingly!)
   if (weight) {
     composedStyle.fontWeight = weight;
   }

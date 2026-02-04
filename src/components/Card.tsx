@@ -1,8 +1,7 @@
 /**
- * VisionFlow AI - Card Component
- * Elevated surface with glassmorphism effect
- * 
- * @module components/Card
+ * VisionFlow AI - Card Component (v2.0 HUD Upgrade)
+ * Tactical surfaces with glassmorphism and scanline support
+ * * @module components/Card
  */
 
 import React from 'react';
@@ -12,67 +11,35 @@ import { Pressable } from './Pressable';
 
 /**
  * Card elevation levels
+ * Added 'glow' for HUD elements
  */
-export type CardElevation = 'none' | 'sm' | 'md' | 'lg';
+export type CardElevation = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'glow';
 
 /**
  * Card variants
+ * Added 'hud' for tactical data blocks
  */
-export type CardVariant = 'default' | 'outlined' | 'glass';
+export type CardVariant = 'default' | 'outlined' | 'glass' | 'hud';
 
 /**
  * Card props
  */
 export interface CardProps {
-  /**
-   * Card content
-   */
   children: React.ReactNode;
-  
-  /**
-   * Card variant
-   */
   variant?: CardVariant;
-  
-  /**
-   * Shadow elevation
-   */
   elevation?: CardElevation;
-  
-  /**
-   * Enable press interaction
-   */
   pressable?: boolean;
-  
-  /**
-   * Press handler (only works if pressable=true)
-   */
   onPress?: () => void;
-  
-  /**
-   * Background color override
-   */
   backgroundColor?: string;
-  
-  /**
-   * Border radius override
-   */
+  borderColor?: string;
   borderRadius?: number;
-  
-  /**
-   * Padding inside card
-   */
   padding?: number;
-  
-  /**
-   * Custom style
-   */
-  style?: ViewStyle;
-  
-  /**
-   * Test ID
-   */
+  style?: ViewStyle | ViewStyle[]; // ✅ Accept array or single style
   testID?: string;
+  /**
+   * If true, applies a subtle active state border/glow
+   */
+  active?: boolean;
 }
 
 /**
@@ -80,36 +47,18 @@ export interface CardProps {
  */
 function getShadowStyle(elevation: CardElevation): ViewStyle {
   switch (elevation) {
-    case 'none':
-      return {};
-    case 'sm':
-      return Theme.shadows.sm;
-    case 'md':
-      return Theme.shadows.md;
-    case 'lg':
-      return Theme.shadows.lg;
-    default:
-      return Theme.shadows.sm;
+    case 'none': return Theme.shadows.none;
+    case 'sm': return Theme.shadows.sm;
+    case 'md': return Theme.shadows.md;
+    case 'lg': return Theme.shadows.lg;
+    case 'xl': return Theme.shadows.xl;
+    case 'glow': return Theme.shadows.glow;
+    default: return Theme.shadows.sm;
   }
 }
 
 /**
  * Card Component
- * 
- * @example
- * ```tsx
- * <Card>
- *   <Text>Simple card</Text>
- * </Card>
- * 
- * <Card pressable onPress={() => console.log('Pressed')} elevation="md">
- *   <Text>Pressable card</Text>
- * </Card>
- * 
- * <Card variant="glass" elevation="lg">
- *   <Text>Glassmorphism card</Text>
- * </Card>
- * ```
  */
 export function Card({
   children,
@@ -118,32 +67,43 @@ export function Card({
   pressable = false,
   onPress,
   backgroundColor,
+  borderColor,
   borderRadius = Theme.borderRadius.l,
   padding = Theme.spacing.m,
+  active = false,
   style,
   testID,
 }: CardProps) {
+  
   // Get variant-specific styles
   const getVariantStyle = (): ViewStyle => {
     switch (variant) {
       case 'default':
         return {
           backgroundColor: backgroundColor || Theme.colors.background.secondary,
+          borderWidth: 0,
         };
         
       case 'outlined':
         return {
           backgroundColor: 'transparent',
           borderWidth: 1,
-          borderColor: Theme.colors.border.medium,
+          borderColor: borderColor || Theme.colors.border.medium,
         };
         
       case 'glass':
         return {
-          backgroundColor: `${Theme.colors.background.secondary}CC`, // 80% opacity
+          backgroundColor: backgroundColor || Theme.glassmorphism.tint,
+          borderWidth: Theme.glassmorphism.borderWidth,
+          borderColor: borderColor || Theme.glassmorphism.borderColor,
+        };
+
+      case 'hud':
+        // Tactical opaque block with thin borders
+        return {
+          backgroundColor: backgroundColor || Theme.colors.background.tertiary,
           borderWidth: 1,
-          borderColor: `${Theme.colors.border.light}40`, // 25% opacity
-          // Note: backdropFilter is web-only, removed for React Native compatibility
+          borderColor: borderColor || Theme.colors.border.default,
         };
         
       default:
@@ -156,6 +116,16 @@ export function Card({
   const variantStyle = getVariantStyle();
   const shadowStyle = getShadowStyle(elevation);
   
+  // Active State Styling (e.g. selected item)
+  const activeStyle: ViewStyle = active ? {
+    borderColor: Theme.colors.border.active,
+    borderWidth: 1,
+    backgroundColor: variant === 'glass' 
+      ? Theme.glassmorphism.tint 
+      : Theme.colors.background.tertiary,
+    ...Theme.shadows.glow, // Add glow when active
+  } : {};
+
   // Base card style
   const cardStyle: ViewStyle = {
     borderRadius,
@@ -163,20 +133,27 @@ export function Card({
     overflow: 'hidden',
     ...variantStyle,
     ...shadowStyle,
+    ...activeStyle,
   };
   
-  // Combine styles - FIXED: Proper handling of optional style prop
+  // Combine styles
   const combinedStyles: ViewStyle[] = [cardStyle];
   if (style) {
-    combinedStyles.push(style);
+    // ✅ Handle both array and single style
+    if (Array.isArray(style)) {
+      combinedStyles.push(...style);
+    } else {
+      combinedStyles.push(style);
+    }
   }
+
   
   // Render pressable or static card
   if (pressable && onPress) {
     return (
       <Pressable
         scaleOnPress
-        pressScale={0.99}
+        pressScale={0.98}
         haptic="light"
         onPress={onPress}
         style={combinedStyles}

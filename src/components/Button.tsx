@@ -1,8 +1,7 @@
 /**
- * VisionFlow AI - Button Component
- * Primary interaction component with variants
- * 
- * @module components/Button
+ * VisionFlow AI - Button Component (v2.0 HUD Upgrade - FIXED)
+ * Tactical interaction plates with glow effects and type safety
+ * * @module components/Button
  */
 
 import React from 'react';
@@ -14,8 +13,9 @@ import { Pressable } from './Pressable';
 
 /**
  * Button variants
+ * Added 'hud' for tactical/scanner actions
  */
-export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost';
+export type ButtonVariant = 'primary' | 'secondary' | 'outline' | 'ghost' | 'hud';
 
 /**
  * Button sizes
@@ -26,64 +26,17 @@ export type ButtonSize = 'small' | 'medium' | 'large';
  * Button props
  */
 export interface ButtonProps {
-  /**
-   * Button label
-   */
   label: string;
-  
-  /**
-   * Button variant
-   */
   variant?: ButtonVariant;
-  
-  /**
-   * Button size
-   */
   size?: ButtonSize;
-  
-  /**
-   * Left icon name
-   */
   leftIcon?: IconProps['name'];
-  
-  /**
-   * Right icon name
-   */
   rightIcon?: IconProps['name'];
-  
-  /**
-   * Loading state
-   */
   loading?: boolean;
-  
-  /**
-   * Disabled state
-   */
   disabled?: boolean;
-  
-  /**
-   * Full width button
-   */
   fullWidth?: boolean;
-  
-  /**
-   * Press handler
-   */
   onPress?: () => void;
-  
-  /**
-   * Custom style
-   */
   style?: ViewStyle;
-  
-  /**
-   * Test ID
-   */
   testID?: string;
-  
-  /**
-   * Accessibility label
-   */
   accessibilityLabel?: string;
 }
 
@@ -107,15 +60,16 @@ function getButtonHeight(size: ButtonSize): number {
 
 /**
  * Get button padding from size
+ * Increased padding for tactical "plate" feel
  */
 function getButtonPadding(size: ButtonSize): number {
   switch (size) {
     case 'small':
       return Theme.spacing.s;
     case 'medium':
-      return Theme.spacing.m;
+      return Theme.spacing.l; // Wider for better touch target
     case 'large':
-      return Theme.spacing.l;
+      return Theme.spacing.xl;
     default:
       return Theme.spacing.m;
   }
@@ -139,12 +93,9 @@ function getTextVariant(size: ButtonSize): 'body' | 'bodyLarge' | 'caption' {
 
 /**
  * Button Component
- * 
- * @example
+ * * @example
  * ```tsx
- * <Button label="Capture Image" variant="primary" leftIcon="camera" onPress={handleCapture} />
- * <Button label="Cancel" variant="ghost" size="small" onPress={handleCancel} />
- * <Button label="Loading..." variant="primary" loading />
+ * <Button label="SCAN SYSTEM" variant="hud" leftIcon="scan" />
  * ```
  */
 export function Button({
@@ -168,30 +119,35 @@ export function Button({
   const iconSize: 'xs' | 'sm' | 'md' = size === 'small' ? 'xs' : size === 'medium' ? 'sm' : 'md';
   
   // Get colors based on variant
+  // Added shadow property for glow effects
   const getVariantStyles = (): {
     backgroundColor: string;
     textColor: string;
     borderColor?: string;
     borderWidth?: number;
+    shadow?: ViewStyle;
   } => {
     switch (variant) {
       case 'primary':
         return {
           backgroundColor: Theme.colors.primary[500],
-          textColor: Theme.colors.text.primary,
+          textColor: '#FFFFFF',
+          shadow: Theme.shadows.glow, // Electric Blue Glow
         };
         
       case 'secondary':
         return {
-          backgroundColor: Theme.colors.background.secondary,
-          textColor: Theme.colors.text.primary,
+          backgroundColor: Theme.colors.background.tertiary, // Darker surface
+          textColor: Theme.colors.text.secondary,
+          borderWidth: 1,
+          borderColor: Theme.colors.border.medium,
         };
         
       case 'outline':
         return {
           backgroundColor: 'transparent',
           textColor: Theme.colors.primary[500],
-          borderColor: Theme.colors.border.medium,
+          borderColor: Theme.colors.primary[500],
           borderWidth: 1,
         };
         
@@ -199,6 +155,16 @@ export function Button({
         return {
           backgroundColor: 'transparent',
           textColor: Theme.colors.text.secondary,
+        };
+
+      case 'hud':
+        // New Tactical Variant
+        return {
+          backgroundColor: 'rgba(59, 130, 246, 0.1)', // 10% Blue tint
+          textColor: Theme.colors.primary[400],
+          borderColor: 'rgba(59, 130, 246, 0.5)',
+          borderWidth: 1,
+          shadow: Theme.shadows.sm,
         };
         
       default:
@@ -221,15 +187,16 @@ export function Button({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: fullWidth ? 'stretch' : 'flex-start',
-    borderWidth: variantStyles.borderWidth,
+    borderWidth: variantStyles.borderWidth || 0,
     borderColor: variantStyles.borderColor,
-    ...Theme.shadows.sm,
+    ...variantStyles.shadow, // Apply glow if present
+    opacity: disabled ? 0.5 : 1,
   };
   
   // Disabled state
   const isDisabled = disabled || loading;
   
-  // Combine styles - FIXED: Proper handling of optional style prop
+  // Combine styles
   const combinedStyles: ViewStyle[] = [containerStyle];
   if (style) {
     combinedStyles.push(style);
@@ -238,7 +205,7 @@ export function Button({
   return (
     <Pressable
       scaleOnPress
-      pressScale={0.98}
+      pressScale={0.96}
       haptic="light"
       onPress={onPress}
       disabled={isDisabled}
@@ -269,8 +236,11 @@ export function Button({
           <Text
             variant={textVariant}
             customColor={variantStyles.textColor}
-            weight="600"
-            style={styles.label}
+            weight="700" // FIXED: Using numeric string "700" instead of "bold"
+            style={[styles.label, { 
+              textTransform: 'uppercase', // HUD requirement
+              letterSpacing: 0.5 
+            }]}
           >
             {label}
           </Text>
@@ -292,7 +262,7 @@ export function Button({
 
 const styles = StyleSheet.create({
   iconContainer: {
-    marginHorizontal: Theme.spacing.xxs,
+    marginHorizontal: Theme.spacing.xs,
   },
   label: {
     textAlign: 'center',

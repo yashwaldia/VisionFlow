@@ -1,8 +1,7 @@
 /**
- * VisionFlow AI - Input Component
- * Text input with validation and error states
- * 
- * @module components/Input
+ * VisionFlow AI - Input Component (v2.0 HUD Upgrade)
+ * Data entry fields with terminal aesthetics and focus glow
+ * * @module components/Input
  */
 
 import React, { useState } from 'react';
@@ -23,100 +22,25 @@ import { Pressable } from './Pressable';
  * Input props
  */
 export interface InputProps extends Omit<TextInputProps, 'style'> {
-  /**
-   * Input label
-   */
   label?: string;
-  
-  /**
-   * Placeholder text
-   */
   placeholder?: string;
-  
-  /**
-   * Input value
-   */
   value: string;
-  
-  /**
-   * Change handler
-   */
   onChangeText: (text: string) => void;
-  
-  /**
-   * Error message
-   */
   error?: string;
-  
-  /**
-   * Helper text (below input)
-   */
   helperText?: string;
-  
-  /**
-   * Left icon
-   */
   leftIcon?: IconProps['name'];
-  
-  /**
-   * Right icon
-   */
   rightIcon?: IconProps['name'];
-  
-  /**
-   * Right icon press handler
-   */
   onRightIconPress?: () => void;
-  
-  /**
-   * Disabled state
-   */
   disabled?: boolean;
-  
-  /**
-   * Secure text entry (password)
-   */
   secureTextEntry?: boolean;
-  
-  /**
-   * Container style
-   */
   containerStyle?: ViewStyle;
-  
-  /**
-   * Input style
-   */
   inputStyle?: TextStyle;
-  
-  /**
-   * Test ID
-   */
   testID?: string;
 }
 
 /**
  * Input Component
- * 
- * @example
- * ```tsx
- * <Input
- *   label="Email"
- *   placeholder="Enter your email"
- *   value={email}
- *   onChangeText={setEmail}
- *   leftIcon="mail"
- *   error={emailError}
- * />
- * 
- * <Input
- *   label="Password"
- *   placeholder="Enter password"
- *   value={password}
- *   onChangeText={setPassword}
- *   secureTextEntry
- *   leftIcon="lock-closed"
- * />
- * ```
+ * "Terminal Data Entry" Style
  */
 export function Input({
   label,
@@ -142,11 +66,11 @@ export function Input({
   const isPassword = secureTextEntry;
   const actualSecureTextEntry = isPassword && !showPassword;
   
-  // Determine border color based on state - FIXED: Use Theme.colors.semantic.error
+  // Determine border color based on state
   const getBorderColor = () => {
     if (error) return Theme.colors.semantic.error;
     if (isFocused) return Theme.colors.primary[500];
-    return Theme.colors.border.medium;
+    return Theme.colors.border.default; // Thinner, subtler default border
   };
   
   // Input container style
@@ -154,33 +78,39 @@ export function Input({
     flexDirection: 'row',
     alignItems: 'center',
     height: Theme.dimensions.input.default,
-    backgroundColor: Theme.colors.background.secondary,
+    backgroundColor: Theme.colors.background.tertiary, // Darker data field
     borderRadius: Theme.borderRadius.m,
     borderWidth: 1,
     borderColor: getBorderColor(),
     paddingHorizontal: Theme.spacing.m,
     opacity: disabled ? Theme.opacity.disabled : 1,
+    // Apply Glow only when focused
+    ...(isFocused ? Theme.shadows.glow : {}),
   };
   
-  // Text input style
+  // Text input style - NOW MONOSPACE
   const textInputStyle: TextStyle = {
     flex: 1,
     fontSize: Theme.typography.fontSize.body,
+    // Use Monospace for that "Terminal" feel
+    fontFamily: Theme.typography.fontFamily.mono, 
     lineHeight: Theme.typography.lineHeight.body,
-    fontWeight: Theme.typography.fontWeight.regular,
     color: Theme.colors.text.primary,
-    paddingVertical: 0, // Remove default padding
+    paddingVertical: 0,
   };
   
   return (
     <View style={containerStyle} testID={testID}>
-      {/* Label */}
+      {/* Label - Uppercase & Spaced */}
       {label && (
         <Text
           variant="caption"
           color="secondary"
-          weight="600"
-          style={styles.label}
+          weight="700"
+          style={[styles.label, { 
+            textTransform: 'uppercase', 
+            letterSpacing: 0.5 
+          }]}
         >
           {label}
         </Text>
@@ -188,7 +118,7 @@ export function Input({
       
       {/* Input Container */}
       <View style={inputContainerStyle}>
-        {/* Left Icon */}
+        {/* Left Icon (Prompt) */}
         {leftIcon && (
           <Icon
             name={leftIcon}
@@ -208,6 +138,7 @@ export function Input({
           editable={!disabled}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
+          selectionColor={Theme.colors.primary[500]} // Electric Blue Cursor
           style={[
             textInputStyle,
             leftIcon && { marginLeft: Theme.spacing.s },
@@ -247,15 +178,18 @@ export function Input({
         ) : null}
       </View>
       
-      {/* Error Message - FIXED: Use Theme.colors.semantic.error */}
+      {/* Error Message */}
       {error && (
-        <Text
-          variant="caption"
-          customColor={Theme.colors.semantic.error}
-          style={styles.helperText}
-        >
-          {error}
-        </Text>
+        <View style={styles.errorContainer}>
+          <Icon name="alert-circle-outline" size="xs" color={Theme.colors.semantic.error} />
+          <Text
+            variant="caption"
+            customColor={Theme.colors.semantic.error}
+            style={{ marginLeft: 4 }}
+          >
+            {error}
+          </Text>
+        </View>
       )}
       
       {/* Helper Text */}
@@ -274,9 +208,16 @@ export function Input({
 
 const styles = StyleSheet.create({
   label: {
-    marginBottom: Theme.spacing.xxs,
+    marginBottom: 6, // Slightly tighter
+    fontSize: 11, // Smaller tactical label
   },
   helperText: {
+    marginTop: Theme.spacing.xxs,
+    marginLeft: Theme.spacing.xs,
+  },
+  errorContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
     marginTop: Theme.spacing.xxs,
     marginLeft: Theme.spacing.xs,
   },

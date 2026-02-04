@@ -1,7 +1,8 @@
 /**
- * VisionFlow AI - AI Review Modal (FIXED)
+ * VisionFlow AI - AI Review Modal (Professional v2.0 - FIXED)
  * Review and edit AI-extracted data before saving
- * * @module screens/modals/AIReviewModal
+ * 
+ * @module screens/modals/AIReviewModal
  */
 
 import React, { useState, useEffect } from 'react';
@@ -38,16 +39,6 @@ import { PatternType } from '../../types/pattern.types';
 
 type AIReviewModalProps = NativeStackScreenProps<RootStackParamList, 'AIReviewModal'>;
 
-/**
- * AIReviewModal Component
- * * Features:
- * - Display captured image
- * - AI analysis with loading state
- * - Editable extracted fields
- * - Category/priority selection
- * - Date/time picker
- * - Save to reminders or patterns
- */
 export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const { imageUri, analysisType } = route.params;
   const { createReminder } = useReminders();
@@ -57,9 +48,9 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // State - Extracted Data (for reminder)
+  // State - Extracted Data
   const [title, setTitle] = useState('');
-  const [note, setNote] = useState(''); // Use 'smartNote' field name
+  const [note, setNote] = useState('');
   const [category, setCategory] = useState<ReminderCategory>(ReminderCategory.PERSONAL);
   const [priority, setPriority] = useState<ReminderPriority>(ReminderPriority.MEDIUM);
   const [reminderDate, setReminderDate] = useState('');
@@ -81,8 +72,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
    */
   const imageToBase64 = async (uri: string): Promise<string> => {
     try {
-      // FIXED: Use string literal 'base64' instead of FileSystem.EncodingType.Base64
-      // This avoids TypeScript namespace import issues
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: 'base64',
       });
@@ -101,25 +90,20 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
       setIsAnalyzing(true);
       setAnalysisError(null);
 
-      // Convert image to base64
       const base64 = await imageToBase64(imageUri);
 
       if (analysisType === 'reminder') {
-        // Analyze as reminder
         const result = await GeminiService.analyzeReminderImage(base64);
         
-        // Populate fields with AI suggestions (use correct property names)
         setTitle(result.title || '');
-        setNote(result.smartNote || ''); // AI returns smartNote
+        setNote(result.smartNote || '');
         setCategory(result.category || ReminderCategory.PERSONAL);
-        setPriority(ReminderPriority.MEDIUM); // Default since AI doesn't return priority
+        setPriority(ReminderPriority.MEDIUM);
         setReminderDate(result.reminderDate || '');
         setReminderTime(result.reminderTime || '');
         setEmoji(result.emoji || '📝');
       } else {
-        // Analyze as pattern
         const result = await GeminiService.analyzePatternImage(base64);
-        // Use first pattern's name from the patterns array
         const firstPattern = result.patterns[0];
         setTitle(firstPattern?.name || 'Pattern');
         setNote(result.insights?.explanation || '');
@@ -139,7 +123,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
    * Handle save
    */
   const handleSave = async () => {
-    // Validation
     if (!title.trim()) {
       Alert.alert('Validation Error', 'Please enter a title.');
       return;
@@ -150,13 +133,12 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
       if (analysisType === 'reminder') {
-        // Create reminder
         await createReminder({
           id: `reminder_${Date.now()}`,
           title: title.trim(),
           smartNote: note.trim(),
           category,
-          subcategory: category, // Use same as category for now
+          subcategory: category,
           priority,
           reminderDate: reminderDate || new Date().toISOString().split('T')[0],
           reminderTime: reminderTime || '12:00',
@@ -170,7 +152,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
 
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
-        // Navigate back to reminders list
         navigation.navigate('MainApp', {
           screen: 'RemindersTab',
           params: {
@@ -179,7 +160,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           },
         });
       } else {
-        // Create pattern
         await createPattern({
           id: `pattern_${Date.now()}`,
           name: title.trim(),
@@ -239,22 +219,42 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     analyzeImage();
   };
 
+  // Category config
+  const categoryConfig = {
+    [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
+    [ReminderCategory.WORK]: { icon: 'briefcase', color: Theme.colors.semantic.info },
+    [ReminderCategory.HEALTH]: { icon: 'fitness', color: Theme.colors.semantic.success },
+    [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
+  };
+
+  // Priority config
+  const priorityConfig = {
+    [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
+    [ReminderPriority.MEDIUM]: { icon: 'remove', color: Theme.colors.semantic.info },
+    [ReminderPriority.HIGH]: { icon: 'chevron-up', color: Theme.colors.semantic.warning },
+    [ReminderPriority.URGENT]: { icon: 'warning', color: Theme.colors.semantic.error },
+  };
+
   return (
     <Screen safeAreaTop safeAreaBottom={false}>
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 0}
       >
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={handleDiscard}>
+          <Pressable onPress={handleDiscard} haptic="light" style={styles.headerButton}>
             <Icon name="close" size="md" color={Theme.colors.text.primary} />
           </Pressable>
-          <Text variant="h4" weight="600">
-            {analysisType === 'reminder' ? 'Review Reminder' : 'Review Pattern'}
-          </Text>
-          <View style={{ width: 24 }} />
+          <View style={styles.headerCenter}>
+            <Text variant="h4" weight="600">
+              {analysisType === 'reminder' ? 'Review Reminder' : 'Review Pattern'}
+            </Text>
+            <Text variant="caption" color="tertiary">
+              Edit AI suggestions
+            </Text>
+          </View>
+          <View style={{ width: 40 }} />
         </View>
 
         <ScrollView 
@@ -266,137 +266,212 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             {/* Image Preview */}
             <Card style={styles.imageCard}>
               <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
+              <View style={styles.imageOverlay}>
+                <View style={[
+                  styles.modeBadge,
+                  { backgroundColor: analysisType === 'reminder' 
+                    ? Theme.colors.primary[500] 
+                    : Theme.colors.semantic.warning 
+                  }
+                ]}>
+                  <Icon 
+                    name={analysisType === 'reminder' ? 'notifications' : 'sparkles'} 
+                    size="sm" 
+                    color={Theme.colors.background.primary} 
+                  />
+                  <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+                    {analysisType === 'reminder' ? 'REMINDER' : 'PATTERN'}
+                  </Text>
+                </View>
+              </View>
             </Card>
 
             {/* AI Analysis Status */}
             {isAnalyzing && (
               <Card style={styles.analysisCard}>
+                <View style={styles.analysisIconContainer}>
+                  <Icon name="sparkles" size="md" color={Theme.colors.primary[500]} />
+                </View>
+                <View style={styles.analysisContent}>
+                  <Text variant="bodyLarge" weight="600">Analyzing Image</Text>
+                  <Text variant="caption" color="secondary">
+                    AI is extracting information from your photo...
+                  </Text>
+                </View>
                 <LoadingSpinner size="small" />
-                <Text variant="body" color="secondary" style={styles.analysisText}>
-                  AI is analyzing your image...
-                </Text>
               </Card>
             )}
 
             {analysisError && (
               <Card style={styles.errorCard}>
-                <Icon name="warning-outline" size="md" color={Theme.colors.semantic.warning} />
+                <View style={styles.errorIconContainer}>
+                  <Icon name="warning" size="md" color={Theme.colors.semantic.error} />
+                </View>
                 <View style={styles.errorContent}>
-                  <Text variant="bodyLarge" weight="600">
-                    Analysis Failed
-                  </Text>
+                  <Text variant="bodyLarge" weight="600">Analysis Failed</Text>
                   <Text variant="caption" color="secondary">
                     {analysisError}
                   </Text>
                 </View>
-                <Button
-                  label="Retry"
-                  variant="outline"
-                  size="small"
-                  onPress={handleRetry}
-                />
+                <Pressable onPress={handleRetry} style={styles.retryButton} haptic="light">
+                  <Icon name="refresh" size="sm" color={Theme.colors.primary[500]} />
+                </Pressable>
               </Card>
             )}
 
             {/* Editable Fields */}
             {!isAnalyzing && (
               <>
-                <Text variant="h4" style={styles.sectionTitle}>
-                  Details
-                </Text>
+                {/* Title & Description Section */}
+                <View style={styles.section}>
+                  <View style={styles.sectionHeader}>
+                    <Icon name="document-text-outline" size="sm" color={Theme.colors.primary[500]} />
+                    <Text variant="h4">Details</Text>
+                  </View>
 
-                <Input
-                  label="Title"
-                  placeholder="Enter title"
-                  value={title}
-                  onChangeText={setTitle}
-                  autoFocus
-                  containerStyle={styles.input}
-                />
+                  <Input
+                    label="Title"
+                    placeholder="Enter title"
+                    value={title}
+                    onChangeText={setTitle}
+                    autoFocus
+                    containerStyle={styles.input}
+                    leftIcon="create-outline"
+                  />
 
-                <Input
-                  label="Description"
-                  placeholder="Enter description"
-                  value={note}
-                  onChangeText={setNote}
-                  multiline
-                  numberOfLines={3}
-                  containerStyle={styles.input}
-                />
+                  <Input
+                    label="Description"
+                    placeholder="Enter description or notes"
+                    value={note}
+                    onChangeText={setNote}
+                    multiline
+                    numberOfLines={4}
+                    containerStyle={styles.input}
+                    leftIcon="chatbox-outline"
+                  />
+                </View>
 
                 {analysisType === 'reminder' && (
                   <>
-                    <Text variant="body" weight="600" style={styles.fieldLabel}>
-                      Category
-                    </Text>
-                    <View style={styles.categoryGrid}>
-                      {[ReminderCategory.PERSONAL, ReminderCategory.WORK, ReminderCategory.HEALTH, ReminderCategory.MONEY].map((cat) => (
-                        <Pressable
-                          key={cat}
-                          onPress={() => setCategory(cat)}
-                          style={[
-                            styles.categoryChip,
-                            ...(category === cat ? [styles.categoryChipActive] : []),
-                          ]}
-                        >
-                          <Text
-                            variant="caption"
-                            weight="600"
-                            customColor={
-                              category === cat
-                                ? Theme.colors.text.primary
-                                : Theme.colors.text.secondary
-                            }
+                    {/* Category Section */}
+                    <View style={styles.section}>
+                      <View style={styles.sectionHeader}>
+                        <Icon name="pricetags-outline" size="sm" color={Theme.colors.primary[500]} />
+                        <Text variant="h4">Category</Text>
+                      </View>
+                      
+                      <View style={styles.categoryGrid}>
+                        {Object.entries(categoryConfig).map(([cat, config]) => {
+                          const isSelected = category === cat;
+                          return (
+                            <Pressable
+                            key={cat}
+                            onPress={() => setCategory(cat as ReminderCategory)}
+                            haptic="light"
+                            style={[
+                              styles.categoryChip,
+                              // ✅ FIXED: Use conditional array spreading
+                              ...(isSelected ? [{ 
+                                backgroundColor: config.color,
+                                borderColor: config.color 
+                              }] : []),
+                            ]}
                           >
-                            {cat.toUpperCase()}
-                          </Text>
-                        </Pressable>
-                      ))}
+
+                              <Icon 
+                                name={config.icon as any} 
+                                size="sm" 
+                                color={isSelected ? Theme.colors.background.primary : config.color} 
+                              />
+                              <Text
+                                variant="caption"
+                                weight="700"
+                                customColor={
+                                  isSelected
+                                    ? Theme.colors.background.primary
+                                    : Theme.colors.text.primary
+                                }
+                              >
+                                {cat}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
                     </View>
 
-                    <Text variant="body" weight="600" style={styles.fieldLabel}>
-                      Priority
-                    </Text>
-                    <View style={styles.priorityRow}>
-                      {[ReminderPriority.LOW, ReminderPriority.MEDIUM, ReminderPriority.HIGH, ReminderPriority.URGENT].map((prio) => (
-                        <Pressable
-                          key={prio}
-                          onPress={() => setPriority(prio)}
-                          style={[
-                            styles.priorityChip,
-                            ...(priority === prio ? [styles.priorityChipActive] : []),
-                          ]}
-                        >
-                          <Text
-                            variant="caption"
-                            weight="600"
-                            customColor={
-                              priority === prio
-                                ? Theme.colors.text.primary
-                                : Theme.colors.text.secondary
-                            }
+                    {/* Priority Section */}
+                    <View style={styles.section}>
+                      <View style={styles.sectionHeader}>
+                        <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
+                        <Text variant="h4">Priority</Text>
+                      </View>
+                      
+                      <View style={styles.priorityGrid}>
+                        {Object.entries(priorityConfig).map(([prio, config]) => {
+                          const isSelected = priority === prio;
+                          return (
+                          <Pressable
+                            key={prio}
+                            onPress={() => setPriority(prio as ReminderPriority)}
+                            haptic="light"
+                            style={[
+                              styles.priorityChip,
+                              // ✅ FIXED: Use conditional array spreading
+                              ...(isSelected ? [{
+                                backgroundColor: config.color,
+                                borderColor: config.color,
+                              }] : []),
+                            ]}
                           >
-                            {prio.toUpperCase()}
-                          </Text>
-                        </Pressable>
-                      ))}
+
+                              <Icon 
+                                name={config.icon as any} 
+                                size="sm" 
+                                color={isSelected ? Theme.colors.background.primary : config.color} 
+                              />
+                              <Text
+                                variant="caption"
+                                weight="700"
+                                customColor={
+                                  isSelected
+                                    ? Theme.colors.background.primary
+                                    : Theme.colors.text.primary
+                                }
+                              >
+                                {prio}
+                              </Text>
+                            </Pressable>
+                          );
+                        })}
+                      </View>
                     </View>
 
-                    <View style={styles.dateTimeRow}>
-                      <Input
-                        label="Date"
-                        placeholder="YYYY-MM-DD"
-                        value={reminderDate}
-                        onChangeText={setReminderDate}
-                        containerStyle={styles.dateInput}
-                      />
-                      <Input
-                        label="Time"
-                        placeholder="HH:MM"
-                        value={reminderTime}
-                        onChangeText={setReminderTime}
-                        containerStyle={styles.timeInput}
-                      />
+                    {/* Date & Time Section */}
+                    <View style={styles.section}>
+                      <View style={styles.sectionHeader}>
+                        <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
+                        <Text variant="h4">Schedule</Text>
+                      </View>
+                      
+                      <View style={styles.dateTimeRow}>
+                        <Input
+                          label="Date"
+                          placeholder="YYYY-MM-DD"
+                          value={reminderDate}
+                          onChangeText={setReminderDate}
+                          containerStyle={styles.dateInput}
+                          leftIcon="calendar"
+                        />
+                        <Input
+                          label="Time"
+                          placeholder="HH:MM"
+                          value={reminderTime}
+                          onChangeText={setReminderTime}
+                          containerStyle={styles.timeInput}
+                          leftIcon="time"
+                        />
+                      </View>
                     </View>
                   </>
                 )}
@@ -411,6 +486,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             label="Discard"
             variant="outline"
             size="large"
+            leftIcon="trash-outline"
             onPress={handleDiscard}
             style={styles.footerButton}
             disabled={isSaving}
@@ -419,6 +495,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             label={isSaving ? 'Saving...' : 'Save'}
             variant="primary"
             size="large"
+            leftIcon="checkmark"
             onPress={handleSave}
             style={styles.footerButtonPrimary}
             disabled={isAnalyzing || isSaving}
@@ -446,25 +523,52 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
   },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
+  },
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
+  },
 
   // Scroll View
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Theme.spacing.xl,
+    paddingBottom: 120,
   },
 
-  // Image
+  // Image Preview
   imageCard: {
     padding: 0,
     overflow: 'hidden',
     marginBottom: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   image: {
     width: '100%',
-    height: 240,
+    height: 280,
     backgroundColor: Theme.colors.background.tertiary,
+  },
+  imageOverlay: {
+    position: 'absolute',
+    top: Theme.spacing.m,
+    right: Theme.spacing.m,
+  },
+  modeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: 8,
+    borderRadius: Theme.borderRadius.full,
   },
 
   // Analysis Card
@@ -473,9 +577,21 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Theme.spacing.m,
     marginBottom: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.primary[500]}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}30`,
   },
-  analysisText: {
+  analysisIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: `${Theme.colors.primary[500]}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  analysisContent: {
     flex: 1,
+    gap: 2,
   },
 
   // Error Card
@@ -484,23 +600,43 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Theme.spacing.m,
     marginBottom: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.warning}10`,
+    backgroundColor: `${Theme.colors.semantic.error}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.error}30`,
+  },
+  errorIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: `${Theme.colors.semantic.error}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   errorContent: {
     flex: 1,
+    gap: 2,
+  },
+  retryButton: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 
-  // Form Fields
-  sectionTitle: {
-    marginTop: Theme.spacing.m,
+  // Section
+  section: {
+    marginBottom: Theme.spacing.l,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
   input: {
     marginBottom: Theme.spacing.m,
-  },
-  fieldLabel: {
-    marginBottom: Theme.spacing.s,
-    marginTop: Theme.spacing.s,
   },
 
   // Category Grid
@@ -508,39 +644,36 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
-    marginBottom: Theme.spacing.m,
   },
   categoryChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.s,
+    paddingVertical: 10,
     borderRadius: Theme.borderRadius.m,
     backgroundColor: Theme.colors.background.tertiary,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-  },
-  categoryChipActive: {
-    backgroundColor: Theme.colors.primary[500],
-    borderColor: Theme.colors.primary[500],
+    minWidth: 100,
   },
 
-  // Priority Row
-  priorityRow: {
+  // Priority Grid
+  priorityGrid: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
-    marginBottom: Theme.spacing.m,
   },
   priorityChip: {
     flex: 1,
-    paddingVertical: Theme.spacing.s,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: 4,
+    paddingVertical: 10,
     borderRadius: Theme.borderRadius.m,
     backgroundColor: Theme.colors.background.tertiary,
-    borderWidth: 1,
+    borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    alignItems: 'center',
-  },
-  priorityChipActive: {
-    backgroundColor: Theme.colors.primary[500],
-    borderColor: Theme.colors.primary[500],
   },
 
   // Date/Time Row

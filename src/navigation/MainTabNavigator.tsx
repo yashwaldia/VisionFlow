@@ -1,14 +1,13 @@
 /**
- * VisionFlow AI - Main Tab Navigator
- * Bottom tab navigation for primary app sections
- * 
- * @module navigation/MainTabNavigator
+ * VisionFlow AI - Main Tab Navigator (v2.0 HUD Upgrade)
+ * Floating "Command Deck" navigation
+ * * @module navigation/MainTabNavigator
  */
 
 import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
-import { Platform, StyleSheet } from 'react-native';
+import { Platform, StyleSheet, View } from 'react-native';
 import { MainTabParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
 
@@ -23,115 +22,106 @@ const Tab = createBottomTabNavigator<MainTabParamList>();
 
 /**
  * MainTabNavigator Component
- * 
- * Tab Structure:
- * 1. Home - Dashboard with overview
- * 2. Reminders - List of all reminders
- * 3. Patterns - Pattern library
- * 4. Projects - Project management
- * 5. Settings - App settings
+ * "The Command Deck"
  */
 export function MainTabNavigator() {
   return (
     <Tab.Navigator
       screenOptions={({ route }) => ({
         headerShown: false,
+        // Floating HUD Style
         tabBarStyle: styles.tabBar,
+        tabBarShowLabel: false, // Cleaner look, relying on icons
         tabBarActiveTintColor: Theme.colors.primary[500],
         tabBarInactiveTintColor: Theme.colors.text.tertiary,
-        tabBarLabelStyle: styles.tabBarLabel,
-        tabBarItemStyle: styles.tabBarItem,
         tabBarIcon: ({ focused, color, size }) => {
           let iconName: keyof typeof Ionicons.glyphMap;
 
+          // Icon Mapping
           switch (route.name) {
             case 'HomeTab':
-              iconName = focused ? 'home' : 'home-outline';
+              iconName = focused ? 'terminal' : 'terminal-outline'; // More techy than 'home'
               break;
             case 'RemindersTab':
               iconName = focused ? 'notifications' : 'notifications-outline';
               break;
             case 'PatternsTab':
-              iconName = focused ? 'grid' : 'grid-outline';
+              iconName = focused ? 'scan' : 'scan-outline'; // 'Scan' fits patterns better
               break;
             case 'ProjectsTab':
-              iconName = focused ? 'folder' : 'folder-outline';
+              iconName = focused ? 'layers' : 'layers-outline';
               break;
             case 'SettingsTab':
               iconName = focused ? 'settings' : 'settings-outline';
               break;
             default:
-              iconName = 'help-outline';
+              iconName = 'square-outline';
           }
 
-          return <Ionicons name={iconName} size={size} color={color} />;
+          // Active Glow Effect Wrapper
+          return (
+            <View style={[
+              styles.iconContainer, 
+              focused && styles.activeIconContainer
+            ]}>
+              <Ionicons 
+                name={iconName} 
+                size={24} 
+                color={color} 
+              />
+              {focused && <View style={styles.activeDot} />}
+            </View>
+          );
         },
       })}
     >
-      <Tab.Screen
-        name="HomeTab"
-        component={HomeStackNavigator}
-        options={{
-          tabBarLabel: 'Home',
-          tabBarAccessibilityLabel: 'Home tab',
-        }}
-      />
-
-      <Tab.Screen
-        name="RemindersTab"
-        component={RemindersStackNavigator}
-        options={{
-          tabBarLabel: 'Reminders',
-          tabBarAccessibilityLabel: 'Reminders tab',
-        }}
-      />
-
-      <Tab.Screen
-        name="PatternsTab"
-        component={PatternsStackNavigator}
-        options={{
-          tabBarLabel: 'Patterns',
-          tabBarAccessibilityLabel: 'Patterns tab',
-        }}
-      />
-
-      <Tab.Screen
-        name="ProjectsTab"
-        component={ProjectsStackNavigator}
-        options={{
-          tabBarLabel: 'Projects',
-          tabBarAccessibilityLabel: 'Projects tab',
-        }}
-      />
-
-      <Tab.Screen
-        name="SettingsTab"
-        component={SettingsStackNavigator}
-        options={{
-          tabBarLabel: 'Settings',
-          tabBarAccessibilityLabel: 'Settings tab',
-        }}
-      />
+      <Tab.Screen name="HomeTab" component={HomeStackNavigator} />
+      <Tab.Screen name="RemindersTab" component={RemindersStackNavigator} />
+      <Tab.Screen name="PatternsTab" component={PatternsStackNavigator} />
+      <Tab.Screen name="ProjectsTab" component={ProjectsStackNavigator} />
+      <Tab.Screen name="SettingsTab" component={SettingsStackNavigator} />
     </Tab.Navigator>
   );
 }
 
 const styles = StyleSheet.create({
   tabBar: {
-    backgroundColor: Theme.colors.background.secondary,
-    borderTopColor: Theme.colors.border.light,
-    borderTopWidth: 1,
-    height: Platform.OS === 'ios' ? 88 : 64,
-    paddingBottom: Platform.OS === 'ios' ? 28 : 8,
-    paddingTop: 8,
-    ...Theme.shadows.lg,
+    position: 'absolute',
+    bottom: 30,
+    left: 20,
+    right: 20,
+    elevation: 0,
+    backgroundColor: 'rgba(8, 8, 10, 0.9)', // Deep dark glass
+    borderRadius: 32,
+    height: 70,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.1)',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 10 },
+    shadowOpacity: 0.5,
+    shadowRadius: 20,
+    paddingBottom: 0, // Reset default padding
   },
-  tabBarLabel: {
-    fontSize: Theme.typography.fontSize.caption,
-    fontWeight: Theme.typography.fontWeight.medium,
-    marginTop: 4,
+  iconContainer: {
+    alignItems: 'center',
+    justifyContent: 'center',
+    height: 50,
+    width: 50,
+    borderRadius: 25,
   },
-  tabBarItem: {
-    paddingVertical: 4,
+  activeIconContainer: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)', // Subtle blue highlight
   },
+  activeDot: {
+    position: 'absolute',
+    bottom: 8,
+    width: 4,
+    height: 4,
+    borderRadius: 2,
+    backgroundColor: Theme.colors.primary[500],
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 1,
+    shadowRadius: 4,
+  }
 });

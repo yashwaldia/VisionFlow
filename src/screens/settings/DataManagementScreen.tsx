@@ -1,11 +1,12 @@
 /**
- * VisionFlow AI - Data Management Screen (FIXED)
+ * VisionFlow AI - Data Management Screen (Professional v2.0)
  * Handle data backup, restoration, and storage management
+ * 
  * @module screens/settings/DataManagementScreen
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Share, Platform } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Share } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 
@@ -18,6 +19,7 @@ import {
   Card,
   Icon,
   Button,
+  Pressable,
   LoadingSpinner,
 } from '../../components';
 import * as StorageService from '../../services/storage.service';
@@ -64,7 +66,6 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
       
       const jsonData = await StorageService.exportAllData();
       
-      // Use native Share for text content
       await Share.share({
         message: jsonData,
         title: 'VisionFlow AI Backup',
@@ -79,8 +80,6 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
   };
 
   const handleImport = async () => {
-    // FIXED: Removed expo-document-picker dependency to prevent build errors
-    // Implementation requires 'npx expo install expo-document-picker'
     Alert.alert(
       'Import Feature Unavailable',
       'This feature requires the "expo-document-picker" package to be installed. Please add it to your project to enable file imports.'
@@ -102,7 +101,6 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               await StorageService.clearAllData();
               await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
               
-              // Reset local stats
               setStats({
                 remindersCount: 0,
                 patternsCount: 0,
@@ -136,101 +134,181 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        <Button 
-            label="Back" 
-            variant="ghost" 
-            leftIcon="arrow-back" 
-            onPress={() => navigation.goBack()} 
-            style={styles.backButton}
-        />
-        <Text variant="h4" weight="600">Data & Storage</Text>
-        <View style={styles.placeholder} />
+        <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
+          <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text variant="h4" weight="600">Data & Storage</Text>
+          <Text variant="caption" color="tertiary">Manage your app data</Text>
+        </View>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Container padding="m">
           
           {/* Storage Overview */}
-          <Text variant="h4" style={styles.sectionTitle}>Storage Usage</Text>
-          <Card style={styles.statsCard}>
-            <View style={styles.usageHeader}>
-              <View style={styles.iconContainer}>
-                <Icon name="server-outline" size="lg" color={Theme.colors.primary[500]} />
-              </View>
-              <View>
-                <Text variant="h3" weight="700">{formatSize(stats.estimatedSizeBytes)}</Text>
-                <Text variant="caption" color="secondary">Total Estimated Size</Text>
-              </View>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="pie-chart-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Storage Usage</Text>
             </View>
+            
+            <Card style={styles.statsCard}>
+              <View style={styles.usageHeader}>
+                <View style={styles.mainIconContainer}>
+                  <Icon name="server" size="xl" color={Theme.colors.primary[500]} />
+                </View>
+                <View style={styles.usageInfo}>
+                  <Text variant="h2" weight="700">{formatSize(stats.estimatedSizeBytes)}</Text>
+                  <Text variant="caption" color="secondary">Total estimated size</Text>
+                </View>
+              </View>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text variant="h4" weight="600">{stats.remindersCount}</Text>
-                <Text variant="caption" color="tertiary">Reminders</Text>
+              <View style={styles.statsGrid}>
+                <View style={styles.statCard}>
+                  <View style={styles.statIconContainer}>
+                    <Icon name="notifications" size="sm" color={Theme.colors.primary[500]} />
+                  </View>
+                  <Text variant="h3" weight="700">{stats.remindersCount}</Text>
+                  <Text variant="caption" color="tertiary">Reminders</Text>
+                </View>
+
+                <View style={styles.statCard}>
+                  <View style={styles.statIconContainer}>
+                    <Icon name="analytics" size="sm" color={Theme.colors.semantic.info} />
+                  </View>
+                  <Text variant="h3" weight="700">{stats.patternsCount}</Text>
+                  <Text variant="caption" color="tertiary">Patterns</Text>
+                </View>
+
+                <View style={styles.statCard}>
+                  <View style={styles.statIconContainer}>
+                    <Icon name="folder" size="sm" color={Theme.colors.semantic.warning} />
+                  </View>
+                  <Text variant="h3" weight="700">{stats.projectsCount}</Text>
+                  <Text variant="caption" color="tertiary">Projects</Text>
+                </View>
               </View>
-              <View style={styles.statItem}>
-                <Text variant="h4" weight="600">{stats.patternsCount}</Text>
-                <Text variant="caption" color="tertiary">Patterns</Text>
-              </View>
-              <View style={styles.statItem}>
-                <Text variant="h4" weight="600">{stats.projectsCount}</Text>
-                <Text variant="caption" color="tertiary">Projects</Text>
-              </View>
-            </View>
-          </Card>
+            </Card>
+          </View>
 
           {/* Backup & Restore */}
-          <Text variant="h4" style={styles.sectionTitle}>Backup & Restore</Text>
-          <Card style={styles.actionCard}>
-            <Button
-              label={isProcessing ? "Processing..." : "Export Data (JSON)"}
-              variant="outline"
-              leftIcon="download-outline"
-              onPress={handleExport}
-              disabled={isProcessing}
-              style={styles.actionButton}
-            />
-            <Text variant="caption" color="tertiary" style={styles.actionHelp}>
-              Download a JSON file containing all your reminders, patterns, and settings.
-            </Text>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="sync-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Backup & Restore</Text>
+            </View>
+            
+            <Card style={styles.actionCard}>
+              {/* Export */}
+              <View style={styles.actionItem}>
+                <View style={styles.actionHeader}>
+                  <View style={styles.actionIconContainer}>
+                    <Icon name="download" size="md" color={Theme.colors.semantic.success} />
+                  </View>
+                  <View style={styles.actionInfo}>
+                    <Text variant="bodyLarge" weight="600">Export Data</Text>
+                    <Text variant="caption" color="secondary" style={styles.actionDescription}>
+                      Download JSON file with all your data
+                    </Text>
+                  </View>
+                </View>
+                <Button
+                  label={isProcessing ? "Exporting..." : "Export Now"}
+                  variant="outline"
+                  size="medium"
+                  onPress={handleExport}
+                  disabled={isProcessing}
+                  style={styles.actionButton}
+                />
+              </View>
 
-            <View style={styles.actionDivider} />
+              <View style={styles.actionDivider} />
 
-            <Button
-              label={isProcessing ? "Processing..." : "Import Data"}
-              variant="outline"
-              leftIcon="cloud-upload-outline"
-              onPress={handleImport}
-              disabled={isProcessing}
-              style={styles.actionButton}
-            />
-            <Text variant="caption" color="tertiary" style={styles.actionHelp}>
-              Restore data from a previously exported JSON file. Current data will be merged or overwritten.
-            </Text>
-          </Card>
+              {/* Import */}
+              <View style={styles.actionItem}>
+                <View style={styles.actionHeader}>
+                  <View style={styles.actionIconContainer}>
+                    <Icon name="cloud-upload" size="md" color={Theme.colors.semantic.info} />
+                  </View>
+                  <View style={styles.actionInfo}>
+                    <Text variant="bodyLarge" weight="600">Import Data</Text>
+                    <Text variant="caption" color="secondary" style={styles.actionDescription}>
+                      Restore from previously exported file
+                    </Text>
+                  </View>
+                </View>
+                <Button
+                  label={isProcessing ? "Importing..." : "Import File"}
+                  variant="outline"
+                  size="medium"
+                  onPress={handleImport}
+                  disabled={isProcessing}
+                  style={styles.actionButton}
+                />
+              </View>
+            </Card>
+
+            {/* Info Card */}
+            <Card style={styles.infoCard}>
+              <View style={styles.infoRow}>
+                <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
+                <Text variant="caption" color="secondary" style={styles.infoText}>
+                  Backups include all reminders, patterns, projects, and settings. Keep your backups safe and secure.
+                </Text>
+              </View>
+            </Card>
+          </View>
 
           {/* Danger Zone */}
-          <Text variant="h4" style={styles.sectionTitle} customColor={Theme.colors.semantic.error}>
-            Danger Zone
-          </Text>
-          
-          {/* FIXED: Use StyleSheet.flatten to pass a single ViewStyle object instead of array */}
-          <Card style={StyleSheet.flatten([styles.actionCard, styles.dangerCard])}>
-            {/* FIXED: Changed variant from 'danger' to 'primary' with style override */}
-            <Button
-              label="Factory Reset"
-              variant="primary" 
-              leftIcon="trash-outline"
-              onPress={handleClearData}
-              disabled={isProcessing}
-              style={{ backgroundColor: Theme.colors.semantic.error }}
-            />
-            <Text variant="caption" color="tertiary" style={styles.actionHelp}>
-              Permanently delete all local data. This action cannot be undone.
-            </Text>
-          </Card>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="warning-outline" size="sm" color={Theme.colors.semantic.error} />
+              <Text variant="h4" customColor={Theme.colors.semantic.error}>Danger Zone</Text>
+            </View>
+            
+            <Card style={styles.dangerCard}>
+              <View style={styles.dangerHeader}>
+                <View style={styles.dangerIconContainer}>
+                  <Icon name="trash" size="lg" color={Theme.colors.semantic.error} />
+                </View>
+                <View style={styles.dangerInfo}>
+                  <Text variant="h4" customColor={Theme.colors.semantic.error}>
+                    Factory Reset
+                  </Text>
+                  <Text variant="caption" color="secondary" style={styles.dangerDescription}>
+                    Permanently delete all local data. This action cannot be undone and will reset the app to its initial state.
+                  </Text>
+                </View>
+              </View>
+              
+              <Button
+                label="Delete All Data"
+                variant="primary"
+                size="large"
+                leftIcon="trash-outline"
+                onPress={handleClearData}
+                disabled={isProcessing}
+                style={styles.dangerButton}
+              />
+            </Card>
+
+            {/* Warning Card */}
+            <Card style={styles.warningCard}>
+              <View style={styles.infoRow}>
+                <Icon name="alert-circle" size="sm" color={Theme.colors.semantic.warning} />
+                <Text variant="caption" color="secondary" style={styles.infoText}>
+                  Make sure to export your data before performing a factory reset. Deleted data cannot be recovered.
+                </Text>
+              </View>
+            </Card>
+          </View>
 
         </Container>
       </ScrollView>
@@ -239,32 +317,50 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
   },
-  backButton: {
-    paddingHorizontal: 0,
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
   },
-  placeholder: {
-    width: 48,
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
   },
-  content: {
-    paddingBottom: Theme.spacing.xl,
+  
+  // Scroll styles
+  scrollContent: {
+    paddingBottom: 120,
   },
-  sectionTitle: {
+  
+  // Section styles
+  section: {
+    marginBottom: Theme.spacing.l,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
-    marginLeft: Theme.spacing.xs,
-    marginTop: Theme.spacing.m,
   },
+  
+  // Stats card styles
   statsCard: {
-    padding: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   usageHeader: {
     flexDirection: 'row',
@@ -272,30 +368,79 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.m,
     marginBottom: Theme.spacing.m,
   },
-  iconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: Theme.borderRadius.m,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+  mainIconContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: `${Theme.colors.primary[500]}30`,
+  },
+  usageInfo: {
+    flex: 1,
+    gap: 4,
   },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
   },
-  statsRow: {
+  statsGrid: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
+    gap: Theme.spacing.s,
   },
-  statItem: {
-    alignItems: 'center',
+  statCard: {
     flex: 1,
+    alignItems: 'center',
+    padding: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
+    gap: 4,
   },
+  statIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.secondary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
+  },
+  
+  // Action card styles
   actionCard: {
     padding: Theme.spacing.m,
-    gap: Theme.spacing.s,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
+  },
+  actionItem: {
+    gap: Theme.spacing.m,
+  },
+  actionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.m,
+  },
+  actionIconContainer: {
+    width: 48,
+    height: 48,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: Theme.colors.background.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
+  },
+  actionInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  actionDescription: {
+    lineHeight: 16,
   },
   actionButton: {
     width: '100%',
@@ -303,13 +448,65 @@ const styles = StyleSheet.create({
   actionDivider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
-    marginVertical: Theme.spacing.s,
+    marginVertical: Theme.spacing.m,
   },
-  actionHelp: {
-    paddingHorizontal: Theme.spacing.xs,
-  },
-  dangerCard: {
-    borderColor: `${Theme.colors.semantic.error}40`,
+  
+  // Info card styles
+  infoCard: {
+    marginTop: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.info}30`,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Theme.spacing.s,
+  },
+  infoText: {
+    flex: 1,
+    lineHeight: 18,
+  },
+  
+  // Danger card styles
+  dangerCard: {
+    backgroundColor: `${Theme.colors.semantic.error}10`,
+    borderWidth: 2,
+    borderColor: `${Theme.colors.semantic.error}40`,
+  },
+  dangerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
+  },
+  dangerIconContainer: {
+    width: 56,
+    height: 56,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: `${Theme.colors.semantic.error}20`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: `${Theme.colors.semantic.error}40`,
+  },
+  dangerInfo: {
+    flex: 1,
+    gap: 4,
+  },
+  dangerDescription: {
+    lineHeight: 18,
+  },
+  dangerButton: {
+    backgroundColor: Theme.colors.semantic.error,
+    borderColor: Theme.colors.semantic.error,
+  },
+  
+  // Warning card styles
+  warningCard: {
+    marginTop: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.semantic.warning}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.warning}30`,
   },
 });

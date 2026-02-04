@@ -1,11 +1,12 @@
 /**
- * VisionFlow AI - Notification Settings Screen (FIXED)
+ * VisionFlow AI - Notification Settings Screen (Professional v2.0)
  * Manage push notification preferences
+ * 
  * @module screens/settings/NotificationSettingsScreen
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Switch, Alert, Linking, AppState } from 'react-native';
+import { View, StyleSheet, Switch, Alert, Linking, AppState, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SettingsStackParamList } from '../../types/navigation.types';
 import { Theme } from '../../constants/theme';
@@ -17,6 +18,7 @@ import {
   Card,
   Icon,
   Button,
+  Pressable,
   LoadingSpinner,
 } from '../../components';
 import * as NotificationService from '../../services/notification.service';
@@ -51,19 +53,13 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       setIsLoading(true);
       await checkPermissions();
       
-      // FIXED: Use correct service method
       const prefs = await StorageService.getUserPreferences();
       
       if (prefs) {
-        // FIXED: Map to correct properties from common.types.ts (NotificationPreferences)
         setRemindersEnabled(prefs.notifications?.reminderAlerts ?? true);
         setPatternsEnabled(prefs.notifications?.patternDiscoveries ?? true);
         setUpdatesEnabled(prefs.notifications?.projectUpdates ?? true);
-        
-        // FIXED: soundEnabled is in notifications, not display
         setSoundEnabled(prefs.notifications?.soundEnabled ?? true);
-        
-        // FIXED: hapticFeedbackEnabled is in display
         setHapticsEnabled(prefs.display?.hapticFeedbackEnabled ?? true);
       }
     } catch (error) {
@@ -89,7 +85,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
 
   /**
    * Save preference helper
-   * Handles deep merging safely since StorageService uses shallow merge
    */
   const savePreference = async (
     key: keyof NotificationPreferences | keyof DisplayPreferences, 
@@ -97,7 +92,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     section: 'notifications' | 'display'
   ) => {
     try {
-      // 1. Get current complete state to avoid overwriting siblings
       const currentPrefs = await StorageService.getUserPreferences();
       
       let updates: Partial<UserPreferences> = {};
@@ -118,7 +112,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
         };
       }
 
-      // 2. FIXED: Use correct service method 'updateUserPreferences'
       await StorageService.updateUserPreferences(updates);
       
     } catch (error) {
@@ -135,7 +128,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     return (
       <Screen>
         <Container center>
-          <LoadingSpinner text="Loading settings..." />
+          <LoadingSpinner text="Loading notification settings..." />
         </Container>
       </Screen>
     );
@@ -147,209 +140,329 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        <Button 
-            label="Back" 
-            variant="ghost" 
-            leftIcon="arrow-back" 
-            onPress={() => navigation.goBack()} 
-            style={styles.backButton}
-        />
-        <Text variant="h4" weight="600">Notifications</Text>
-        <View style={styles.placeholder} />
+        <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
+          <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text variant="h4" weight="600">Notifications</Text>
+          <Text variant="caption" color="tertiary">Manage your alerts</Text>
+        </View>
+        <View style={{ width: 40 }} />
       </View>
 
-      <Container padding="m">
-        {/* Permission Status Card */}
-        <Card style={styles.permissionCard}>
-          <View style={styles.permissionHeader}>
-            <View style={[
-              styles.iconCircle, 
-              { backgroundColor: isPermissionGranted ? `${Theme.colors.semantic.success}20` : `${Theme.colors.semantic.error}20` }
-            ]}>
-              <Icon 
-                name={isPermissionGranted ? "notifications" : "notifications-off"} 
-                size="md" 
-                color={isPermissionGranted ? Theme.colors.semantic.success : Theme.colors.semantic.error} 
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Container padding="m">
+          {/* Permission Status Card */}
+          <Card style={[
+            styles.permissionCard,
+            isPermissionGranted ? styles.permissionCardEnabled : styles.permissionCardDisabled
+          ]}>
+            <View style={styles.permissionHeader}>
+              <View style={[
+                styles.permissionIconContainer,
+                isPermissionGranted ? styles.permissionIconEnabled : styles.permissionIconDisabled
+              ]}>
+                <Icon 
+                  name={isPermissionGranted ? "notifications" : "notifications-off"} 
+                  size="lg" 
+                  color={isPermissionGranted ? Theme.colors.semantic.success : Theme.colors.semantic.error} 
+                />
+              </View>
+              <View style={styles.permissionInfo}>
+                <Text variant="h4">
+                  {isPermissionGranted ? 'Notifications Enabled' : 'Notifications Disabled'}
+                </Text>
+                <Text variant="caption" color="secondary" style={styles.permissionDescription}>
+                  {isPermissionGranted 
+                    ? 'VisionFlow can send you reminders and updates' 
+                    : 'Enable permissions in settings to receive alerts'}
+                </Text>
+              </View>
+            </View>
+            
+            {!isPermissionGranted && (
+              <Button
+                label="Open System Settings"
+                variant="primary"
+                size="medium"
+                leftIcon="settings"
+                onPress={openSystemSettings}
+                style={styles.settingsButton}
               />
+            )}
+          </Card>
+
+          {/* Alert Types Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="notifications-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Alert Types</Text>
             </View>
-            <View style={styles.permissionText}>
-              <Text variant="h4">
-                {isPermissionGranted ? 'Notifications Enabled' : 'Notifications Disabled'}
+            
+            <Card style={styles.optionsCard}>
+              {/* Reminders Toggle */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="alarm" size="sm" color={Theme.colors.primary[500]} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Reminders</Text>
+                    <Text variant="caption" color="secondary">Get notified for due tasks</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={remindersEnabled}
+                  onValueChange={(val) => {
+                    setRemindersEnabled(val);
+                    savePreference('reminderAlerts', val, 'notifications');
+                  }}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={remindersEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                  disabled={!isPermissionGranted}
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Patterns Toggle */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="analytics" size="sm" color={Theme.colors.semantic.info} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Pattern Insights</Text>
+                    <Text variant="caption" color="secondary">Weekly pattern discoveries</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={patternsEnabled}
+                  onValueChange={(val) => {
+                    setPatternsEnabled(val);
+                    savePreference('patternDiscoveries', val, 'notifications');
+                  }}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={patternsEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                  disabled={!isPermissionGranted}
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Updates Toggle */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="gift" size="sm" color={Theme.colors.semantic.warning} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Product Updates</Text>
+                    <Text variant="caption" color="secondary">News about new features</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={updatesEnabled}
+                  onValueChange={(val) => {
+                    setUpdatesEnabled(val);
+                    savePreference('projectUpdates', val, 'notifications');
+                  }}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={updatesEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                  disabled={!isPermissionGranted}
+                />
+              </View>
+            </Card>
+          </View>
+
+          {/* Preferences Section */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="options-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Experience</Text>
+            </View>
+
+            <Card style={styles.optionsCard}>
+              {/* Sound Toggle */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="volume-high" size="sm" color={Theme.colors.semantic.success} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">In-App Sound</Text>
+                    <Text variant="caption" color="secondary">Play sounds for actions</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={soundEnabled}
+                  onValueChange={(val) => {
+                    setSoundEnabled(val);
+                    savePreference('soundEnabled', val, 'notifications');
+                  }}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={soundEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
+              </View>
+
+              <View style={styles.divider} />
+
+              {/* Haptics Toggle */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="phone-portrait" size="sm" color={Theme.colors.semantic.info} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Haptic Feedback</Text>
+                    <Text variant="caption" color="secondary">Vibrate on interactions</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={hapticsEnabled}
+                  onValueChange={(val) => {
+                    setHapticsEnabled(val);
+                    savePreference('hapticFeedbackEnabled', val, 'display');
+                  }}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={hapticsEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
+              </View>
+            </Card>
+          </View>
+
+          {/* Info Card */}
+          <Card style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
+              <Text variant="caption" color="secondary" style={styles.infoText}>
+                Notification settings are saved instantly. System notification permissions can be changed in your device settings at any time.
               </Text>
-              <Text variant="caption" color="secondary">
-                {isPermissionGranted 
-                  ? 'VisionFlow can send you reminders and updates.' 
-                  : 'Enable permissions in settings to receive alerts.'}
-              </Text>
             </View>
-          </View>
-          
-          {!isPermissionGranted && (
-            <Button
-              label="Open System Settings"
-              variant="outline"
-              size="small"
-              onPress={openSystemSettings}
-              style={styles.settingsButton}
-            />
-          )}
-        </Card>
+          </Card>
 
-        <Text variant="h4" style={styles.sectionTitle}>Alert Types</Text>
-        
-        <Card style={styles.optionsCard}>
-          {/* Reminders Toggle - FIXED: key mapped to reminderAlerts */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text variant="body" weight="600">Reminders</Text>
-              <Text variant="caption" color="secondary">Get notified for due tasks</Text>
-            </View>
-            <Switch
-              value={remindersEnabled}
-              onValueChange={(val) => {
-                setRemindersEnabled(val);
-                savePreference('reminderAlerts', val, 'notifications');
-              }}
-              trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-              thumbColor={Theme.colors.text.primary}
-              disabled={!isPermissionGranted}
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Patterns Toggle - FIXED: key mapped to patternDiscoveries */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text variant="body" weight="600">Pattern Insights</Text>
-              <Text variant="caption" color="secondary">Weekly pattern discovery summaries</Text>
-            </View>
-            <Switch
-              value={patternsEnabled}
-              onValueChange={(val) => {
-                setPatternsEnabled(val);
-                savePreference('patternDiscoveries', val, 'notifications');
-              }}
-              trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-              thumbColor={Theme.colors.text.primary}
-              disabled={!isPermissionGranted}
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Updates Toggle - FIXED: key mapped to projectUpdates */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text variant="body" weight="600">Product Updates</Text>
-              <Text variant="caption" color="secondary">News about new features</Text>
-            </View>
-            <Switch
-              value={updatesEnabled}
-              onValueChange={(val) => {
-                setUpdatesEnabled(val);
-                savePreference('projectUpdates', val, 'notifications');
-              }}
-              trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-              thumbColor={Theme.colors.text.primary}
-              disabled={!isPermissionGranted}
-            />
-          </View>
-        </Card>
-
-        <Text variant="h4" style={styles.sectionTitle}>Preferences</Text>
-
-        <Card style={styles.optionsCard}>
-            {/* Sound Toggle - FIXED: section is 'notifications' */}
-            <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text variant="body" weight="600">In-App Sound</Text>
-              <Text variant="caption" color="secondary">Play sounds for actions</Text>
-            </View>
-            <Switch
-              value={soundEnabled}
-              onValueChange={(val) => {
-                setSoundEnabled(val);
-                savePreference('soundEnabled', val, 'notifications');
-              }}
-              trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-              thumbColor={Theme.colors.text.primary}
-            />
-          </View>
-
-          <View style={styles.divider} />
-
-          {/* Haptics Toggle - FIXED: section is 'display' */}
-          <View style={styles.optionRow}>
-            <View style={styles.optionInfo}>
-              <Text variant="body" weight="600">Haptic Feedback</Text>
-              <Text variant="caption" color="secondary">Vibrate on interactions</Text>
-            </View>
-            <Switch
-              value={hapticsEnabled}
-              onValueChange={(val) => {
-                setHapticsEnabled(val);
-                savePreference('hapticFeedbackEnabled', val, 'display');
-              }}
-              trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-              thumbColor={Theme.colors.text.primary}
-            />
-          </View>
-        </Card>
-
-      </Container>
+        </Container>
+      </ScrollView>
     </Screen>
   );
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
   },
-  backButton: {
-    paddingHorizontal: 0,
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
   },
-  placeholder: {
-    width: 48,
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
   },
+  
+  // Scroll styles
+  scrollContent: {
+    paddingBottom: 120,
+  },
+  
+  // Permission card styles
   permissionCard: {
     marginBottom: Theme.spacing.l,
-    gap: Theme.spacing.m,
+    borderWidth: 2,
+  },
+  permissionCardEnabled: {
+    backgroundColor: `${Theme.colors.semantic.success}10`,
+    borderColor: `${Theme.colors.semantic.success}30`,
+  },
+  permissionCardDisabled: {
+    backgroundColor: `${Theme.colors.semantic.error}10`,
+    borderColor: `${Theme.colors.semantic.error}30`,
   },
   permissionHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
   },
-  iconCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+  permissionIconContainer: {
+    width: 60,
+    height: 60,
+    borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 2,
   },
-  permissionText: {
+  permissionIconEnabled: {
+    backgroundColor: `${Theme.colors.semantic.success}20`,
+    borderColor: `${Theme.colors.semantic.success}40`,
+  },
+  permissionIconDisabled: {
+    backgroundColor: `${Theme.colors.semantic.error}20`,
+    borderColor: `${Theme.colors.semantic.error}40`,
+  },
+  permissionInfo: {
     flex: 1,
     gap: 4,
+  },
+  permissionDescription: {
+    lineHeight: 18,
   },
   settingsButton: {
     marginTop: Theme.spacing.s,
   },
-  sectionTitle: {
-    marginBottom: Theme.spacing.m,
-    marginLeft: Theme.spacing.xs,
+  
+  // Section styles
+  section: {
+    marginBottom: Theme.spacing.l,
   },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    marginBottom: Theme.spacing.m,
+  },
+  
+  // Options card styles
   optionsCard: {
     padding: 0,
     overflow: 'hidden',
-    marginBottom: Theme.spacing.l,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   optionRow: {
     flexDirection: 'row',
@@ -357,13 +470,46 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Theme.spacing.m,
   },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.m,
+    flex: 1,
+  },
+  optionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
+  },
   optionInfo: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
-    marginLeft: Theme.spacing.m,
+    marginLeft: Theme.spacing.m + 40 + Theme.spacing.m, // Left padding + icon + gap
+  },
+  
+  // Info card styles
+  infoCard: {
+    marginTop: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.semantic.info}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.info}30`,
+  },
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Theme.spacing.s,
+  },
+  infoText: {
+    flex: 1,
+    lineHeight: 18,
   },
 });

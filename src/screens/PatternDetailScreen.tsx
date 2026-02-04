@@ -1,11 +1,11 @@
 /**
- * VisionFlow AI - Pattern Detail Screen (FIXED)
+ * VisionFlow AI - Pattern Detail Screen (FIXED & POLISHED)
  * View and manage discovered AI patterns
- * @module screens/PatternDetailScreen
+ * * @module screens/PatternDetailScreen
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PatternStackParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
@@ -24,34 +24,28 @@ import { formatDate } from '../utils/dateUtils';
 
 type PatternDetailScreenProps = NativeStackScreenProps<PatternStackParamList, 'PatternDetail'>;
 
-/**
- * Helper to determine confidence color based on score (0.0 - 1.0)
- */
 const getConfidenceColor = (score: number): string => {
   if (score >= 0.8) return Theme.colors.semantic.success;
   if (score >= 0.5) return Theme.colors.semantic.warning;
   return Theme.colors.semantic.error;
 };
 
-/**
- * PatternDetailScreen Component
- */
 export function PatternDetailScreen({ navigation, route }: PatternDetailScreenProps) {
-  const { patternId } = route.params;
+  // FIXED: Defensive check for params to prevent crash
+  const { patternId } = route.params || {};
   const { getPatternById, deletePattern } = usePatterns();
   
-  // Initialize local state from hook data
   const [pattern, setPattern] = useState(getPatternById(patternId));
 
   useEffect(() => {
-    // Refresh pattern data if ID changes or on focus
     const unsubscribe = navigation.addListener('focus', () => {
+      if (patternId) {
         setPattern(getPatternById(patternId));
+      }
     });
     return unsubscribe;
   }, [navigation, patternId, getPatternById]);
 
-  // Handle "Not Found" state (e.g., deep linking to deleted item)
   if (!pattern) {
     return (
       <Screen>
@@ -64,7 +58,6 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
     );
   }
 
-  // FIXED: Handle optional confidence safely
   const safeConfidence = pattern.confidence ?? 0;
   const confidenceColor = getConfidenceColor(safeConfidence);
   const confidencePercentage = Math.round(safeConfidence * 100);
@@ -96,18 +89,20 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        {/* FIXED: haptic prop must be a string enum, not boolean */}
         <Pressable onPress={() => navigation.goBack()} haptic="light">
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <Text variant="h4" weight="600">Pattern Details</Text>
-        {/* FIXED: haptic prop must be a string enum */}
         <Pressable onPress={handleDelete} haptic="medium">
           <Icon name="trash-outline" size="md" color={Theme.colors.semantic.error} />
         </Pressable>
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        // FIXED: Massive bottom padding to clear the Tab Bar + Safe Area
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Container padding="m">
           {/* Visual Header */}
           <View style={styles.iconContainer}>
@@ -118,7 +113,6 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
           {/* Title & Type */}
           <Text variant="h2" style={styles.title}>{pattern.name}</Text>
-          {/* FIXED: Replaced non-existent Theme.colors.secondary with primary */}
           <View style={[styles.typeBadge, { backgroundColor: `${Theme.colors.primary[500]}20` }]}>
             <Text variant="body" weight="600" customColor={Theme.colors.primary[500]}>
               {pattern.type.toUpperCase().replace('_', ' ')}
@@ -143,6 +137,37 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </View>
           </Card>
 
+          {/* Description / Notes (RESTORED) */}
+          {pattern.userNotes && (
+            <Card style={styles.card}>
+               <View style={styles.cardHeader}>
+                  <Icon name="document-text-outline" size="md" color={Theme.colors.primary[500]} />
+                  <Text variant="h4">Notes</Text>
+              </View>
+              <Text variant="body">{pattern.userNotes}</Text>
+            </Card>
+          )}
+
+          {/* Saved Points Section (RESTORED & VISIBLE) */}
+          {pattern.anchors && pattern.anchors.length > 0 && (
+             <Card style={styles.card}>
+                <View style={styles.cardHeader}>
+                   <Icon name="scan-outline" size="md" color={Theme.colors.semantic.info} />
+                   <Text variant="h4">Saved Points</Text>
+               </View>
+               <View style={styles.contextGrid}>
+                 {pattern.anchors.map((anchor, index) => (
+                   <View key={index} style={styles.contextItem}>
+                     <Text variant="caption" color="secondary">Point {index + 1}</Text>
+                     <Text variant="body" weight="600">
+                       X: {Math.round(anchor.x)}, Y: {Math.round(anchor.y)}
+                     </Text>
+                   </View>
+                 ))}
+               </View>
+             </Card>
+          )}
+
           {/* Metadata Card */}
           <Card style={styles.card}>
             <View style={styles.detailRow}>
@@ -157,13 +182,6 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
               <Text variant="body" color="secondary">Last Updated:</Text>
               <Text variant="body" weight="600">
                 {formatDate(new Date(pattern.updatedAt))}
-              </Text>
-            </View>
-            <View style={styles.detailRow}>
-              <Icon name="heart-outline" size="sm" color={Theme.colors.text.secondary} />
-              <Text variant="body" color="secondary">Favorite:</Text>
-              <Text variant="body" weight="600">
-                {pattern.isFavorite ? 'Yes' : 'No'}
               </Text>
             </View>
           </Card>
@@ -184,9 +202,11 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
   },
-  content: {
-    paddingBottom: Theme.spacing.xl,
+  // FIXED: Increased padding to clear bottom tabs
+  scrollContent: {
+    paddingBottom: 120, 
   },
   centered: {
     flex: 1,
@@ -244,6 +264,17 @@ const styles = StyleSheet.create({
   confidenceBarFill: {
     height: '100%',
     borderRadius: Theme.borderRadius.full,
+  },
+  contextGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: Theme.spacing.s,
+  },
+  contextItem: {
+    backgroundColor: Theme.colors.background.tertiary,
+    padding: Theme.spacing.s,
+    borderRadius: Theme.borderRadius.s,
+    width: '47%',
   },
   detailRow: {
     flexDirection: 'row',

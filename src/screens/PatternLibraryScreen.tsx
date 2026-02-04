@@ -1,12 +1,11 @@
 /**
- * VisionFlow AI - Pattern Library Screen (100% ERROR-FREE)
+ * VisionFlow AI - Pattern Library Screen (FIXED)
  * Browse and manage all discovered patterns
- * 
- * @module screens/PatternLibraryScreen
+ * * @module screens/PatternLibraryScreen
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import { View, StyleSheet, FlatList, RefreshControl, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PatternStackParamList } from '../types/navigation.types';
 import { PatternType } from '../types/pattern.types';
@@ -28,7 +27,9 @@ import * as Haptics from 'expo-haptics';
 type PatternLibraryScreenProps = NativeStackScreenProps<PatternStackParamList, 'PatternLibrary'>;
 
 export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreenProps) {
-  const { filterType } = route.params;
+  // FIXED: Handle undefined params safely to prevent crash
+  const { filterType } = route.params || {};
+  
   const {
     filteredPatterns,
     isLoading,
@@ -117,6 +118,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             handleToggleFavorite(item.id);
           }}
           style={styles.favoriteButton}
+          hitSlop={8}
         >
           <Icon
             name={item.isFavorite ? 'heart' : 'heart-outline'}
@@ -163,7 +165,6 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           </View>
         </View>
 
-        {/* FIXED: Use ternary operator with empty object instead of && */}
         <View style={styles.typeFilter}>
           <Pressable
             onPress={() => handleTypeFilter('all')}
@@ -185,7 +186,6 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             </Text>
           </Pressable>
 
-          {/* FIXED: Use correct PatternType enum values */}
           {[
             PatternType.FIBONACCI,
             PatternType.GEOMETRIC,
@@ -233,6 +233,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           data={filteredPatterns}
           renderItem={renderPattern}
           keyExtractor={(item) => item.id}
+          // FIXED: Increased bottom padding to ensure visibility above tab bar
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -253,6 +254,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
   },
   headerTop: {
     flexDirection: 'row',
@@ -265,6 +267,8 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     marginBottom: Theme.spacing.m,
     paddingVertical: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
   },
   statItem: {
     alignItems: 'center',
@@ -273,6 +277,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: Theme.spacing.s,
     flexWrap: 'wrap',
+    paddingBottom: Theme.spacing.xs,
   },
   typeChip: {
     paddingHorizontal: Theme.spacing.m,
@@ -294,6 +299,7 @@ const styles = StyleSheet.create({
   listContent: {
     padding: Theme.spacing.m,
     gap: Theme.spacing.s,
+    paddingBottom: 120, // FIXED: Ensure content is visible above bottom tab bar
   },
   patternCard: {
     marginBottom: Theme.spacing.s,

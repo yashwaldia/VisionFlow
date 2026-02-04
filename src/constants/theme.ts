@@ -1,49 +1,73 @@
 /**
- * VisionFlow AI - Design System
- * Complete theme configuration following 2026 standards
+ * VisionFlow AI - Design System (v2.1 - Harmonized Edition)
+ * Cyberpunk/Tactical interface configuration with enforced consistency
  * 
  * @module constants/theme
  * @see Product Requirements: Section 1.3 - UI/UX Design System
+ * 
+ * CHANGELOG v2.1:
+ * - Added explicit typography variants for screen consistency
+ * - Added safe area spacing helpers
+ * - Clarified font weight usage (removed 'heavy', standardized to '700')
+ * - Added component spacing guidelines
  */
+
 
 /**
  * Color Palette
- * Following Material You 3.0 and iOS 18 design principles
+ * Aesthetic: "Hidden-Sight" // Cyberpunk // Tactical HUD
  */
 export const Colors = {
-  // Primary Brand Colors
+  // Primary: Electric Blue (The Scanner Eye)
   primary: {
-    50: '#EEF2FF',
-    100: '#E0E7FF',
-    200: '#C7D2FE',
-    300: '#A5B4FC',
-    400: '#818CF8',
-    500: '#6366F1', // Main brand color
-    600: '#4F46E5',
-    700: '#4338CA',
-    800: '#3730A3',
-    900: '#312E81',
-    950: '#1E1B4B',
+    50: '#f0f9ff',
+    100: '#e0f2fe',
+    200: '#bae6fd',
+    300: '#7dd3fc',
+    400: '#38bdf8',
+    500: '#3b82f6', // CORE BRAND COLOR (Electric Blue)
+    600: '#2563eb',
+    700: '#1d4ed8',
+    800: '#1e40af',
+    900: '#1e3a8a',
+    950: '#172554',
   },
 
-  // Dark Background System
+  // Secondary: Neural Amber (Data/Processing)
+  secondary: {
+    50: '#fffbeb',
+    100: '#fef3c7',
+    200: '#fde68a',
+    300: '#fcd34d',
+    400: '#fbbf24',
+    500: '#f59e0b', // Amber Glow
+    600: '#d97706',
+    700: '#b45309',
+    800: '#92400e',
+    900: '#78350f',
+    950: '#451a03',
+  },
+
+  // Dark Background System (OLED Optimized)
   background: {
-    primary: '#0A0A0F', // Main background
-    secondary: '#1A1A24', // Elevated surfaces (cards)
-    tertiary: '#2A2A38', // Higher elevation
-    overlay: 'rgba(0, 0, 0, 0.6)', // Modal backdrop
+    primary: '#020203',   // Deepest Void (Main)
+    secondary: '#08080A', // Card Surface
+    tertiary: '#121216',  // Elevated Surface
+    overlay: 'rgba(2, 2, 3, 0.85)', // Modal Backdrop
+    scanline: 'rgba(59, 130, 246, 0.03)', // Subtle grid texture
   },
 
-  // Text Colors
+  // Text Colors (High Contrast Data)
   text: {
-    primary: '#FFFFFF', // 100% opacity
-    secondary: '#E5E5EA', // 70% opacity
-    tertiary: '#8B8B9A', // 50% opacity
-    disabled: '#3C3C43', // 30% opacity
-    inverse: '#0A0A0F', // For light backgrounds
+    primary: '#F3F4F6',   // 100% (Crisp White/Grey)
+    secondary: '#9CA3AF', // 70% (Muted Blue-Grey)
+    tertiary: '#6B7280',  // 50% (Dimmed Data)
+    disabled: '#374151',  // 30%
+    inverse: '#020203',   // For light backgrounds
+    accent: '#3b82f6',    // Highlighted Data
   },
 
-  // Category-Specific Colors (12 categories)
+  // Category-Specific Colors (Retained & Tuned for Dark Mode)
   category: {
     money: {
       light: '#10B981',
@@ -119,57 +143,70 @@ export const Colors = {
     },
   },
 
-  // Pattern Type Colors
+  // Pattern Type Colors (Neon/Cyberpunk)
   pattern: {
-    fibonacci: '#FACC15',
-    channel: '#3B82F6',
-    pitchfork: '#10B981',
-    geometric: '#A855F7',
-    wave: '#06B6D4',
-    symmetry: '#6366F1',
-    sacredGeometry: '#F472B6',
-    custom: '#EF4444',
+    fibonacci: '#FACC15', // Yellow
+    channel: '#3B82F6',   // Blue
+    pitchfork: '#10B981', // Green
+    geometric: '#A855F7', // Purple
+    wave: '#06B6D4',      // Cyan
+    symmetry: '#6366F1',  // Indigo
+    sacredGeometry: '#F472B6', // Pink
+    custom: '#EF4444',    // Red
   },
 
   // Semantic Colors
   semantic: {
     success: '#10B981',
     error: '#EF4444',
-    warning: '#EAB308',
+    warning: '#F59E0B',
     info: '#3B82F6',
   },
 
   // UI State Colors
   state: {
-    active: '#6366F1',
-    inactive: '#64748B',
-    hover: 'rgba(255, 255, 255, 0.1)',
-    pressed: 'rgba(255, 255, 255, 0.05)',
-    focus: 'rgba(99, 102, 241, 0.3)',
+    active: '#3B82F6',
+    inactive: '#6B7280',
+    hover: 'rgba(255, 255, 255, 0.08)',
+    pressed: 'rgba(59, 130, 246, 0.15)',
+    focus: 'rgba(59, 130, 246, 0.3)',
     disabled: 'rgba(255, 255, 255, 0.1)',
   },
 
-  // Border Colors
+  // Border Colors (Thin, Precise Lines)
   border: {
-    default: 'rgba(255, 255, 255, 0.1)',
-    light: 'rgba(255, 255, 255, 0.05)',
-    medium: 'rgba(255, 255, 255, 0.15)',
-    strong: 'rgba(255, 255, 255, 0.3)',
+    default: 'rgba(255, 255, 255, 0.08)',
+    light: 'rgba(255, 255, 255, 0.04)',
+    medium: 'rgba(255, 255, 255, 0.12)',
+    strong: 'rgba(255, 255, 255, 0.25)',
+    active: 'rgba(59, 130, 246, 0.5)',
+    glow: 'rgba(59, 130, 246, 0.3)',
   },
 } as const;
+
 
 /**
  * Typography System
  * SF Pro Display / Roboto with consistent hierarchy
+ * 
+ * USAGE GUIDELINES:
+ * - h1: Large feature titles (Home screen "VisionFlow AI")
+ * - h2: Screen titles (RemindersScreen, PatternsScreen, etc.)
+ * - h3: Section headers within screens
+ * - h4: Subsection headers, card titles
+ * - bodyLarge: Important body text, list items
+ * - body: Default text, descriptions
+ * - caption: Secondary info, metadata
+ * - micro: Tiny labels, badges, status indicators
  */
 export const Typography = {
   // Font Families
   fontFamily: {
-    primary: 'System', // Uses platform default (SF Pro / Roboto)
-    mono: 'monospace', // For timestamps and code
+    primary: 'System',
+    mono: 'monospace', // For timestamps, data, HUD labels
   },
 
-  // Font Sizes
+  // Raw Font Sizes (use variants below instead)
   fontSize: {
     micro: 10,
     caption: 12,
@@ -182,15 +219,15 @@ export const Typography = {
     display: 40,
   },
 
-  // Font Weights
+  // Font Weights (STANDARDIZED - removed 'heavy')
   fontWeight: {
     regular: '400' as const,
     medium: '500' as const,
     semibold: '600' as const,
-    bold: '700' as const,
+    bold: '700' as const, // Use this for all headers
   },
 
-  // Line Heights (1.5x font size for readability)
+  // Raw Line Heights
   lineHeight: {
     micro: 15,
     caption: 18,
@@ -208,14 +245,85 @@ export const Typography = {
     tight: -0.5,
     normal: 0,
     wide: 0.5,
+    widest: 1.5, // For "VISIONFLOW" headers
+  },
+
+  /**
+   * 🆕 TYPOGRAPHY VARIANTS (Use these in Text component)
+   * Each variant combines fontSize, lineHeight, and fontWeight
+   */
+  variants: {
+    // Display (Hero text - rare use)
+    display: {
+      fontSize: 40,
+      lineHeight: 60,
+      fontWeight: '700' as const,
+      letterSpacing: 1.5,
+    },
+
+    // Headings
+    h1: {
+      fontSize: 32,
+      lineHeight: 48,
+      fontWeight: '700' as const,
+      letterSpacing: 0,
+    },
+    h2: {
+      fontSize: 24,
+      lineHeight: 36,
+      fontWeight: '700' as const,
+      letterSpacing: 0,
+    },
+    h3: {
+      fontSize: 20,
+      lineHeight: 30,
+      fontWeight: '600' as const,
+      letterSpacing: 0,
+    },
+    h4: {
+      fontSize: 18,
+      lineHeight: 27,
+      fontWeight: '600' as const,
+      letterSpacing: 0,
+    },
+
+    // Body Text
+    bodyLarge: {
+      fontSize: 16,
+      lineHeight: 24,
+      fontWeight: '400' as const,
+      letterSpacing: 0,
+    },
+    body: {
+      fontSize: 14,
+      lineHeight: 21,
+      fontWeight: '400' as const,
+      letterSpacing: 0,
+    },
+
+    // Small Text
+    caption: {
+      fontSize: 12,
+      lineHeight: 18,
+      fontWeight: '400' as const,
+      letterSpacing: 0,
+    },
+    micro: {
+      fontSize: 10,
+      lineHeight: 15,
+      fontWeight: '600' as const, // Bold for visibility
+      letterSpacing: 0.5,
+    },
   },
 } as const;
 
+
 /**
  * Spacing System
- * 8pt base unit grid
+ * 4px Base Grid
  */
 export const Spacing = {
+  none: 0,
   xxs: 4,
   xs: 8,
   s: 12,
@@ -233,10 +341,21 @@ export const Spacing = {
   cardPadding: 16,
   sectionGap: 24,
   itemGap: 12,
+
+  /**
+   * 🆕 SAFE AREA HELPERS
+   * Use these for consistent bottom spacing above tab bar
+   */
+  safeArea: {
+    bottomTabBar: 64,        // Tab bar height
+    bottomPadding: 80,       // Tab bar + 16px spacing
+    bottomPaddingLarge: 96,  // For lists with FABs
+  },
 } as const;
 
+
 /**
- * Border Radius System
+ * Border Radius System (Squircle / Tech)
  */
 export const BorderRadius = {
   xs: 4,
@@ -245,12 +364,13 @@ export const BorderRadius = {
   l: 16,
   xl: 20,
   xxl: 24,
-  full: 9999, // Pill shape
+  full: 9999,
 } as const;
+
 
 /**
  * Shadow System
- * Depth layers for elevation
+ * Updated with Glow effects for HUD
  */
 export const Shadows = {
   none: {
@@ -263,32 +383,41 @@ export const Shadows = {
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.2,
     shadowRadius: 2,
     elevation: 1,
   },
   md: {
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.1,
-    shadowRadius: 4,
-    elevation: 2,
-  },
-  lg: {
-    shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
-  xl: {
+  lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.4,
     shadowRadius: 16,
     elevation: 8,
   },
+  xl: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 12 },
+    shadowOpacity: 0.5,
+    shadowRadius: 24,
+    elevation: 12,
+  },
+  // HUD Glow
+  glow: {
+    shadowColor: Colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 5,
+  },
 } as const;
+
 
 /**
  * Animation Durations (milliseconds)
@@ -300,6 +429,7 @@ export const AnimationDuration = {
   slow: 500,
   verySlow: 800,
 } as const;
+
 
 /**
  * Animation Easing Functions
@@ -315,44 +445,32 @@ export const AnimationEasing = {
   },
 } as const;
 
+
 /**
  * Component-Specific Dimensions
  */
 export const Dimensions = {
-  // Touchable minimum (iOS HIG / Material)
   touchableMin: 44,
-
-  // Button heights
   button: {
-    small: 36,
+    small: 32,
     medium: 44,
     large: 52,
   },
-
-  // Input heights
   input: {
     default: 48,
     large: 56,
   },
-
-  // Bottom tab bar
   tabBar: {
-    height: 60,
+    height: 64,
     iconSize: 24,
   },
-
-  // Header
   header: {
     height: 56,
   },
-
-  // FAB (Floating Action Button)
   fab: {
     size: 56,
     iconSize: 24,
   },
-
-  // Avatar sizes
   avatar: {
     xs: 24,
     sm: 32,
@@ -360,8 +478,6 @@ export const Dimensions = {
     lg: 56,
     xl: 80,
   },
-
-  // Icon sizes
   icon: {
     xs: 16,
     sm: 20,
@@ -370,6 +486,7 @@ export const Dimensions = {
     xl: 48,
   },
 } as const;
+
 
 /**
  * Z-Index Layering
@@ -386,24 +503,81 @@ export const ZIndex = {
   toast: 1700,
 } as const;
 
+
 /**
  * Opacity Values
  */
 export const Opacity = {
-  disabled: 0.3,
-  secondary: 0.5,
-  tertiary: 0.7,
+  disabled: 0.4,
+  secondary: 0.6,
+  tertiary: 0.8,
   full: 1.0,
 } as const;
+
 
 /**
  * Glassmorphism Effect
  */
 export const Glassmorphism = {
   blur: 20,
-  tint: 'rgba(255, 255, 255, 0.1)',
-  borderColor: 'rgba(255, 255, 255, 0.2)',
+  tint: 'rgba(10, 10, 15, 0.6)',
+  borderColor: 'rgba(255, 255, 255, 0.08)',
+  borderWidth: 1,
 } as const;
+
+
+/**
+ * 🆕 COMPONENT STYLE PRESETS
+ * Reusable style objects for common components
+ */
+export const ComponentStyles = {
+  /**
+   * Filter Chips (for Reminders, Patterns, Projects screens)
+   * USE THIS EVERYWHERE for consistency
+   */
+  filterChip: {
+    base: {
+      paddingHorizontal: Spacing.m,
+      paddingVertical: Spacing.xs,
+      borderRadius: BorderRadius.full, // Always full for pill shape
+      backgroundColor: Colors.background.tertiary,
+      borderWidth: 1,
+      borderColor: Colors.border.medium,
+    },
+    active: {
+      backgroundColor: `${Colors.primary[500]}20`, // 20% opacity
+      borderColor: Colors.primary[500],
+    },
+  },
+
+  /**
+   * Card Styles
+   */
+  card: {
+    base: {
+      backgroundColor: Colors.background.secondary,
+      borderRadius: BorderRadius.m,
+      padding: Spacing.cardPadding,
+      borderWidth: 1,
+      borderColor: Colors.border.default,
+    },
+    elevated: {
+      ...Shadows.md,
+    },
+  },
+
+  /**
+   * Screen Header
+   */
+  screenHeader: {
+    paddingHorizontal: Spacing.screenPadding.horizontal,
+    paddingVertical: Spacing.m,
+    borderBottomWidth: 1,
+    borderBottomColor: Colors.border.light,
+    backgroundColor: Colors.background.secondary,
+  },
+} as const;
+
 
 /**
  * Complete Theme Object
@@ -422,6 +596,14 @@ export const Theme = {
   zIndex: ZIndex,
   opacity: Opacity,
   glassmorphism: Glassmorphism,
+  componentStyles: ComponentStyles, // 🆕 NEW
+  
+  // HUD-specific configs
+  hud: {
+    scanlineOpacity: 0.05,
+    activeBorderWidth: 1,
+  },
 } as const;
+
 
 export type ThemeType = typeof Theme;

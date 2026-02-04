@@ -1,4 +1,27 @@
 .
+├── android
+│   ├── app
+│   │   ├── build.gradle
+│   │   ├── debug.keystore
+│   │   ├── proguard-rules.pro
+│   │   └── src
+│   │       ├── debug
+│   │       │   └── AndroidManifest.xml
+│   │       ├── debugOptimized
+│   │       │   └── AndroidManifest.xml
+│   │       └── main
+│   │           ├── AndroidManifest.xml
+│   │           ├── java
+│   │           └── res
+│   ├── build.gradle
+│   ├── gradle
+│   │   └── wrapper
+│   │       ├── gradle-wrapper.jar
+│   │       └── gradle-wrapper.properties
+│   ├── gradle.properties
+│   ├── gradlew
+│   ├── gradlew.bat
+│   └── settings.gradle
 ├── app.json
 ├── App.tsx
 ├── assets
@@ -61,6 +84,7 @@
 │   │   ├── modals
 │   │   │   ├── AIReviewModal.tsx
 │   │   │   └── CameraModal.tsx
+│   │   ├── PatternDetailScreen.tsx
 │   │   ├── PatternLibraryScreen.tsx
 │   │   ├── PatternsScreen.tsx
 │   │   ├── ProjectAnalyticsScreen.tsx
@@ -70,6 +94,11 @@
 │   │   ├── ReminderDetailScreen.tsx
 │   │   ├── ReminderListScreen.tsx
 │   │   ├── RemindersScreen.tsx
+│   │   ├── settings
+│   │   │   ├── AboutScreen.tsx
+│   │   │   ├── DataManagementScreen.tsx
+│   │   │   ├── NotificationSettingsScreen.tsx
+│   │   │   └── ThemeSettingsScreen.tsx
 │   │   └── SettingsScreen.tsx
 │   ├── services
 │   │   ├── gemini.service.ts
@@ -89,4 +118,4 @@
 │       └── validators.ts
 └── tsconfig.json
 
-16 directories, 74 files
+27 directories, 92 files

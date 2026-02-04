@@ -1,5 +1,5 @@
 /**
- * VisionFlow AI - Camera Modal (CORRECTED)
+ * VisionFlow AI - Camera Modal (Professional v2.0)
  * Full-screen camera capture interface
  * 
  * @module screens/modals/CameraModal
@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
-import { CameraView, useCameraPermissions, CameraType } from 'expo-camera';
+import { CameraView, useCameraPermissions } from 'expo-camera';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { RootStackParamList } from '../../types/navigation.types';
@@ -27,14 +27,6 @@ type CameraModalProps = NativeStackScreenProps<RootStackParamList, 'CameraModal'
 
 /**
  * CameraModal Component
- * 
- * Features:
- * - Full-screen camera view
- * - Flash toggle
- * - Front/back camera switch
- * - Gallery picker
- * - Capture with animation
- * - Permission handling
  */
 export function CameraModal({ navigation, route }: CameraModalProps) {
   const cameraRef = useRef<CameraView>(null);
@@ -42,8 +34,8 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
 
   // State
   const [permission, requestPermission] = useCameraPermissions();
-  const [cameraFacing, setCameraFacing] = useState<'back' | 'front'>('back'); // Use string literals
-  const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off'); // Use string literals
+  const [cameraFacing, setCameraFacing] = useState<'back' | 'front'>('back');
+  const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off');
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
@@ -72,12 +64,9 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     if (!cameraRef.current || isCapturing || isProcessing) return;
 
     try {
-      // Haptic feedback
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      
       setIsCapturing(true);
 
-      // Capture photo
       const photo = await cameraRef.current.takePictureAsync({
         quality: 0.8,
       });
@@ -86,15 +75,13 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
         throw new Error('Failed to capture photo');
       }
 
-      // Process image - compress using ImageManipulator
       setIsProcessing(true);
       const processed = await ImageManipulator.manipulateAsync(
         photo.uri,
-        [{ resize: { width: 1920, height: 1920 } }],
+        [{ resize: { width: 1920 } }],
         { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
       );
 
-      // Navigate to AI Review with processed URI
       navigation.replace('AIReviewModal', {
         imageUri: processed.uri,
         analysisType: mode as 'reminder' | 'pattern',
@@ -115,7 +102,6 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
    */
   const handlePickFromGallery = async () => {
     try {
-      // Request media library permissions
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
       
       if (status !== 'granted') {
@@ -127,7 +113,6 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
         return;
       }
 
-      // Launch image picker
       const result = await ImagePicker.launchImageLibraryAsync({
         mediaTypes: ImagePicker.MediaTypeOptions.Images,
         allowsEditing: true,
@@ -138,14 +123,12 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
       if (!result.canceled && result.assets[0]) {
         setIsProcessing(true);
         
-        // Process image - compress
         const processed = await ImageManipulator.manipulateAsync(
           result.assets[0].uri,
-          [{ resize: { width: 1920, height: 1920 } }],
+          [{ resize: { width: 1920 } }],
           { compress: 0.85, format: ImageManipulator.SaveFormat.JPEG }
         );
 
-        // Navigate to AI Review
         navigation.replace('AIReviewModal', {
           imageUri: processed.uri,
           analysisType: mode as 'reminder' | 'pattern',
@@ -164,19 +147,15 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
    */
   const toggleFlash = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setFlashMode((current: 'off' | 'on' | 'auto') => 
-      current === 'off' ? 'on' : 'off'
-    );
+    setFlashMode((current) => current === 'off' ? 'on' : 'off');
   };
 
   /**
-   * Toggle camera type
+   * Toggle camera facing
    */
   const toggleCameraFacing = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setCameraFacing((current: 'back' | 'front') =>
-      current === 'back' ? 'front' : 'back'
-    );
+    setCameraFacing((current) => current === 'back' ? 'front' : 'back');
   };
 
   /**
@@ -191,8 +170,14 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
   if (!permission) {
     return (
       <View style={styles.loadingContainer}>
+        <View style={styles.loadingIconContainer}>
+          <Icon name="camera" size="xl" color={Theme.colors.primary[500]} />
+        </View>
         <LoadingSpinner size="large" />
-        <Text variant="body" color="secondary" style={styles.loadingText}>
+        <Text variant="h3" style={styles.loadingTitle}>
+          Initializing Camera
+        </Text>
+        <Text variant="body" color="secondary" align="center" style={styles.loadingText}>
           Requesting camera access...
         </Text>
       </View>
@@ -203,13 +188,24 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
   if (!permission.granted) {
     return (
       <View style={styles.permissionContainer}>
-        <Icon name="camera-outline" size="xl" color={Theme.colors.text.tertiary} />
-        <Text variant="h3" style={styles.permissionTitle}>
+        <View style={styles.permissionIconContainer}>
+        <Icon name="ban" size="xl" color={Theme.colors.semantic.error} />
+        </View>
+        <Text variant="h2" style={styles.permissionTitle}>
           Camera Access Required
         </Text>
         <Text variant="body" color="secondary" align="center" style={styles.permissionText}>
-          VisionFlow needs camera access to capture reminders and discover patterns.
+          VisionFlow needs camera access to capture reminders and discover patterns from your photos.
         </Text>
+        <Pressable 
+          onPress={requestPermission}
+          style={styles.permissionButton}
+        >
+          <Icon name="camera" size="sm" color={Theme.colors.background.primary} />
+          <Text variant="body" weight="600" customColor={Theme.colors.background.primary}>
+            Grant Camera Access
+          </Text>
+        </Pressable>
       </View>
     );
   }
@@ -218,13 +214,22 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
   if (isProcessing) {
     return (
       <View style={styles.processingContainer}>
-        <LoadingSpinner size="large" />
-        <Text variant="h3" style={styles.processingText}>
-          Processing image...
-        </Text>
+        <View style={styles.processingContent}>
+          <LoadingSpinner size="large" />
+          <Text variant="h2" style={styles.processingTitle}>
+            Processing Image
+          </Text>
+          <Text variant="body" color="secondary" align="center">
+            Optimizing and preparing for AI analysis...
+          </Text>
+        </View>
       </View>
     );
   }
+
+  const modeConfig = mode === 'reminder' 
+    ? { icon: 'notifications', label: 'Reminder Mode', color: Theme.colors.primary[500] }
+    : { icon: 'sparkles', label: 'Pattern Mode', color: Theme.colors.semantic.warning };
 
   return (
     <View style={styles.container}>
@@ -238,52 +243,71 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
         {/* Top Bar */}
         <View style={styles.topBar}>
           {/* Close Button */}
-          <Pressable
-            onPress={handleClose}
-            style={styles.topButton}
-          >
-            <Icon name="close" size="md" color={Theme.colors.text.primary} />
+          <Pressable onPress={handleClose} style={styles.topButton}>
+            <View style={styles.buttonInner}>
+              <Icon name="close" size="md" color={Theme.colors.text.primary} />
+            </View>
           </Pressable>
 
           {/* Mode Indicator */}
           <View style={styles.modeIndicator}>
-            <Icon 
-              name={mode === 'reminder' ? 'notifications' : 'sparkles'} 
-              size="sm" 
-              color={Theme.colors.text.primary} 
-            />
-            <Text variant="caption" weight="600" style={styles.modeText}>
-              {mode === 'reminder' ? 'Reminder Mode' : 'Pattern Mode'}
+            <View style={[styles.modeIconContainer, { backgroundColor: `${modeConfig.color}30` }]}>
+              <Icon name={modeConfig.icon as any} size="sm" color={modeConfig.color} />
+            </View>
+            <Text variant="caption" weight="700" style={styles.modeText}>
+              {modeConfig.label.toUpperCase()}
             </Text>
           </View>
 
           {/* Flash Toggle */}
-          <Pressable
-            onPress={toggleFlash}
-            style={styles.topButton}
-          >
-            <Icon 
-              name={flashMode === 'on' ? 'flash' : 'flash-off'} 
-              size="md" 
-              color={flashMode === 'on' ? Theme.colors.primary[500] : Theme.colors.text.primary}
-            />
+          <Pressable onPress={toggleFlash} style={styles.topButton}>
+            <View style={[
+              styles.buttonInner,
+              flashMode === 'on' && styles.buttonInnerActive
+            ]}>
+              <Icon 
+                name={flashMode === 'on' ? 'flash' : 'flash-off'} 
+                size="md" 
+                color={flashMode === 'on' ? Theme.colors.primary[500] : Theme.colors.text.primary}
+              />
+            </View>
           </Pressable>
         </View>
 
-        {/* Grid Overlay */}
-        <View style={styles.gridOverlay}>
-          <View style={styles.gridLine} />
-          <View style={[styles.gridLine, styles.gridLineVertical]} />
+        {/* Grid Overlay (Rule of Thirds) */}
+        <View style={styles.gridOverlay} pointerEvents="none">
+          <View style={styles.gridRow}>
+            <View style={styles.gridCell} />
+            <View style={[styles.gridCell, styles.gridCellBorder]} />
+            <View style={styles.gridCell} />
+          </View>
+          <View style={[styles.gridRow, styles.gridRowBorder]}>
+            <View style={styles.gridCell} />
+            <View style={[styles.gridCell, styles.gridCellBorder]} />
+            <View style={styles.gridCell} />
+          </View>
+          <View style={styles.gridRow}>
+            <View style={styles.gridCell} />
+            <View style={[styles.gridCell, styles.gridCellBorder]} />
+            <View style={styles.gridCell} />
+          </View>
+        </View>
+
+        {/* Center Focus Frame */}
+        <View style={styles.focusFrame} pointerEvents="none">
+          <View style={[styles.focusCorner, styles.focusCornerTL]} />
+          <View style={[styles.focusCorner, styles.focusCornerTR]} />
+          <View style={[styles.focusCorner, styles.focusCornerBL]} />
+          <View style={[styles.focusCorner, styles.focusCornerBR]} />
         </View>
 
         {/* Bottom Controls */}
         <View style={styles.bottomBar}>
           {/* Gallery Button */}
-          <Pressable
-            onPress={handlePickFromGallery}
-            style={styles.bottomButton}
-          >
-            <Icon name="images-outline" size="md" color={Theme.colors.text.primary} />
+          <Pressable onPress={handlePickFromGallery} style={styles.sideButton}>
+            <View style={styles.buttonInner}>
+              <Icon name="images" size="md" color={Theme.colors.text.primary} />
+            </View>
           </Pressable>
 
           {/* Capture Button */}
@@ -295,32 +319,41 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
               isCapturing && styles.captureButtonActive,
             ]}
           >
-            <View style={styles.captureButtonInner}>
+            <View style={[
+              styles.captureButtonInner,
+              { backgroundColor: modeConfig.color }
+            ]}>
               {isCapturing ? (
-                <ActivityIndicator size="large" color={Theme.colors.text.primary} />
+                <ActivityIndicator size="large" color={Theme.colors.background.primary} />
               ) : (
-                <View style={styles.captureButtonRing} />
+                <Icon name="camera" size="lg" color={Theme.colors.background.primary} />
               )}
             </View>
           </Pressable>
 
           {/* Flip Camera Button */}
-          <Pressable
-            onPress={toggleCameraFacing}
-            style={styles.bottomButton}
-          >
-            <Icon name="camera-reverse-outline" size="md" color={Theme.colors.text.primary} />
+          <Pressable onPress={toggleCameraFacing} style={styles.sideButton}>
+            <View style={styles.buttonInner}>
+              <Icon name="camera-reverse" size="md" color={Theme.colors.text.primary} />
+            </View>
           </Pressable>
         </View>
 
         {/* Capture Hint */}
         {!isCapturing && (
           <View style={styles.hintContainer}>
-            <Text variant="caption" color="secondary" align="center">
-              {mode === 'reminder' 
-                ? 'Capture a clear photo of your reminder' 
-                : 'Frame the pattern you want to analyze'}
-            </Text>
+            <View style={styles.hintBubble}>
+              <Icon 
+                name={mode === 'reminder' ? 'bulb' : 'scan'} 
+                size="sm" 
+                color={Theme.colors.text.primary} 
+              />
+              <Text variant="caption" weight="600" style={styles.hintText}>
+                {mode === 'reminder' 
+                  ? 'Capture a clear photo of your reminder' 
+                  : 'Frame the pattern you want to analyze'}
+              </Text>
+            </View>
           </View>
         )}
       </CameraView>
@@ -344,9 +377,23 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.xl,
+    gap: Theme.spacing.l,
+  },
+  loadingIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: `${Theme.colors.primary[500]}30`,
+  },
+  loadingTitle: {
+    marginTop: Theme.spacing.m,
   },
   loadingText: {
-    marginTop: Theme.spacing.l,
+    maxWidth: 280,
   },
 
   // Permission State
@@ -356,24 +403,50 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.xl,
+    gap: Theme.spacing.l,
+  },
+  permissionIconContainer: {
+    width: 96,
+    height: 96,
+    borderRadius: 48,
+    backgroundColor: `${Theme.colors.semantic.error}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 2,
+    borderColor: `${Theme.colors.semantic.error}30`,
   },
   permissionTitle: {
-    marginTop: Theme.spacing.l,
-    marginBottom: Theme.spacing.s,
+    marginTop: Theme.spacing.m,
   },
   permissionText: {
-    maxWidth: 280,
+    maxWidth: 300,
+    lineHeight: 22,
+  },
+  permissionButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.s,
+    paddingHorizontal: Theme.spacing.l,
+    paddingVertical: Theme.spacing.m,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: Theme.colors.primary[500],
+    marginTop: Theme.spacing.m,
   },
 
   // Processing State
   processingContainer: {
     flex: 1,
-    backgroundColor: Theme.colors.background.primary,
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  processingText: {
-    marginTop: Theme.spacing.l,
+  processingContent: {
+    alignItems: 'center',
+    gap: Theme.spacing.l,
+    paddingHorizontal: Theme.spacing.xl,
+  },
+  processingTitle: {
+    marginTop: Theme.spacing.m,
   },
 
   // Top Bar
@@ -384,45 +457,117 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingTop: Platform.OS === 'ios' ? 60 : Theme.spacing.l,
     paddingBottom: Theme.spacing.m,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   topButton: {
-    width: 48,
-    height: 48,
+    width: 52,
+    height: 52,
+  },
+  buttonInner: {
+    width: '100%',
+    height: '100%',
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+  },
+  buttonInnerActive: {
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderColor: Theme.colors.primary[500],
   },
   modeIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.xs,
+    gap: Theme.spacing.s,
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.xs,
+    paddingVertical: 10,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+  },
+  modeIconContainer: {
+    width: 28,
+    height: 28,
+    borderRadius: 14,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   modeText: {
-    textTransform: 'uppercase',
+    fontSize: 11,
+    letterSpacing: 1,
   },
 
   // Grid Overlay
   gridOverlay: {
-    ...StyleSheet.absoluteFillObject,
-    justifyContent: 'space-evenly',
-    alignItems: 'center',
-  },
-  gridLine: {
-    width: '100%',
-    height: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-  },
-  gridLineVertical: {
-    width: 1,
-    height: '100%',
     position: 'absolute',
-    left: '50%',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+  },
+  gridRow: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  gridRowBorder: {
+    borderTopWidth: 1,
+    borderBottomWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+  gridCell: {
+    flex: 1,
+  },
+  gridCellBorder: {
+    borderLeftWidth: 1,
+    borderRightWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
+
+  // Focus Frame
+  focusFrame: {
+    position: 'absolute',
+    top: '25%',
+    left: '12.5%',
+    right: '12.5%',
+    bottom: '25%',
+  },
+  focusCorner: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
+    borderColor: Theme.colors.primary[500],
+    borderWidth: 3,
+  },
+  focusCornerTL: {
+    top: 0,
+    left: 0,
+    borderBottomWidth: 0,
+    borderRightWidth: 0,
+    borderTopLeftRadius: Theme.borderRadius.m,
+  },
+  focusCornerTR: {
+    top: 0,
+    right: 0,
+    borderBottomWidth: 0,
+    borderLeftWidth: 0,
+    borderTopRightRadius: Theme.borderRadius.m,
+  },
+  focusCornerBL: {
+    bottom: 0,
+    left: 0,
+    borderTopWidth: 0,
+    borderRightWidth: 0,
+    borderBottomLeftRadius: Theme.borderRadius.m,
+  },
+  focusCornerBR: {
+    bottom: 0,
+    right: 0,
+    borderTopWidth: 0,
+    borderLeftWidth: 0,
+    borderBottomRightRadius: Theme.borderRadius.m,
   },
 
   // Bottom Bar
@@ -436,23 +581,19 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.xl,
     paddingBottom: Platform.OS === 'ios' ? 48 : Theme.spacing.xl,
-    paddingTop: Theme.spacing.l,
-    backgroundColor: 'rgba(0, 0, 0, 0.3)',
+    paddingTop: Theme.spacing.xl,
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
-  bottomButton: {
-    width: 56,
-    height: 56,
-    borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.5)',
-    justifyContent: 'center',
-    alignItems: 'center',
+  sideButton: {
+    width: 60,
+    height: 60,
   },
 
   // Capture Button
   captureButton: {
-    width: 80,
-    height: 80,
-    borderRadius: Theme.borderRadius.full,
+    width: 84,
+    height: 84,
+    borderRadius: 42,
     backgroundColor: 'rgba(255, 255, 255, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -460,30 +601,38 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.text.primary,
   },
   captureButtonActive: {
-    transform: [{ scale: 0.9 }],
+    transform: [{ scale: 0.92 }],
   },
   captureButtonInner: {
-    width: 64,
-    height: 64,
-    borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.primary[500],
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-  captureButtonRing: {
-    width: '100%',
-    height: '100%',
-    borderRadius: Theme.borderRadius.full,
-    backgroundColor: Theme.colors.text.primary,
   },
 
   // Hint
   hintContainer: {
     position: 'absolute',
-    bottom: 140,
+    bottom: 180,
     left: 0,
     right: 0,
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.xl,
+  },
+  hintBubble: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.s,
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: 12,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    borderWidth: 2,
+    borderColor: 'rgba(255, 255, 255, 0.2)',
+    maxWidth: 320,
+  },
+  hintText: {
+    flex: 1,
   },
 });

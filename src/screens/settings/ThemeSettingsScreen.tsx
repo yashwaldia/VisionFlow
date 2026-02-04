@@ -1,11 +1,12 @@
 /**
- * VisionFlow AI - Theme Settings Screen
+ * VisionFlow AI - Theme Settings Screen (Professional v2.0)
  * Customize app appearance and display preferences
+ * 
  * @module screens/settings/ThemeSettingsScreen
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { View, StyleSheet, Switch, ScrollView, Alert, Platform } from 'react-native';
+import { View, StyleSheet, Switch, ScrollView, Alert } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { SettingsStackParamList } from '../../types/navigation.types';
 import { Theme } from '../../constants/theme';
@@ -16,7 +17,6 @@ import {
   Text,
   Card,
   Icon,
-  Button,
   Pressable,
   LoadingSpinner,
 } from '../../components';
@@ -117,40 +117,52 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
     );
   }
 
-  const renderThemeOption = (mode: 'light' | 'dark' | 'auto', icon: string, label: string) => {
+  const renderThemeOption = (
+    mode: 'light' | 'dark' | 'auto', 
+    icon: string, 
+    label: string,
+    description: string
+  ) => {
     const isSelected = themeMode === mode;
     const activeColor = Theme.colors.primary[500];
-    const inactiveBorder = Theme.colors.border.medium;
-    const inactiveBg = Theme.colors.background.tertiary;
 
     return (
       <Pressable
         onPress={() => handleThemeChange(mode)}
         style={[
           styles.themeOption,
-          { 
-            borderColor: isSelected ? activeColor : inactiveBorder,
-            backgroundColor: isSelected ? `${activeColor}15` : inactiveBg
-          }
+          isSelected ? styles.themeOptionActive : {},
         ]}
         haptic="light"
       >
-        <Icon 
-          name={icon as any} 
-          size="md" 
-          color={isSelected ? activeColor : Theme.colors.text.secondary} 
-        />
+        <View style={[
+          styles.themeIconContainer,
+          isSelected ? styles.themeIconContainerActive : {},
+        ]}>
+          <Icon 
+            name={icon as any} 
+            size="lg" 
+            color={isSelected ? Theme.colors.background.primary : Theme.colors.primary[500]} 
+          />
+        </View>
         <Text 
           variant="body" 
-          weight={isSelected ? "600" : "400"}
-          customColor={isSelected ? activeColor : Theme.colors.text.secondary}
-          style={styles.themeLabel}
+          weight="700"
+          customColor={isSelected ? Theme.colors.background.primary : Theme.colors.text.primary}
         >
           {label}
         </Text>
+        <Text 
+          variant="caption" 
+          align="center"
+          customColor={isSelected ? `${Theme.colors.background.primary}CC` : Theme.colors.text.tertiary}
+          style={styles.themeDescription}
+        >
+          {description}
+        </Text>
         {isSelected && (
-          <View style={styles.checkIcon}>
-            <Icon name="checkmark-circle" size="sm" color={activeColor} />
+          <View style={styles.checkIconBadge}>
+            <Icon name="checkmark-circle" size="sm" color={Theme.colors.semantic.success} />
           </View>
         )}
       </Pressable>
@@ -161,103 +173,173 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        <Button 
-            label="Back" 
-            variant="ghost" 
-            leftIcon="arrow-back" 
-            onPress={() => navigation.goBack()} 
-            style={styles.backButton}
-        />
-        <Text variant="h4" weight="600">Appearance</Text>
-        <View style={styles.placeholder} />
+        <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
+          <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text variant="h4" weight="600">Appearance</Text>
+          <Text variant="caption" color="tertiary">Customize your experience</Text>
+        </View>
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Container padding="m">
           
           {/* Theme Section */}
-          <Text variant="h4" style={styles.sectionTitle}>App Theme</Text>
-          <Card style={styles.card}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="color-palette-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">App Theme</Text>
+            </View>
+            
             <View style={styles.themeGrid}>
-              {renderThemeOption('light', 'sunny-outline', 'Light')}
-              {renderThemeOption('dark', 'moon-outline', 'Dark')}
-              {renderThemeOption('auto', 'phone-portrait-outline', 'System')}
+              {renderThemeOption('light', 'sunny', 'Light', 'Bright & clean')}
+              {renderThemeOption('dark', 'moon', 'Dark', 'Easy on eyes')}
+              {renderThemeOption('auto', 'phone-portrait', 'Auto', 'Match system')}
             </View>
-            <View style={styles.infoBox}>
-              <Icon name="information-circle-outline" size="sm" color={Theme.colors.text.tertiary} />
-              <Text variant="caption" color="tertiary" style={styles.infoText}>
-                The app is currently optimized for Dark Mode. Light mode support is in beta.
-              </Text>
-            </View>
-          </Card>
+
+            <Card style={styles.themeInfoCard}>
+              <View style={styles.infoRow}>
+                <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
+                <Text variant="caption" color="secondary" style={styles.infoText}>
+                  The app is currently optimized for Dark Mode. Light mode support is in beta and may have visual inconsistencies.
+                </Text>
+              </View>
+            </Card>
+          </View>
 
           {/* Interface Section */}
-          <Text variant="h4" style={styles.sectionTitle}>Interface</Text>
-          <Card style={styles.optionsCard}>
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="options-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Interface</Text>
+            </View>
             
-            {/* Compact Mode */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text variant="body" weight="600">Compact Mode</Text>
-                <Text variant="caption" color="secondary">Decrease spacing and font sizes</Text>
+            <Card style={styles.optionsCard}>
+              
+              {/* Compact Mode */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="contract" size="sm" color={Theme.colors.primary[500]} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Compact Mode</Text>
+                    <Text variant="caption" color="secondary">Reduce spacing and sizes</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={compactMode}
+                  onValueChange={(val) => handleDisplayToggle(setCompactMode, 'compactMode', val)}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={compactMode ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
               </View>
-              <Switch
-                value={compactMode}
-                onValueChange={(val) => handleDisplayToggle(setCompactMode, 'compactMode', val)}
-                trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-                thumbColor={Theme.colors.text.primary}
-              />
-            </View>
 
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            {/* Animations */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text variant="body" weight="600">Animations</Text>
-                <Text variant="caption" color="secondary">Enable fluid transitions and effects</Text>
+              {/* Animations */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="flash" size="sm" color={Theme.colors.semantic.warning} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Animations</Text>
+                    <Text variant="caption" color="secondary">Fluid transitions and effects</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={animationsEnabled}
+                  onValueChange={(val) => handleDisplayToggle(setAnimationsEnabled, 'animationsEnabled', val)}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={animationsEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
               </View>
-              <Switch
-                value={animationsEnabled}
-                onValueChange={(val) => handleDisplayToggle(setAnimationsEnabled, 'animationsEnabled', val)}
-                trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-                thumbColor={Theme.colors.text.primary}
-              />
-            </View>
-          </Card>
+            </Card>
+          </View>
 
           {/* Content Section */}
-          <Text variant="h4" style={styles.sectionTitle}>Content</Text>
-          <Card style={styles.optionsCard}>
-            
-            {/* Category Emojis */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text variant="body" weight="600">Category Emojis</Text>
-                <Text variant="caption" color="secondary">Show icons next to categories</Text>
-              </View>
-              <Switch
-                value={showCategoryEmojis}
-                onValueChange={(val) => handleDisplayToggle(setShowCategoryEmojis, 'showCategoryEmojis', val)}
-                trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-                thumbColor={Theme.colors.text.primary}
-              />
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="eye-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Content Display</Text>
             </View>
-
-            <View style={styles.divider} />
-
-            {/* Pattern Labels */}
-            <View style={styles.optionRow}>
-              <View style={styles.optionInfo}>
-                <Text variant="body" weight="600">Pattern Labels</Text>
-                <Text variant="caption" color="secondary">Show names on pattern overlays</Text>
+            
+            <Card style={styles.optionsCard}>
+              
+              {/* Category Emojis */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="happy" size="sm" color={Theme.colors.semantic.warning} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Category Emojis</Text>
+                    <Text variant="caption" color="secondary">Show visual category icons</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={showCategoryEmojis}
+                  onValueChange={(val) => handleDisplayToggle(setShowCategoryEmojis, 'showCategoryEmojis', val)}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={showCategoryEmojis ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
               </View>
-              <Switch
-                value={showPatternLabels}
-                onValueChange={(val) => handleDisplayToggle(setShowPatternLabels, 'showPatternLabels', val)}
-                trackColor={{ false: Theme.colors.background.tertiary, true: Theme.colors.primary[500] }}
-                thumbColor={Theme.colors.text.primary}
-              />
+
+              <View style={styles.divider} />
+
+              {/* Pattern Labels */}
+              <View style={styles.optionRow}>
+                <View style={styles.optionLeft}>
+                  <View style={styles.optionIconContainer}>
+                    <Icon name="grid" size="sm" color={Theme.colors.semantic.info} />
+                  </View>
+                  <View style={styles.optionInfo}>
+                    <Text variant="body" weight="600">Pattern Labels</Text>
+                    <Text variant="caption" color="secondary">Display overlay pattern names</Text>
+                  </View>
+                </View>
+                <Switch
+                  value={showPatternLabels}
+                  onValueChange={(val) => handleDisplayToggle(setShowPatternLabels, 'showPatternLabels', val)}
+                  trackColor={{ 
+                    false: Theme.colors.background.tertiary, 
+                    true: `${Theme.colors.primary[500]}80` 
+                  }}
+                  thumbColor={showPatternLabels ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
+                  ios_backgroundColor={Theme.colors.background.tertiary}
+                />
+              </View>
+            </Card>
+          </View>
+
+          {/* Preview Card */}
+          <Card style={styles.previewCard}>
+            <View style={styles.previewHeader}>
+              <Icon name="eye" size="sm" color={Theme.colors.semantic.success} />
+              <Text variant="caption" color="secondary" weight="600">LIVE PREVIEW</Text>
+            </View>
+            <View style={styles.previewContent}>
+              <Text variant="body" color="secondary" align="center">
+                Changes are applied immediately. Restart the app if some settings don't take effect.
+              </Text>
             </View>
           </Card>
 
@@ -268,68 +350,108 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
+    alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
   },
-  backButton: {
-    paddingHorizontal: 0,
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
   },
-  placeholder: {
-    width: 48,
+  headerCenter: {
+    flex: 1,
+    alignItems: 'center',
+    gap: 2,
   },
-  content: {
-    paddingBottom: Theme.spacing.xl,
+  
+  // Scroll styles
+  scrollContent: {
+    paddingBottom: 120,
   },
-  sectionTitle: {
+  
+  // Section styles
+  section: {
+    marginBottom: Theme.spacing.l,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
-    marginLeft: Theme.spacing.xs,
-    marginTop: Theme.spacing.m,
   },
-  card: {
-    padding: Theme.spacing.m,
-  },
+  
+  // Theme grid styles
   themeGrid: {
     flexDirection: 'row',
-    gap: Theme.spacing.m,
+    gap: Theme.spacing.s,
+    marginBottom: Theme.spacing.m,
   },
   themeOption: {
     flex: 1,
     alignItems: 'center',
     paddingVertical: Theme.spacing.m,
-    borderRadius: Theme.borderRadius.m,
+    paddingHorizontal: Theme.spacing.s,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: Theme.colors.background.secondary,
     borderWidth: 2,
-    gap: Theme.spacing.s,
+    borderColor: Theme.colors.border.default,
+    gap: Theme.spacing.xs,
     position: 'relative',
   },
-  themeLabel: {
-    fontSize: Theme.typography.fontSize.caption,
+  themeOptionActive: {
+    backgroundColor: Theme.colors.primary[500],
+    borderColor: Theme.colors.primary[500],
   },
-  checkIcon: {
+  themeIconContainer: {
+    width: 52,
+    height: 52,
+    borderRadius: Theme.borderRadius.l,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}30`,
+  },
+  themeIconContainerActive: {
+    backgroundColor: Theme.colors.background.primary,
+    borderColor: Theme.colors.background.primary,
+  },
+  themeDescription: {
+    fontSize: 11,
+    lineHeight: 14,
+  },
+  checkIconBadge: {
     position: 'absolute',
-    top: 4,
-    right: 4,
+    top: 6,
+    right: 6,
+    backgroundColor: Theme.colors.background.primary,
+    borderRadius: 12,
   },
-  infoBox: {
-    flexDirection: 'row',
-    gap: Theme.spacing.s,
-    marginTop: Theme.spacing.m,
-    paddingTop: Theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border.light,
+  
+  // Theme info card
+  themeInfoCard: {
+    backgroundColor: `${Theme.colors.semantic.info}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.info}30`,
   },
-  infoText: {
-    flex: 1,
-  },
+  
+  // Options card styles
   optionsCard: {
     padding: 0,
     overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   optionRow: {
     flexDirection: 'row',
@@ -337,13 +459,59 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     padding: Theme.spacing.m,
   },
+  optionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.m,
+    flex: 1,
+  },
+  optionIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
+  },
   optionInfo: {
     flex: 1,
-    gap: 4,
+    gap: 2,
   },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
-    marginLeft: Theme.spacing.m,
+    marginLeft: Theme.spacing.m + 40 + Theme.spacing.m, // Left padding + icon + gap
+  },
+  
+  // Info styles
+  infoRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: Theme.spacing.s,
+  },
+  infoText: {
+    flex: 1,
+    lineHeight: 18,
+  },
+  
+  // Preview card styles
+  previewCard: {
+    marginTop: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.semantic.success}10`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.success}30`,
+  },
+  previewHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    marginBottom: Theme.spacing.s,
+  },
+  previewContent: {
+    paddingTop: Theme.spacing.s,
+    borderTopWidth: 1,
+    borderTopColor: `${Theme.colors.semantic.success}20`,
   },
 });

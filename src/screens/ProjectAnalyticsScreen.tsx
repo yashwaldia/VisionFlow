@@ -1,11 +1,12 @@
 /**
- * VisionFlow AI - Project Analytics Screen (FIXED)
+ * VisionFlow AI - Project Analytics Screen (Professional v2.0)
  * View detailed analytics for a project
- * * @module screens/ProjectAnalyticsScreen
+ * 
+ * @module screens/ProjectAnalyticsScreen
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView } from 'react-native';
+import React, { useState, useEffect, useMemo } from 'react';
+import { View, StyleSheet, ScrollView, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProjectStackParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
@@ -20,7 +21,35 @@ import {
 import { useProjects } from '../hooks/useProjects';
 import { useReminders } from '../hooks/useReminders';
 
+const { width: SCREEN_WIDTH } = Dimensions.get('window');
+
 type ProjectAnalyticsScreenProps = NativeStackScreenProps<ProjectStackParamList, 'ProjectAnalytics'>;
+
+/**
+ * Get priority color
+ */
+const getPriorityColor = (priority: string): string => {
+  const colors: Record<string, string> = {
+    low: Theme.colors.semantic.success,
+    medium: Theme.colors.semantic.info,
+    high: Theme.colors.semantic.warning,
+    urgent: Theme.colors.semantic.error,
+  };
+  return colors[priority.toLowerCase()] || Theme.colors.primary[500];
+};
+
+/**
+ * Get category icon
+ */
+const getCategoryIcon = (category: string): string => {
+  const icons: Record<string, string> = {
+    personal: 'home',
+    work: 'briefcase',
+    health: 'fitness',
+    money: 'cash',
+  };
+  return icons[category.toLowerCase()] || 'pricetag';
+};
 
 /**
  * ProjectAnalyticsScreen Component
@@ -31,36 +60,63 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
   const { reminders } = useReminders();
 
   const project = getProjectById(projectId);
-  const projectReminders = reminders.filter(r => r.projectId === projectId);
+  const projectReminders = useMemo(
+    () => reminders.filter(r => r.projectId === projectId),
+    [reminders, projectId]
+  );
 
   // Calculate statistics
-  const totalReminders = projectReminders.length;
-  const upcomingReminders = projectReminders.filter(r => r.status === 'upcoming').length;
-  const doneReminders = projectReminders.filter(r => r.status === 'done').length;
-  const overdueReminders = projectReminders.filter(r => r.status === 'overdue').length;
-  const completionRate = totalReminders > 0 ? Math.round((doneReminders / totalReminders) * 100) : 0;
+  const stats = useMemo(() => {
+    const total = projectReminders.length;
+    const upcoming = projectReminders.filter(r => r.status === 'upcoming').length;
+    const done = projectReminders.filter(r => r.status === 'done').length;
+    const overdue = projectReminders.filter(r => r.status === 'overdue').length;
+    const snoozed = projectReminders.filter(r => r.status === 'snoozed').length;
+    const completionRate = total > 0 ? Math.round((done / total) * 100) : 0;
+    
+    return { total, upcoming, done, overdue, snoozed, completionRate };
+  }, [projectReminders]);
 
   // Category breakdown
-  const categoryBreakdown = projectReminders.reduce((acc, reminder) => {
-    // Ensure category is treated as a string key
-    const catKey = String(reminder.category);
-    acc[catKey] = (acc[catKey] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const categoryBreakdown = useMemo(() => {
+    return projectReminders.reduce((acc, reminder) => {
+      const catKey = String(reminder.category);
+      acc[catKey] = (acc[catKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [projectReminders]);
 
   // Priority breakdown
-  const priorityBreakdown = projectReminders.reduce((acc, reminder) => {
-    // FIXED: Handle undefined priority by defaulting to 'medium'
-    const priorityKey = String(reminder.priority || 'medium');
-    acc[priorityKey] = (acc[priorityKey] || 0) + 1;
-    return acc;
-  }, {} as Record<string, number>);
+  const priorityBreakdown = useMemo(() => {
+    return projectReminders.reduce((acc, reminder) => {
+      const priorityKey = String(reminder.priority || 'medium');
+      acc[priorityKey] = (acc[priorityKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [projectReminders]);
+
+  // Status breakdown
+  const statusBreakdown = useMemo(() => {
+    return projectReminders.reduce((acc, reminder) => {
+      const statusKey = String(reminder.status);
+      acc[statusKey] = (acc[statusKey] || 0) + 1;
+      return acc;
+    }, {} as Record<string, number>);
+  }, [projectReminders]);
 
   if (!project) {
     return (
       <Screen>
         <Container padding="m">
-          <Text variant="h3">Project not found</Text>
+          <View style={styles.notFoundContainer}>
+            <Icon name="alert-circle-outline" size="xl" color={Theme.colors.text.tertiary} />
+            <Text variant="h3" align="center" style={styles.notFoundTitle}>
+              Project not found
+            </Text>
+            <Text variant="body" color="secondary" align="center">
+              This project may have been deleted
+            </Text>
+          </View>
         </Container>
       </Screen>
     );
@@ -70,132 +126,274 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()}>
+        <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <Text variant="h4" weight="600">Analytics</Text>
-        <View style={{ width: 24 }} />
+        <View style={{ width: 40 }} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.content}>
+      <ScrollView 
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
         <Container padding="m">
-          {/* Project Info */}
+          {/* Project Header */}
           <View style={styles.projectHeader}>
-            <Text variant="h2">{project.name}</Text>
-            <Text variant="body" color="secondary">{project.primaryCategory}</Text>
-          </View>
-
-          {/* Overview Stats */}
-          <Text variant="h4" style={styles.sectionTitle}>Overview</Text>
-          <View style={styles.statsGrid}>
-            <Card style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Icon name="list-outline" size="lg" color={Theme.colors.primary[500]} />
-              </View>
-              <Text variant="h2" weight="600">{totalReminders}</Text>
-              <Text variant="caption" color="secondary">Total Reminders</Text>
-            </Card>
-
-            <Card style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Icon name="time-outline" size="lg" color={Theme.colors.semantic.info} />
-              </View>
-              <Text variant="h2" weight="600">{upcomingReminders}</Text>
-              <Text variant="caption" color="secondary">Upcoming</Text>
-            </Card>
-
-            <Card style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Icon name="checkmark-circle-outline" size="lg" color={Theme.colors.semantic.success} />
-              </View>
-              <Text variant="h2" weight="600">{doneReminders}</Text>
-              <Text variant="caption" color="secondary">Completed</Text>
-            </Card>
-
-            <Card style={styles.statCard}>
-              <View style={styles.statIconContainer}>
-                <Icon name="alert-circle-outline" size="lg" color={Theme.colors.semantic.error} />
-              </View>
-              <Text variant="h2" weight="600">{overdueReminders}</Text>
-              <Text variant="caption" color="secondary">Overdue</Text>
-            </Card>
-          </View>
-
-          {/* Completion Rate */}
-          <Card style={styles.completionCard}>
-            <View style={styles.completionHeader}>
-              <Text variant="h4">Completion Rate</Text>
-              <Text variant="h2" weight="600" customColor={Theme.colors.primary[500]}>
-                {completionRate}%
+            <View style={styles.projectIconContainer}>
+              <Icon name="folder" size="lg" color={Theme.colors.primary[500]} />
+            </View>
+            <Text variant="h2" align="center">{project.name}</Text>
+            <View style={styles.categoryBadge}>
+              <Icon 
+                name={getCategoryIcon(project.primaryCategory) as any} 
+                size="xs" 
+                color={Theme.colors.primary[500]} 
+              />
+              <Text variant="body" weight="600" customColor={Theme.colors.primary[500]}>
+                {project.primaryCategory}
               </Text>
             </View>
-            <View style={styles.progressBar}>
-              <View
-                style={[
-                  styles.progressFill,
-                  { width: `${completionRate}%` },
-                ]}
-              />
-            </View>
-            <Text variant="caption" color="secondary" style={styles.progressText}>
-              {doneReminders} of {totalReminders} reminders completed
-            </Text>
-          </Card>
-
-          {/* Category Breakdown */}
-          {Object.keys(categoryBreakdown).length > 0 && (
-            <>
-              <Text variant="h4" style={styles.sectionTitle}>By Category</Text>
-              <Card style={styles.breakdownCard}>
-                {Object.entries(categoryBreakdown).map(([category, count]) => (
-                  <View key={category} style={styles.breakdownRow}>
-                    <View style={styles.breakdownLabel}>
-                      <View style={[styles.breakdownDot, { backgroundColor: Theme.colors.primary[500] }]} />
-                      <Text variant="body">{category}</Text>
-                    </View>
-                    <Text variant="body" weight="600">{count}</Text>
-                  </View>
-                ))}
-              </Card>
-            </>
-          )}
-
-          {/* Priority Breakdown */}
-          {Object.keys(priorityBreakdown).length > 0 && (
-            <>
-              <Text variant="h4" style={styles.sectionTitle}>By Priority</Text>
-              <Card style={styles.breakdownCard}>
-                {Object.entries(priorityBreakdown).map(([priority, count]) => {
-                  const priorityColor = {
-                    low: Theme.colors.semantic.success,
-                    medium: Theme.colors.semantic.info,
-                    high: Theme.colors.semantic.warning,
-                    urgent: Theme.colors.semantic.error,
-                  }[priority] || Theme.colors.primary[500];
-
-                  return (
-                    <View key={priority} style={styles.breakdownRow}>
-                      <View style={styles.breakdownLabel}>
-                        <View style={[styles.breakdownDot, { backgroundColor: priorityColor }]} />
-                        <Text variant="body">{priority.toUpperCase()}</Text>
-                      </View>
-                      <Text variant="body" weight="600">{count}</Text>
-                    </View>
-                  );
-                })}
-              </Card>
-            </>
-          )}
+          </View>
 
           {/* Empty State */}
-          {totalReminders === 0 && (
+          {stats.total === 0 ? (
             <Card style={styles.emptyCard}>
               <Icon name="analytics-outline" size="xl" color={Theme.colors.text.tertiary} />
-              <Text variant="h4" style={styles.emptyTitle}>No Data Yet</Text>
-              <Text variant="body" color="secondary" style={styles.emptyText}>
-                Add reminders to this project to see analytics
+              <Text variant="h3" style={styles.emptyTitle}>No Data Yet</Text>
+              <Text variant="body" color="secondary" align="center" style={styles.emptyText}>
+                Add reminders to this project to see detailed analytics and insights
               </Text>
             </Card>
+          ) : (
+            <>
+              {/* Key Metrics Overview */}
+              <View style={styles.metricsSection}>
+                <View style={styles.sectionHeader}>
+                  <Icon name="stats-chart-outline" size="sm" color={Theme.colors.primary[500]} />
+                  <Text variant="h4">Key Metrics</Text>
+                </View>
+                
+                <View style={styles.statsGrid}>
+                  <Card elevation="sm" style={styles.statCard}>
+                    <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.primary[500]}15` }]}>
+                      <Icon name="list" size="md" color={Theme.colors.primary[500]} />
+                    </View>
+                    <Text variant="h2" weight="700">{stats.total}</Text>
+                    <Text variant="caption" color="secondary">Total Reminders</Text>
+                  </Card>
+
+                  <Card elevation="sm" style={styles.statCard}>
+                    <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.info}15` }]}>
+                      <Icon name="time" size="md" color={Theme.colors.semantic.info} />
+                    </View>
+                    <Text variant="h2" weight="700" customColor={Theme.colors.semantic.info}>
+                      {stats.upcoming}
+                    </Text>
+                    <Text variant="caption" color="secondary">Upcoming</Text>
+                  </Card>
+
+                  <Card elevation="sm" style={styles.statCard}>
+                    <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.success}15` }]}>
+                      <Icon name="checkmark-circle" size="md" color={Theme.colors.semantic.success} />
+                    </View>
+                    <Text variant="h2" weight="700" customColor={Theme.colors.semantic.success}>
+                      {stats.done}
+                    </Text>
+                    <Text variant="caption" color="secondary">Completed</Text>
+                  </Card>
+
+                  {stats.overdue > 0 && (
+                    <Card elevation="sm" style={styles.statCard}>
+                      <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.error}15` }]}>
+                        <Icon name="alert-circle" size="md" color={Theme.colors.semantic.error} />
+                      </View>
+                      <Text variant="h2" weight="700" customColor={Theme.colors.semantic.error}>
+                        {stats.overdue}
+                      </Text>
+                      <Text variant="caption" color="secondary">Overdue</Text>
+                    </Card>
+                  )}
+                </View>
+              </View>
+
+              {/* Completion Rate */}
+              <View style={styles.completionSection}>
+                <Card style={styles.completionCard}>
+                  <View style={styles.completionHeader}>
+                    <View style={styles.completionHeaderLeft}>
+                      <Icon name="trophy" size="sm" color={Theme.colors.semantic.success} />
+                      <Text variant="h4">Completion Rate</Text>
+                    </View>
+                    <View style={styles.completionBadge}>
+                      <Text variant="h2" weight="700" customColor={
+                        stats.completionRate === 100 
+                          ? Theme.colors.semantic.success 
+                          : stats.completionRate >= 50 
+                          ? Theme.colors.primary[500] 
+                          : Theme.colors.semantic.warning
+                      }>
+                        {stats.completionRate}%
+                      </Text>
+                    </View>
+                  </View>
+                  
+                  <View style={styles.progressBarContainer}>
+                    <View style={styles.progressBar}>
+                      <View
+                        style={[
+                          styles.progressFill,
+                          { 
+                            width: `${stats.completionRate}%`,
+                            backgroundColor: stats.completionRate === 100 
+                              ? Theme.colors.semantic.success 
+                              : Theme.colors.primary[500]
+                          },
+                        ]}
+                      />
+                    </View>
+                  </View>
+                  
+                  <View style={styles.progressStats}>
+                    <View style={styles.progressStatItem}>
+                      <Text variant="caption" color="tertiary">Completed</Text>
+                      <Text variant="bodyLarge" weight="600" customColor={Theme.colors.semantic.success}>
+                        {stats.done}
+                      </Text>
+                    </View>
+                    <View style={styles.progressDivider} />
+                    <View style={styles.progressStatItem}>
+                      <Text variant="caption" color="tertiary">Remaining</Text>
+                      <Text variant="bodyLarge" weight="600" customColor={Theme.colors.semantic.info}>
+                        {stats.total - stats.done}
+                      </Text>
+                    </View>
+                    <View style={styles.progressDivider} />
+                    <View style={styles.progressStatItem}>
+                      <Text variant="caption" color="tertiary">Total</Text>
+                      <Text variant="bodyLarge" weight="600">
+                        {stats.total}
+                      </Text>
+                    </View>
+                  </View>
+                </Card>
+              </View>
+
+              {/* Status Breakdown */}
+              {Object.keys(statusBreakdown).length > 0 && (
+                <View style={styles.breakdownSection}>
+                  <View style={styles.sectionHeader}>
+                    <Icon name="pie-chart-outline" size="sm" color={Theme.colors.text.secondary} />
+                    <Text variant="h4">By Status</Text>
+                  </View>
+                  
+                  <Card style={styles.breakdownCard}>
+                    {Object.entries(statusBreakdown).map(([status, count]) => {
+                      const percentage = Math.round((count / stats.total) * 100);
+                      const statusConfig: Record<string, { color: string; icon: string }> = {
+                        upcoming: { color: Theme.colors.primary[500], icon: 'time' },
+                        done: { color: Theme.colors.semantic.success, icon: 'checkmark-circle' },
+                        overdue: { color: Theme.colors.semantic.error, icon: 'alert-circle' },
+                        snoozed: { color: Theme.colors.semantic.warning, icon: 'moon' },
+                      };
+                      const config = statusConfig[status] || { color: Theme.colors.text.secondary, icon: 'ellipse' };
+
+                      return (
+                        <View key={status} style={styles.breakdownRow}>
+                          <View style={styles.breakdownLeft}>
+                            <View style={[styles.breakdownIconContainer, { backgroundColor: `${config.color}15` }]}>
+                              <Icon name={config.icon as any} size="xs" color={config.color} />
+                            </View>
+                            <View style={styles.breakdownInfo}>
+                              <Text variant="body" weight="600">{status.charAt(0).toUpperCase() + status.slice(1)}</Text>
+                              <Text variant="caption" color="tertiary">{percentage}% of total</Text>
+                            </View>
+                          </View>
+                          <View style={styles.breakdownRight}>
+                            <Text variant="h4" weight="700" customColor={config.color}>{count}</Text>
+                          </View>
+                        </View>
+                      );
+                    })}
+                  </Card>
+                </View>
+              )}
+
+              {/* Category Breakdown */}
+              {Object.keys(categoryBreakdown).length > 0 && (
+                <View style={styles.breakdownSection}>
+                  <View style={styles.sectionHeader}>
+                    <Icon name="pricetags-outline" size="sm" color={Theme.colors.text.secondary} />
+                    <Text variant="h4">By Category</Text>
+                  </View>
+                  
+                  <Card style={styles.breakdownCard}>
+                    {Object.entries(categoryBreakdown)
+                      .sort((a, b) => b[1] - a[1]) // Sort by count descending
+                      .map(([category, count]) => {
+                        const percentage = Math.round((count / stats.total) * 100);
+                        const categoryColor = Theme.colors.primary[500];
+
+                        return (
+                          <View key={category} style={styles.breakdownRow}>
+                            <View style={styles.breakdownLeft}>
+                              <View style={[styles.breakdownIconContainer, { backgroundColor: `${categoryColor}15` }]}>
+                                <Icon name={getCategoryIcon(category) as any} size="xs" color={categoryColor} />
+                              </View>
+                              <View style={styles.breakdownInfo}>
+                                <Text variant="body" weight="600">{category}</Text>
+                                <Text variant="caption" color="tertiary">{percentage}% of total</Text>
+                              </View>
+                            </View>
+                            <View style={styles.breakdownRight}>
+                              <Text variant="h4" weight="700">{count}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                  </Card>
+                </View>
+              )}
+
+              {/* Priority Breakdown */}
+              {Object.keys(priorityBreakdown).length > 0 && (
+                <View style={styles.breakdownSection}>
+                  <View style={styles.sectionHeader}>
+                    <Icon name="flag-outline" size="sm" color={Theme.colors.text.secondary} />
+                    <Text variant="h4">By Priority</Text>
+                  </View>
+                  
+                  <Card style={styles.breakdownCard}>
+                    {Object.entries(priorityBreakdown)
+                      .sort((a, b) => {
+                        const order: Record<string, number> = { urgent: 0, high: 1, medium: 2, low: 3 };
+                        return (order[a[0].toLowerCase()] || 99) - (order[b[0].toLowerCase()] || 99);
+                      })
+                      .map(([priority, count]) => {
+                        const percentage = Math.round((count / stats.total) * 100);
+                        const priorityColor = getPriorityColor(priority);
+
+                        return (
+                          <View key={priority} style={styles.breakdownRow}>
+                            <View style={styles.breakdownLeft}>
+                              <View style={[styles.breakdownIconContainer, { backgroundColor: `${priorityColor}15` }]}>
+                                <Icon name="flag" size="xs" color={priorityColor} />
+                              </View>
+                              <View style={styles.breakdownInfo}>
+                                <Text variant="body" weight="600">{priority.toUpperCase()}</Text>
+                                <Text variant="caption" color="tertiary">{percentage}% of total</Text>
+                              </View>
+                            </View>
+                            <View style={styles.breakdownRight}>
+                              <Text variant="h4" weight="700" customColor={priorityColor}>{count}</Text>
+                            </View>
+                          </View>
+                        );
+                      })}
+                  </Card>
+                </View>
+              )}
+            </>
           )}
         </Container>
       </ScrollView>
@@ -204,6 +402,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -214,87 +413,199 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
   },
-  content: {
-    paddingBottom: Theme.spacing.xl,
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
   },
+  
+  // Content styles
+  scrollContent: {
+    paddingBottom: 120, // Space for bottom tab bar
+  },
+  
+  // Not found styles
+  notFoundContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    paddingVertical: Theme.spacing.xxl,
+    gap: Theme.spacing.m,
+  },
+  notFoundTitle: {
+    marginTop: Theme.spacing.s,
+  },
+  
+  // Project header styles
   projectHeader: {
     alignItems: 'center',
-    marginVertical: Theme.spacing.l,
-    gap: Theme.spacing.xs,
+    marginBottom: Theme.spacing.xl,
+    gap: Theme.spacing.m,
   },
-  sectionTitle: {
-    marginTop: Theme.spacing.l,
+  projectIconContainer: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    borderWidth: 2,
+    borderColor: `${Theme.colors.primary[500]}30`,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  categoryBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.full,
+    backgroundColor: `${Theme.colors.primary[500]}15`,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}30`,
+  },
+  
+  // Section styles
+  metricsSection: {
+    marginBottom: Theme.spacing.l,
+  },
+  completionSection: {
+    marginBottom: Theme.spacing.l,
+  },
+  breakdownSection: {
+    marginBottom: Theme.spacing.l,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
+  
+  // Stats grid styles
   statsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Theme.spacing.m,
+    gap: Theme.spacing.s,
   },
   statCard: {
     width: '48%',
     alignItems: 'center',
-    padding: Theme.spacing.l,
-    gap: Theme.spacing.s,
+    paddingVertical: Theme.spacing.l,
+    paddingHorizontal: Theme.spacing.s,
+    gap: Theme.spacing.xs,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   statIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: 28,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+    width: 52,
+    height: 52,
+    borderRadius: Theme.borderRadius.l,
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 4,
   },
+  
+  // Completion card styles
   completionCard: {
-    marginTop: Theme.spacing.l,
-    gap: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   completionHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Theme.spacing.m,
+  },
+  completionHeaderLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+  },
+  completionBadge: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: 4,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+  },
+  progressBarContainer: {
+    marginBottom: Theme.spacing.m,
   },
   progressBar: {
-    height: 12,
+    height: 16,
     backgroundColor: Theme.colors.background.tertiary,
-    borderRadius: Theme.borderRadius.full,
+    borderRadius: Theme.borderRadius.m,
     overflow: 'hidden',
   },
   progressFill: {
     height: '100%',
-    backgroundColor: Theme.colors.primary[500],
-    borderRadius: Theme.borderRadius.full,
+    borderRadius: Theme.borderRadius.m,
   },
-  progressText: {
-    textAlign: 'center',
+  progressStats: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingTop: Theme.spacing.m,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border.light,
   },
+  progressStatItem: {
+    alignItems: 'center',
+    gap: 4,
+  },
+  progressDivider: {
+    width: 1,
+    backgroundColor: Theme.colors.border.light,
+  },
+  
+  // Breakdown card styles
   breakdownCard: {
-    gap: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   breakdownRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    paddingVertical: Theme.spacing.s,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border.light,
   },
-  breakdownLabel: {
+  breakdownLeft: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.s,
+    gap: Theme.spacing.m,
+    flex: 1,
   },
-  breakdownDot: {
-    width: 12,
-    height: 12,
-    borderRadius: 6,
+  breakdownIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: Theme.borderRadius.m,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
+  breakdownInfo: {
+    flex: 1,
+    gap: 2,
+  },
+  breakdownRight: {
+    minWidth: 48,
+    alignItems: 'flex-end',
+  },
+  
+  // Empty state styles
   emptyCard: {
     alignItems: 'center',
-    padding: Theme.spacing.xl,
+    paddingVertical: Theme.spacing.xxl,
+    paddingHorizontal: Theme.spacing.l,
     gap: Theme.spacing.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
   },
   emptyTitle: {
-    marginTop: Theme.spacing.m,
+    marginTop: Theme.spacing.s,
   },
   emptyText: {
-    textAlign: 'center',
+    maxWidth: 280,
   },
 });

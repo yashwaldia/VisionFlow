@@ -1,8 +1,14 @@
 /**
- * VisionFlow AI - Screen Component
- * Safe area wrapper with header support
+ * VisionFlow AI - Screen Component (v2.1 - Harmonized Edition)
+ * Safe area wrapper with automatic bottom tab bar spacing
  * 
  * @module components/Screen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ FIXED: Automatic bottom padding for tab bar (no more hidden content!)
+ * - ✅ Uses useBottomTabBarHeight() when available
+ * - ✅ Fallback to theme-based tab bar height
+ * - ✅ Developers no longer need to add paddingBottom manually
  */
 
 import React from 'react';
@@ -14,86 +20,75 @@ import {
   StyleSheet,
   ViewStyle,
   StatusBar,
+  RefreshControlProps,
 } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Theme } from '../constants/theme';
 
 /**
  * Screen props
  */
 export interface ScreenProps {
-  /**
-   * Screen content
-   */
   children: React.ReactNode;
-  
-  /**
-   * Enable scroll behavior
-   */
   scroll?: boolean;
-  
-  /**
-   * Show bounce effect on scroll (iOS)
-   */
   bounces?: boolean;
-  
-  /**
-   * Keyboard avoiding behavior
-   */
   keyboardAvoiding?: boolean;
-  
-  /**
-   * Use SafeAreaView
-   */
   useSafeArea?: boolean;
-  
-  /**
-   * Apply safe area only to top
-   */
   safeAreaTop?: boolean;
-  
-  /**
-   * Apply safe area only to bottom
-   */
   safeAreaBottom?: boolean;
-  
-  /**
-   * Background color
-   */
   backgroundColor?: string;
-  
-  /**
-   * Status bar style
-   */
   statusBarStyle?: 'light-content' | 'dark-content';
-  
-  /**
-   * Custom style
-   */
   style?: ViewStyle;
-  
-  /**
-   * Content container style (for ScrollView)
-   */
   contentContainerStyle?: ViewStyle;
-  
-  /**
-   * Test ID
-   */
   testID?: string;
+  /**
+   * Show the tactical vertical ruler on the left
+   * @default true
+   */
+  showRuler?: boolean;
+  /**
+   * Disable automatic bottom tab bar spacing
+   * Use this ONLY if screen is not within tab navigator
+   * @default false
+   */
+  disableTabBarSpacing?: boolean;
+  refreshControl?: React.ReactElement<RefreshControlProps>;
+}
+
+/**
+ * Hook to get tab bar height with fallback
+ */
+function useTabBarHeightSafe(): number {
+  try {
+    // Try to get actual tab bar height from navigation
+    const tabBarHeight = useBottomTabBarHeight();
+    return tabBarHeight;
+  } catch {
+    // Fallback to theme value if not in tab navigator
+    return Theme.dimensions.tabBar.height;
+  }
 }
 
 /**
  * Screen Component
+ * "The Mainframe Canvas" - Now with automatic tab bar spacing!
  * 
  * @example
  * ```tsx
+ * // Scrollable screen (automatic bottom spacing)
  * <Screen scroll>
- *   <Text>Content</Text>
+ *   <Text>Content will automatically clear the tab bar!</Text>
  * </Screen>
  * 
- * <Screen keyboardAvoiding backgroundColor={Theme.colors.background.primary}>
- *   <Input />
+ * // Non-scrollable screen
+ * <Screen>
+ *   <View>Content here</View>
+ * </Screen>
+ * 
+ * // Modal (no tab bar spacing)
+ * <Screen disableTabBarSpacing>
+ *   <Text>Modal content</Text>
  * </Screen>
  * ```
  */
@@ -110,37 +105,114 @@ export function Screen({
   style,
   contentContainerStyle,
   testID,
+  showRuler = true,
+  disableTabBarSpacing = false,
+  refreshControl,
 }: ScreenProps) {
-  // Container style
+  
+  // Get safe area insets
+  const insets = useSafeAreaInsets();
+  
+  // Get tab bar height (with fallback)
+  const tabBarHeight = useTabBarHeightSafe();
+  
+  /**
+   * Calculate bottom padding
+   * This ensures content is visible above the tab bar
+   */
+  const bottomPadding = React.useMemo(() => {
+    if (!safeAreaBottom || disableTabBarSpacing) {
+      return 0;
+    }
+    
+    // Tab bar height + extra spacing for breathing room
+    // Uses the larger value between device inset and tab bar
+    return Math.max(insets.bottom, tabBarHeight) + Theme.spacing.m;
+  }, [safeAreaBottom, disableTabBarSpacing, insets.bottom, tabBarHeight]);
+  
+  // Base Container Style
   const containerStyle: ViewStyle = {
     flex: 1,
     backgroundColor,
   };
   
-  // Safe area edges
+  // Safe area edges (now we handle bottom manually for better control)
   const safeAreaEdges: Array<'top' | 'bottom' | 'left' | 'right'> = [];
   if (safeAreaTop) safeAreaEdges.push('top');
-  if (safeAreaBottom) safeAreaEdges.push('bottom');
+  // Note: We don't add 'bottom' here because we handle it with padding
+
+  /**
+   * HUD Decorations (Passive Visuals)
+   */
+  const HudDecorations = () => (
+    <View 
+      style={[StyleSheet.absoluteFill, { zIndex: -1 }]} 
+      pointerEvents="none"
+    >
+      {/* 1. Global Tint/Scanline Overlay */}
+      <View 
+        style={{ 
+          flex: 1, 
+          backgroundColor: Theme.colors.background.scanline 
+        }} 
+      />
+      
+      {/* 2. Tactical Ruler (Visual Anchor) */}
+      {showRuler && (
+        <View 
+          style={{
+            position: 'absolute',
+            left: 24,
+            top: 0,
+            bottom: 0,
+            width: 1,
+            backgroundColor: 'rgba(255, 255, 255, 0.05)',
+          }} 
+        />
+      )}
+    </View>
+  );
   
   // Render content based on scroll behavior
-  const renderContent = () => {
-    if (scroll) {
-      return (
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={[styles.scrollContentContainer, contentContainerStyle]}
-          bounces={bounces}
-          showsVerticalScrollIndicator={false}
-          keyboardShouldPersistTaps="handled"
-          testID={testID ? `${testID}-scroll` : undefined}
-        >
-          {children}
-        </ScrollView>
-      );
-    }
-    
-    return <View style={[styles.contentContainer, style]}>{children}</View>;
-  };
+// Render content based on scroll behavior
+const renderContent = () => {
+  if (scroll) {
+    return (
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={[
+          styles.scrollContentContainer,
+          {
+            paddingBottom: bottomPadding,
+          },
+          contentContainerStyle,
+        ]}
+        bounces={bounces}
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        refreshControl={refreshControl}  // ✅ ADD THIS LINE
+        testID={testID ? `${testID}-scroll` : undefined}
+      >
+        {children}
+      </ScrollView>
+    );
+  }
+  
+  return (
+    <View 
+      style={[
+        styles.contentContainer, 
+        {
+          paddingBottom: bottomPadding,
+        },
+        style,
+      ]}
+    >
+      {children}
+    </View>
+  );
+};
+
   
   // Wrap with keyboard avoiding view if needed
   const content = keyboardAvoiding ? (
@@ -155,16 +227,17 @@ export function Screen({
     renderContent()
   );
   
-  // Wrap with SafeAreaView if needed
+  // Render Logic
   if (useSafeArea) {
     return (
       <>
-        <StatusBar barStyle={statusBarStyle} />
+        <StatusBar barStyle={statusBarStyle} backgroundColor={backgroundColor} />
         <SafeAreaView
           edges={safeAreaEdges}
           style={[containerStyle, style]}
           testID={testID}
         >
+          <HudDecorations />
           {content}
         </SafeAreaView>
       </>
@@ -173,8 +246,9 @@ export function Screen({
   
   return (
     <>
-      <StatusBar barStyle={statusBarStyle} />
+      <StatusBar barStyle={statusBarStyle} backgroundColor={backgroundColor} />
       <View style={[containerStyle, style]} testID={testID}>
+        <HudDecorations />
         {content}
       </View>
     </>
