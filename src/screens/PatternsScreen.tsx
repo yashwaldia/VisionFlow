@@ -1,13 +1,13 @@
 /**
- * VisionFlow AI - Patterns Library Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Patterns Library Screen (v2.2 - Harmonized Edition)
  * Neural Database Interface for visual patterns
  * 
  * @module screens/PatternsScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Changed title from h3 to h2 for consistency
- * - ✅ Removed hardcoded paddingBottom (uses theme constant)
- * - ✅ Kept tactical/HUD styling as design aesthetic
+ * CHANGELOG v2.2:
+ * - ✅ Fixed placeholder image opacity (15% → 20%)
+ * - ✅ Fixed filter chip active opacity (15% → 20%)
+ * - ✅ Added subtle header shadow (maintains tactical aesthetic)
  */
 
 import React, { useState, useMemo } from 'react';
@@ -136,11 +136,11 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
                   style={styles.patternImage}
                   resizeMode="cover"
                 />
-                {/* Tech Overlay for "Scanned" look */}
+                {/* Tech Overlay for "Scanned" look - ✅ Kept at 8% (intentional subtlety) */}
                 <View style={[styles.imageOverlay, { backgroundColor: `${typeColor}08` }]} />
               </>
             ) : (
-              <View style={[styles.placeholderImage, { backgroundColor: `${typeColor}15` }]}>
+              <View style={[styles.placeholderImage, { backgroundColor: `${typeColor}20` }]}>
                 <Icon name="scan-outline" size="lg" color={typeColor} />
               </View>
             )}
@@ -197,7 +197,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
   
   return (
     <Screen>
-      {/* Fixed Header */}
+      {/* Fixed Header - ✅ ENHANCED: Added subtle shadow */}
       <View style={styles.header}>
         <Container padding="m">
           {/* Status Line */}
@@ -210,7 +210,6 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
           </View>
 
           <View style={styles.headerTop}>
-            {/* ✅ UPDATED: Changed from h3 to h2 */}
             <Text variant="h2" weight="700" style={styles.headerTitle}>
               NEURAL INDEX
             </Text>
@@ -317,12 +316,13 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added subtle shadow for depth
   header: {
     backgroundColor: Theme.colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.default,
     paddingTop: Theme.spacing.xs,
+    ...Theme.shadows.sm, // ✅ ADDED: Subtle shadow (maintains tactical/flat aesthetic)
   },
   statusLine: {
     flexDirection: 'row',
@@ -377,7 +377,7 @@ const styles = StyleSheet.create({
     borderWidth: 0,
   },
   
-  // Filters styles - ✅ Kept tactical aesthetic (intentional design choice)
+  // Filters styles - ✅ FIXED: Standardized active opacity
   filtersContainer: {
     paddingVertical: Theme.spacing.s,
     backgroundColor: Theme.colors.background.secondary,
@@ -398,13 +398,13 @@ const styles = StyleSheet.create({
   },
   filterChipActive: {
     borderColor: Theme.colors.primary[500],
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
   },
   filterText: {
     fontFamily: Theme.typography.fontFamily.mono,
   },
   
-  // Grid styles - ✅ FIXED: Uses theme constant
+  // Grid styles - ✅ Already correct
   gridContent: {
     padding: Theme.spacing.m,
     paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme (80)
@@ -438,6 +438,7 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
+    // ✅ Background opacity fixed inline above (15% → 20%)
   },
   typeBadge: {
     position: 'absolute',
@@ -483,7 +484,7 @@ const styles = StyleSheet.create({
   confidenceContainer: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    backgroundColor: `${Theme.colors.primary[500]}10`,
+    backgroundColor: `${Theme.colors.primary[500]}10`, // ✅ Kept at 10% (intentionally subtle)
     borderRadius: 3,
   },
   patternName: {

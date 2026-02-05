@@ -1,9 +1,16 @@
 /**
- * VisionFlow AI - AI Review Modal (Professional v2.0 - FIXED)
+ * VisionFlow AI - AI Review Modal (v3.2 - Controlled UI Refinement)
  * Review and edit AI-extracted data before saving
  * 
  * @module screens/modals/AIReviewModal
+ * 
+ * CHANGELOG v3.2:
+ * - 🔧 Fixed button width consistency (both Discard and Save now equal width)
+ * - 🔧 Fixed bottom positioning (footer now fixed at bottom, always visible)
+ * - 🔧 Added debug flag to prevent repeated API calls during debug phase
+ * - 🔧 Buttons now hidden during analysis, visible only after completion
  */
+
 
 import React, { useState, useEffect } from 'react';
 import {
@@ -32,23 +39,135 @@ import {
 } from '../../components';
 import { ReminderCategory, ReminderPriority, ReminderStatus } from '../../types/reminder.types';
 import * as GeminiService from '../../services/gemini.service';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { useReminders } from '../../hooks/useReminders';
 import { usePatterns } from '../../hooks/usePatterns';
 import { PatternType } from '../../types/pattern.types';
 
+
 type AIReviewModalProps = NativeStackScreenProps<RootStackParamList, 'AIReviewModal'>;
+
+
+// 🔧 DEBUG FLAG: Set to false to enable API calls
+const DEBUG_MODE = true;
+
+
+enum ErrorType {
+  NETWORK = 'network',
+  IMAGE_QUALITY = 'image_quality',
+  PARSING = 'parsing',
+  API_LIMIT = 'api_limit',
+  UNKNOWN = 'unknown',
+}
+
+
+interface SmartError {
+  type: ErrorType;
+  title: string;
+  message: string;
+  suggestion: string;
+  icon: string;
+  retryable: boolean;
+}
+
+
+function categorizeError(error: any): SmartError {
+  const errorMessage = error?.message || error?.toString() || '';
+  const errorString = errorMessage.toLowerCase();
+
+
+  if (
+    errorString.includes('network') ||
+    errorString.includes('connection') ||
+    errorString.includes('timeout') ||
+    errorString.includes('fetch failed')
+  ) {
+    return {
+      type: ErrorType.NETWORK,
+      title: 'Connection Issue',
+      message: 'Unable to reach AI service',
+      suggestion: 'Check your internet connection and try again',
+      icon: 'cloud-offline-outline',
+      retryable: true,
+    };
+  }
+
+
+  if (
+    errorString.includes('blurry') ||
+    errorString.includes('blur') ||
+    errorString.includes('unclear') ||
+    errorString.includes('quality') ||
+    errorString.includes('unreadable') ||
+    errorString.includes('no text detected')
+  ) {
+    return {
+      type: ErrorType.IMAGE_QUALITY,
+      title: 'Image Quality Issue',
+      message: 'Photo is too blurry or unclear',
+      suggestion: 'Retake with better lighting and focus. Hold steady and ensure text is clearly visible.',
+      icon: 'camera-outline',
+      retryable: false,
+    };
+  }
+
+
+  if (
+    errorString.includes('json') ||
+    errorString.includes('parse') ||
+    errorString.includes('unexpected token') ||
+    errorString.includes('unexpected end')
+  ) {
+    return {
+      type: ErrorType.PARSING,
+      title: 'Analysis Failed',
+      message: 'AI couldn\'t extract clear information',
+      suggestion: 'Try retaking the photo with better composition. Ensure the content is well-framed and visible.',
+      icon: 'scan-outline',
+      retryable: true,
+    };
+  }
+
+
+  if (
+    errorString.includes('rate limit') ||
+    errorString.includes('quota') ||
+    errorString.includes('429') ||
+    errorString.includes('too many requests')
+  ) {
+    return {
+      type: ErrorType.API_LIMIT,
+      title: 'Service Limit Reached',
+      message: 'Too many requests in a short time',
+      suggestion: 'Please wait a moment and try again',
+      icon: 'timer-outline',
+      retryable: true,
+    };
+  }
+
+
+  return {
+    type: ErrorType.UNKNOWN,
+    title: 'Analysis Error',
+    message: 'AI couldn\'t process the image',
+    suggestion: 'You can edit the details manually below, or retake the photo',
+    icon: 'alert-circle-outline',
+    retryable: true,
+  };
+}
+
 
 export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const { imageUri, analysisType } = route.params;
   const { createReminder } = useReminders();
   const { createPattern } = usePatterns();
 
-  // State - AI Analysis
-  const [isAnalyzing, setIsAnalyzing] = useState(true);
-  const [analysisError, setAnalysisError] = useState<string | null>(null);
 
-  // State - Extracted Data
+  const [isAnalyzing, setIsAnalyzing] = useState(true);
+  const [analysisError, setAnalysisError] = useState<SmartError | null>(null);
+  const [retryCount, setRetryCount] = useState(0);
+
+
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [category, setCategory] = useState<ReminderCategory>(ReminderCategory.PERSONAL);
@@ -57,45 +176,67 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const [reminderTime, setReminderTime] = useState('');
   const [emoji, setEmoji] = useState('📝');
 
-  // State - Saving
+
   const [isSaving, setIsSaving] = useState(false);
 
-  /**
-   * Perform AI analysis on mount
-   */
+
   useEffect(() => {
-    analyzeImage();
+    // 🔧 Skip API call during debug phase
+    if (!DEBUG_MODE) {
+      analyzeImage();
+    } else {
+      setIsAnalyzing(false);
+    }
   }, []);
 
-  /**
-   * Convert image URI to base64
-   */
+
   const imageToBase64 = async (uri: string): Promise<string> => {
     try {
+      if (!uri || typeof uri !== 'string') {
+        throw new Error('Invalid image URI');
+      }
+
+
+      const fileInfo = await FileSystem.getInfoAsync(uri);
+      if (!fileInfo.exists) {
+        throw new Error('IMAGE_NOT_FOUND');
+      }
+
+
       const base64 = await FileSystem.readAsStringAsync(uri, {
-        encoding: 'base64',
+        encoding: FileSystem.EncodingType.Base64,
       });
+
+
+      if (!base64 || base64.length < 1000) {
+        throw new Error('IMAGE_QUALITY');
+      }
+
+
       return base64;
     } catch (error) {
-      console.error('[AIReviewModal] Base64 conversion failed:', error);
-      throw new Error('Failed to process image');
+      throw error;
     }
   };
 
-  /**
-   * Analyze image with Gemini AI
-   */
+
   const analyzeImage = async () => {
     try {
       setIsAnalyzing(true);
       setAnalysisError(null);
 
+
       const base64 = await imageToBase64(imageUri);
+
 
       if (analysisType === 'reminder') {
         const result = await GeminiService.analyzeReminderImage(base64);
         
-        setTitle(result.title || '');
+        if (!result.title && !result.smartNote) {
+          throw new Error('NO_TEXT_DETECTED');
+        }
+        
+        setTitle(result.title || 'Untitled Reminder');
         setNote(result.smartNote || '');
         setCategory(result.category || ReminderCategory.PERSONAL);
         setPriority(ReminderPriority.MEDIUM);
@@ -104,33 +245,44 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         setEmoji(result.emoji || '📝');
       } else {
         const result = await GeminiService.analyzePatternImage(base64);
+        
+        if (!result.patterns || result.patterns.length === 0) {
+          throw new Error('NO_PATTERNS');
+        }
+        
         const firstPattern = result.patterns[0];
         setTitle(firstPattern?.name || 'Pattern');
         setNote(result.insights?.explanation || '');
       }
 
+
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+      
     } catch (error: any) {
-      console.error('[AIReviewModal] Analysis failed:', error);
-      setAnalysisError(error.message || 'AI analysis failed. Please edit manually.');
+      const smartError = categorizeError(error);
+      setAnalysisError(smartError);
+      
+      if (!title) setTitle('');
+      if (!note) setNote('');
+      
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsAnalyzing(false);
     }
   };
 
-  /**
-   * Handle save
-   */
+
   const handleSave = async () => {
     if (!title.trim()) {
-      Alert.alert('Validation Error', 'Please enter a title.');
+      Alert.alert('Missing Title', 'Please enter a title for this item.');
       return;
     }
+
 
     try {
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
 
       if (analysisType === 'reminder') {
         await createReminder({
@@ -149,6 +301,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           createdAt: Date.now(),
           updatedAt: Date.now(),
         } as any);
+
 
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
@@ -173,6 +326,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           userNotes: note.trim(),
         } as any);
 
+
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
         navigation.navigate('MainApp', {
@@ -184,7 +338,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         });
       }
     } catch (error: any) {
-      console.error('[AIReviewModal] Save failed:', error);
       Alert.alert('Save Failed', error.message || 'Failed to save. Please try again.');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
@@ -192,9 +345,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
-  /**
-   * Handle discard
-   */
+
   const handleDiscard = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -212,14 +363,18 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     );
   };
 
-  /**
-   * Handle retry analysis
-   */
+
   const handleRetry = () => {
+    setRetryCount(prev => prev + 1);
     analyzeImage();
   };
 
-  // Category config
+
+  const handleRecapture = () => {
+    navigation.goBack();
+  };
+
+
   const categoryConfig = {
     [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
     [ReminderCategory.WORK]: { icon: 'briefcase', color: Theme.colors.semantic.info },
@@ -227,7 +382,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
   };
 
-  // Priority config
+
   const priorityConfig = {
     [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
     [ReminderPriority.MEDIUM]: { icon: 'remove', color: Theme.colors.semantic.info },
@@ -235,13 +390,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     [ReminderPriority.URGENT]: { icon: 'warning', color: Theme.colors.semantic.error },
   };
 
+
   return (
-    <Screen safeAreaTop safeAreaBottom={false}>
+    <Screen 
+      safeAreaTop 
+      safeAreaBottom={false} 
+      disableTabBarSpacing={true}
+    >
       <KeyboardAvoidingView
         style={styles.container}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={handleDiscard} haptic="light" style={styles.headerButton}>
             <Icon name="close" size="md" color={Theme.colors.text.primary} />
@@ -251,11 +410,12 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
               {analysisType === 'reminder' ? 'Review Reminder' : 'Review Pattern'}
             </Text>
             <Text variant="caption" color="tertiary">
-              Edit AI suggestions
+              {isAnalyzing ? 'Analyzing...' : analysisError ? 'Edit manually' : 'Edit AI suggestions'}
             </Text>
           </View>
           <View style={{ width: 40 }} />
         </View>
+
 
         <ScrollView 
           style={styles.scrollView}
@@ -263,8 +423,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           showsVerticalScrollIndicator={false}
         >
           <Container padding="m">
-            {/* Image Preview */}
-            <Card style={styles.imageCard}>
+            <Card elevation="sm" style={styles.imageCard}>
               <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
               <View style={styles.imageOverlay}>
                 <View style={[
@@ -286,48 +445,85 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
               </View>
             </Card>
 
-            {/* AI Analysis Status */}
+
             {isAnalyzing && (
-              <Card style={styles.analysisCard}>
+              <Card elevation="sm" style={styles.analysisCard}>
                 <View style={styles.analysisIconContainer}>
                   <Icon name="sparkles" size="md" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.analysisContent}>
                   <Text variant="bodyLarge" weight="600">Analyzing Image</Text>
                   <Text variant="caption" color="secondary">
-                    AI is extracting information from your photo...
+                    {retryCount > 0 ? `Retry attempt ${retryCount}...` : 'AI is extracting information...'}
                   </Text>
                 </View>
                 <LoadingSpinner size="small" />
               </Card>
             )}
 
+
             {analysisError && (
-              <Card style={styles.errorCard}>
-                <View style={styles.errorIconContainer}>
-                  <Icon name="warning" size="md" color={Theme.colors.semantic.error} />
+              <Card elevation="sm" style={styles.errorCard}>
+                <View style={styles.errorHeader}>
+                  <View style={styles.errorIconContainer}>
+                    <Icon name={analysisError.icon as any} size="md" color={Theme.colors.semantic.error} />
+                  </View>
+                  <View style={styles.errorContent}>
+                    <Text variant="bodyLarge" weight="600">{analysisError.title}</Text>
+                    <Text variant="body" color="secondary" style={{ marginTop: 4 }}>
+                      {analysisError.message}
+                    </Text>
+                  </View>
                 </View>
-                <View style={styles.errorContent}>
-                  <Text variant="bodyLarge" weight="600">Analysis Failed</Text>
-                  <Text variant="caption" color="secondary">
-                    {analysisError}
+                
+                <View style={styles.suggestionBox}>
+                  <Icon name="bulb-outline" size="sm" color={Theme.colors.secondary[500]} />
+                  <Text variant="caption" color="secondary" style={{ flex: 1, marginLeft: 8 }}>
+                    {analysisError.suggestion}
                   </Text>
                 </View>
-                <Pressable onPress={handleRetry} style={styles.retryButton} haptic="light">
-                  <Icon name="refresh" size="sm" color={Theme.colors.primary[500]} />
-                </Pressable>
+
+
+                <View style={styles.errorActions}>
+                  {analysisError.type === ErrorType.IMAGE_QUALITY ? (
+                    <Button
+                      label="Retake Photo"
+                      variant="outline"
+                      size="medium"
+                      leftIcon="camera"
+                      onPress={handleRecapture}
+                      fullWidth
+                    />
+                  ) : analysisError.retryable ? (
+                    <Button
+                      label="Try Again"
+                      variant="outline"
+                      size="medium"
+                      leftIcon="refresh"
+                      onPress={handleRetry}
+                      fullWidth
+                    />
+                  ) : null}
+                </View>
               </Card>
             )}
 
-            {/* Editable Fields */}
+
             {!isAnalyzing && (
               <>
-                {/* Title & Description Section */}
                 <View style={styles.section}>
                   <View style={styles.sectionHeader}>
                     <Icon name="document-text-outline" size="sm" color={Theme.colors.primary[500]} />
                     <Text variant="h4">Details</Text>
+                    {analysisError && (
+                      <View style={styles.manualBadge}>
+                        <Text variant="micro" customColor={Theme.colors.secondary[500]}>
+                          MANUAL ENTRY
+                        </Text>
+                      </View>
+                    )}
                   </View>
+
 
                   <Input
                     label="Title"
@@ -338,6 +534,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                     containerStyle={styles.input}
                     leftIcon="create-outline"
                   />
+
 
                   <Input
                     label="Description"
@@ -351,9 +548,9 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   />
                 </View>
 
+
                 {analysisType === 'reminder' && (
                   <>
-                    {/* Category Section */}
                     <View style={styles.section}>
                       <View style={styles.sectionHeader}>
                         <Icon name="pricetags-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -365,19 +562,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                           const isSelected = category === cat;
                           return (
                             <Pressable
-                            key={cat}
-                            onPress={() => setCategory(cat as ReminderCategory)}
-                            haptic="light"
-                            style={[
-                              styles.categoryChip,
-                              // ✅ FIXED: Use conditional array spreading
-                              ...(isSelected ? [{ 
-                                backgroundColor: config.color,
-                                borderColor: config.color 
-                              }] : []),
-                            ]}
-                          >
-
+                              key={cat}
+                              onPress={() => setCategory(cat as ReminderCategory)}
+                              haptic="light"
+                              style={[
+                                styles.categoryChip,
+                                ...(isSelected ? [{ 
+                                  backgroundColor: config.color,
+                                  borderColor: config.color 
+                                }] : []),
+                              ]}
+                            >
                               <Icon 
                                 name={config.icon as any} 
                                 size="sm" 
@@ -400,7 +595,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                       </View>
                     </View>
 
-                    {/* Priority Section */}
+
                     <View style={styles.section}>
                       <View style={styles.sectionHeader}>
                         <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -411,20 +606,18 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                         {Object.entries(priorityConfig).map(([prio, config]) => {
                           const isSelected = priority === prio;
                           return (
-                          <Pressable
-                            key={prio}
-                            onPress={() => setPriority(prio as ReminderPriority)}
-                            haptic="light"
-                            style={[
-                              styles.priorityChip,
-                              // ✅ FIXED: Use conditional array spreading
-                              ...(isSelected ? [{
-                                backgroundColor: config.color,
-                                borderColor: config.color,
-                              }] : []),
-                            ]}
-                          >
-
+                            <Pressable
+                              key={prio}
+                              onPress={() => setPriority(prio as ReminderPriority)}
+                              haptic="light"
+                              style={[
+                                styles.priorityChip,
+                                ...(isSelected ? [{
+                                  backgroundColor: config.color,
+                                  borderColor: config.color,
+                                }] : []),
+                              ]}
+                            >
                               <Icon 
                                 name={config.icon as any} 
                                 size="sm" 
@@ -447,7 +640,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                       </View>
                     </View>
 
-                    {/* Date & Time Section */}
+
                     <View style={styles.section}>
                       <View style={styles.sectionHeader}>
                         <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -480,39 +673,47 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           </Container>
         </ScrollView>
 
-        {/* Footer Actions */}
-        <View style={styles.footer}>
-          <Button
-            label="Discard"
-            variant="outline"
-            size="large"
-            leftIcon="trash-outline"
-            onPress={handleDiscard}
-            style={styles.footerButton}
-            disabled={isSaving}
-          />
-          <Button
-            label={isSaving ? 'Saving...' : 'Save'}
-            variant="primary"
-            size="large"
-            leftIcon="checkmark"
-            onPress={handleSave}
-            style={styles.footerButtonPrimary}
-            disabled={isAnalyzing || isSaving}
-            loading={isSaving}
-          />
-        </View>
+        {/* 🔧 Footer now outside ScrollView, conditionally rendered */}
+{!isAnalyzing && (
+  <View style={styles.footerContainer}>
+    <View style={styles.footer}>
+      <View style={styles.footerButton}>
+        <Button
+          label="Discard"
+          variant="outline"
+          size="large"
+          leftIcon="trash-outline"
+          onPress={handleDiscard}
+          disabled={isSaving}
+          fullWidth
+        />
+      </View>
+      <View style={styles.footerButton}>
+        <Button
+          label={isSaving ? 'Saving...' : 'Save'}
+          variant="primary"
+          size="large"
+          leftIcon="checkmark"
+          onPress={handleSave}
+          disabled={isSaving}
+          loading={isSaving}
+          fullWidth
+        />
+      </View>
+    </View>
+  </View>
+)}
       </KeyboardAvoidingView>
     </Screen>
   );
 }
+
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
   },
   
-  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -522,6 +723,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -536,15 +738,15 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
-  // Scroll View
+
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 120,
+    paddingBottom: 140,
   },
 
-  // Image Preview
+
   imageCard: {
     padding: 0,
     overflow: 'hidden',
@@ -571,7 +773,7 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.full,
   },
 
-  // Analysis Card
+
   analysisCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -594,15 +796,17 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
-  // Error Card
+
   errorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Theme.spacing.m,
     marginBottom: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.error}10`,
+    backgroundColor: `${Theme.colors.semantic.error}08`,
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.error}30`,
+  },
+  errorHeader: {
+    flexDirection: 'row',
+    gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
   },
   errorIconContainer: {
     width: 48,
@@ -614,18 +818,23 @@ const styles = StyleSheet.create({
   },
   errorContent: {
     flex: 1,
-    gap: 2,
   },
-  retryButton: {
-    width: 40,
-    height: 40,
+  suggestionBox: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    padding: Theme.spacing.m,
+    backgroundColor: `${Theme.colors.secondary[500]}10`,
     borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
-    alignItems: 'center',
-    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.secondary[500]}30`,
+    marginBottom: Theme.spacing.m,
+  },
+  errorActions: {
+    flexDirection: 'row',
+    gap: Theme.spacing.s,
   },
 
-  // Section
+
   section: {
     marginBottom: Theme.spacing.l,
   },
@@ -635,11 +844,18 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
+  manualBadge: {
+    marginLeft: 'auto',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    backgroundColor: `${Theme.colors.secondary[500]}20`,
+    borderRadius: Theme.borderRadius.s,
+  },
   input: {
     marginBottom: Theme.spacing.m,
   },
 
-  // Category Grid
+
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -658,25 +874,26 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
-  // Priority Grid
+
   priorityGrid: {
     flexDirection: 'row',
+    flexWrap: 'wrap',
     gap: Theme.spacing.s,
   },
   priorityChip: {
-    flex: 1,
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 4,
+    gap: 6,
+    paddingHorizontal: Theme.spacing.m,
     paddingVertical: 10,
     borderRadius: Theme.borderRadius.m,
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
+    minWidth: 100,
   },
 
-  // Date/Time Row
+
   dateTimeRow: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
@@ -688,20 +905,28 @@ const styles = StyleSheet.create({
     flex: 1,
   },
 
-  // Footer
+
+  // 🔧 Fixed footer positioning (absolute, always visible)
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Theme.colors.background.secondary,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border.light,
+    ...Theme.shadows.sm,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+  },
   footer: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border.light,
-    backgroundColor: Theme.colors.background.secondary,
+    paddingTop: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
   },
+  // 🔧 Equal width for both buttons
   footerButton: {
     flex: 1,
-  },
-  footerButtonPrimary: {
-    flex: 2,
   },
 });

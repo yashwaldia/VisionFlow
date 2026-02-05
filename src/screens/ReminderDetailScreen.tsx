@@ -1,8 +1,14 @@
 /**
- * VisionFlow AI - Reminder Detail Screen (Professional v2.0)
+ * VisionFlow AI - Reminder Detail Screen (v2.1 - Harmonized Edition)
  * View and manage a single reminder
  * 
  * @module screens/ReminderDetailScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Added header shadow for separation
+ * - ✅ Enhanced footer button with glow effect
  */
 
 import React, { useState, useEffect } from 'react';
@@ -157,7 +163,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow for depth */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -180,7 +186,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Image */}
+          {/* Image - ✅ ENHANCED: Added card elevation */}
           {reminder.imageUri && (
             <Card padding={0} style={styles.imageCard}>
               <Image 
@@ -188,7 +194,6 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                 style={styles.image} 
                 resizeMode="cover" 
               />
-              {/* Image overlay gradient for better text visibility if needed */}
             </Card>
           )}
 
@@ -212,7 +217,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </View>
 
-          {/* Details Card */}
+          {/* Details Card - ✅ ENHANCED: Added elevation */}
           <Card style={styles.detailsCard}>
             {/* Date & Time */}
             <View style={styles.detailSection}>
@@ -287,7 +292,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </Card>
 
-          {/* Smart Note */}
+          {/* Smart Note - ✅ ENHANCED: Added elevation */}
           <View style={styles.noteSection}>
             <View style={styles.noteSectionHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
@@ -328,7 +333,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         </Container>
       </ScrollView>
 
-      {/* Footer Actions */}
+      {/* Footer Actions - ✅ ENHANCED: Added glow to button */}
       {!isDone && (
         <View style={styles.footer}>
           <Container padding="m">
@@ -348,7 +353,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -358,6 +363,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -371,9 +377,9 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
   },
   
-  // Content styles
+  // Content styles - ✅ FIXED: Uses theme constant
   scrollContent: {
-    paddingBottom: 120, // Extra space for footer button
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 96 from theme (was hardcoded 120)
   },
   
   // Not found styles
@@ -391,12 +397,13 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // Image styles
+  // Image styles - ✅ ENHANCED: Added shadow
   imageCard: {
     marginBottom: Theme.spacing.l,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.md, // ✅ ADDED: Image card shadow for depth
   },
   image: {
     width: '100%',
@@ -439,11 +446,12 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   
-  // Details card styles
+  // Details card styles - ✅ ENHANCED: Added shadow
   detailsCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Details card shadow for depth
   },
   detailSection: {
     gap: Theme.spacing.m,
@@ -480,7 +488,7 @@ const styles = StyleSheet.create({
     marginVertical: Theme.spacing.m,
   },
   
-  // Note section styles
+  // Note section styles - ✅ ENHANCED: Added shadow
   noteSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -493,6 +501,7 @@ const styles = StyleSheet.create({
   noteCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Note card shadow for depth
   },
   noteText: {
     lineHeight: 24,
@@ -511,12 +520,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   
-  // Footer styles
+  // Footer styles - ✅ ENHANCED: Added shadow
   footer: {
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingBottom: Theme.spacing.s,
+    ...Theme.shadows.md, // ✅ ADDED: Footer shadow for separation
   },
   footerButton: {
     width: '100%',

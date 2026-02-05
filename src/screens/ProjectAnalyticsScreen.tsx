@@ -1,8 +1,15 @@
 /**
- * VisionFlow AI - Project Analytics Screen (Professional v2.0)
+ * VisionFlow AI - Project Analytics Screen (v2.1 - Harmonized Edition)
  * View detailed analytics for a project
  * 
  * @module screens/ProjectAnalyticsScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
+ * - ✅ Standardized project icon background opacity to 20%
+ * - ✅ Standardized category badge opacity to 20%
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card shadows for depth
  */
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -124,7 +131,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -156,7 +163,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
             </View>
           </View>
 
-          {/* Empty State */}
+          {/* Empty State - ✅ ENHANCED: Added shadow */}
           {stats.total === 0 ? (
             <Card style={styles.emptyCard}>
               <Icon name="analytics-outline" size="xl" color={Theme.colors.text.tertiary} />
@@ -217,7 +224,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
                 </View>
               </View>
 
-              {/* Completion Rate */}
+              {/* Completion Rate - ✅ ENHANCED: Added shadow */}
               <View style={styles.completionSection}>
                 <Card style={styles.completionCard}>
                   <View style={styles.completionHeader}>
@@ -279,7 +286,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
                 </Card>
               </View>
 
-              {/* Status Breakdown */}
+              {/* Status Breakdown - ✅ ENHANCED: Added shadow */}
               {Object.keys(statusBreakdown).length > 0 && (
                 <View style={styles.breakdownSection}>
                   <View style={styles.sectionHeader}>
@@ -319,7 +326,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
                 </View>
               )}
 
-              {/* Category Breakdown */}
+              {/* Category Breakdown - ✅ ENHANCED: Added shadow */}
               {Object.keys(categoryBreakdown).length > 0 && (
                 <View style={styles.breakdownSection}>
                   <View style={styles.sectionHeader}>
@@ -355,7 +362,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
                 </View>
               )}
 
-              {/* Priority Breakdown */}
+              {/* Priority Breakdown - ✅ ENHANCED: Added shadow */}
               {Object.keys(priorityBreakdown).length > 0 && (
                 <View style={styles.breakdownSection}>
                   <View style={styles.sectionHeader}>
@@ -402,7 +409,7 @@ export function ProjectAnalyticsScreen({ navigation, route }: ProjectAnalyticsSc
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -412,6 +419,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -421,9 +429,9 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.m,
   },
   
-  // Content styles
+  // Content styles - ✅ FIXED: Uses theme constant
   scrollContent: {
-    paddingBottom: 120, // Space for bottom tab bar
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
   },
   
   // Not found styles
@@ -438,7 +446,7 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.s,
   },
   
-  // Project header styles
+  // Project header styles - ✅ FIXED: Opacity standardized
   projectHeader: {
     alignItems: 'center',
     marginBottom: Theme.spacing.xl,
@@ -448,7 +456,7 @@ const styles = StyleSheet.create({
     width: 72,
     height: 72,
     borderRadius: 36,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderWidth: 2,
     borderColor: `${Theme.colors.primary[500]}30`,
     alignItems: 'center',
@@ -461,7 +469,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}30`,
   },
@@ -507,10 +515,11 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   
-  // Completion card styles
+  // Completion card styles - ✅ ENHANCED: Added shadow
   completionCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   completionHeader: {
     flexDirection: 'row',
@@ -558,10 +567,11 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.border.light,
   },
   
-  // Breakdown card styles
+  // Breakdown card styles - ✅ ENHANCED: Added shadow
   breakdownCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   breakdownRow: {
     flexDirection: 'row',
@@ -593,7 +603,7 @@ const styles = StyleSheet.create({
     alignItems: 'flex-end',
   },
   
-  // Empty state styles
+  // Empty state styles - ✅ ENHANCED: Added shadow
   emptyCard: {
     alignItems: 'center',
     paddingVertical: Theme.spacing.xxl,
@@ -601,6 +611,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   emptyTitle: {
     marginTop: Theme.spacing.s,

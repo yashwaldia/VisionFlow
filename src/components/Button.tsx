@@ -236,11 +236,8 @@ export function Button({
           <Text
             variant={textVariant}
             customColor={variantStyles.textColor}
-            weight="700" // FIXED: Using numeric string "700" instead of "bold"
-            style={[styles.label, { 
-              textTransform: 'uppercase', // HUD requirement
-              letterSpacing: 0.5 
-            }]}
+            weight="700"
+            style={styles.label}
           >
             {label}
           </Text>

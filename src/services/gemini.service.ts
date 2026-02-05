@@ -473,7 +473,7 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
 export async function testGeminiConnection(): Promise<boolean> {
   try {
     const genAI = initializeGemini();
-    const model = genAI.getGenerativeModel({ model: 'gemini-2.0-flash-exp' });
+    const model = genAI.getGenerativeModel({ model: 'gemini-2.5-flash' });
     
     const result = await model.generateContent({
       contents: [{ role: 'user', parts: [{ text: 'Test' }] }],

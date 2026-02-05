@@ -1,7 +1,13 @@
 /**
- * VisionFlow AI - Pattern Detail Screen (FIXED & POLISHED)
+ * VisionFlow AI - Pattern Detail Screen (v2.1 - Harmonized Edition)
  * View and manage discovered AI patterns
- * * @module screens/PatternDetailScreen
+ * 
+ * @module screens/PatternDetailScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
  */
 
 import React, { useState, useEffect } from 'react';
@@ -87,7 +93,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light">
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -99,7 +105,6 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
       </View>
 
       <ScrollView 
-        // FIXED: Massive bottom padding to clear the Tab Bar + Safe Area
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
@@ -119,8 +124,8 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Text>
           </View>
 
-          {/* Confidence Score Card */}
-          <Card style={styles.card}>
+          {/* Confidence Score Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.card}>
             <View style={styles.confidenceHeader}>
               <Text variant="h4">AI Confidence</Text>
               <Text variant="h2" weight="700" customColor={confidenceColor}>
@@ -137,9 +142,9 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </View>
           </Card>
 
-          {/* Description / Notes (RESTORED) */}
+          {/* Description / Notes - ✅ ENHANCED: Added elevation */}
           {pattern.userNotes && (
-            <Card style={styles.card}>
+            <Card elevation="sm" style={styles.card}>
                <View style={styles.cardHeader}>
                   <Icon name="document-text-outline" size="md" color={Theme.colors.primary[500]} />
                   <Text variant="h4">Notes</Text>
@@ -148,9 +153,9 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* Saved Points Section (RESTORED & VISIBLE) */}
+          {/* Saved Points Section - ✅ ENHANCED: Added elevation */}
           {pattern.anchors && pattern.anchors.length > 0 && (
-             <Card style={styles.card}>
+             <Card elevation="sm" style={styles.card}>
                 <View style={styles.cardHeader}>
                    <Icon name="scan-outline" size="md" color={Theme.colors.semantic.info} />
                    <Text variant="h4">Saved Points</Text>
@@ -168,8 +173,8 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
              </Card>
           )}
 
-          {/* Metadata Card */}
-          <Card style={styles.card}>
+          {/* Metadata Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.card}>
             <View style={styles.detailRow}>
               <Icon name="calendar-outline" size="sm" color={Theme.colors.text.secondary} />
               <Text variant="body" color="secondary">Discovered:</Text>
@@ -193,6 +198,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 }
 
 const styles = StyleSheet.create({
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -203,10 +209,11 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
-  // FIXED: Increased padding to clear bottom tabs
+  // Scroll content - ✅ FIXED: Uses theme constant
   scrollContent: {
-    paddingBottom: 120, 
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
   },
   centered: {
     flex: 1,
@@ -243,6 +250,7 @@ const styles = StyleSheet.create({
   card: {
     marginBottom: Theme.spacing.m,
     gap: Theme.spacing.m,
+    // ✅ Card elevation added via elevation="sm" prop on Card component
   },
   cardHeader: {
       flexDirection: 'row',

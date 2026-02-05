@@ -1,8 +1,14 @@
 /**
- * VisionFlow AI - Data Management Screen (Professional v2.0)
+ * VisionFlow AI - Data Management Screen (v2.1 - Harmonized Edition)
  * Handle data backup, restoration, and storage management
  * 
  * @module screens/settings/DataManagementScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed main icon container opacity (15% → 20%)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Scroll padding already adequate for tab bar (120px)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -132,7 +138,7 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -157,7 +163,7 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               <Text variant="h4">Storage Usage</Text>
             </View>
             
-            <Card style={styles.statsCard}>
+            <Card elevation="sm" style={styles.statsCard}>
               <View style={styles.usageHeader}>
                 <View style={styles.mainIconContainer}>
                   <Icon name="server" size="xl" color={Theme.colors.primary[500]} />
@@ -205,7 +211,7 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               <Text variant="h4">Backup & Restore</Text>
             </View>
             
-            <Card style={styles.actionCard}>
+            <Card elevation="sm" style={styles.actionCard}>
               {/* Export */}
               <View style={styles.actionItem}>
                 <View style={styles.actionHeader}>
@@ -255,8 +261,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               </View>
             </Card>
 
-            {/* Info Card */}
-            <Card style={styles.infoCard}>
+            {/* Info Card - ✅ ENHANCED: Added elevation */}
+            <Card elevation="sm" style={styles.infoCard}>
               <View style={styles.infoRow}>
                 <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
                 <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -273,7 +279,7 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               <Text variant="h4" customColor={Theme.colors.semantic.error}>Danger Zone</Text>
             </View>
             
-            <Card style={styles.dangerCard}>
+            <Card elevation="sm" style={styles.dangerCard}>
               <View style={styles.dangerHeader}>
                 <View style={styles.dangerIconContainer}>
                   <Icon name="trash" size="lg" color={Theme.colors.semantic.error} />
@@ -299,8 +305,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               />
             </Card>
 
-            {/* Warning Card */}
-            <Card style={styles.warningCard}>
+            {/* Warning Card - ✅ ENHANCED: Added elevation */}
+            <Card elevation="sm" style={styles.warningCard}>
               <View style={styles.infoRow}>
                 <Icon name="alert-circle" size="sm" color={Theme.colors.semantic.warning} />
                 <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -317,7 +323,7 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -327,6 +333,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -341,7 +348,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles
+  // Scroll styles - ✅ Already adequate for tab bar (120px)
   scrollContent: {
     paddingBottom: 120,
   },
@@ -357,7 +364,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Stats card styles
+  // Stats card styles - ✅ Card elevation added via elevation="sm" prop + FIXED opacity
   statsCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
@@ -372,7 +379,7 @@ const styles = StyleSheet.create({
     width: 64,
     height: 64,
     borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -411,7 +418,7 @@ const styles = StyleSheet.create({
     borderColor: `${Theme.colors.border.default}20`,
   },
   
-  // Action card styles
+  // Action card styles - ✅ Card elevation added via elevation="sm" prop
   actionCard: {
     padding: Theme.spacing.m,
     borderWidth: 1,
@@ -451,10 +458,10 @@ const styles = StyleSheet.create({
     marginVertical: Theme.spacing.m,
   },
   
-  // Info card styles
+  // Info card styles - ✅ Card elevation added via elevation="sm" prop
   infoCard: {
     marginTop: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.info}10`,
+    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },
@@ -468,9 +475,9 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   
-  // Danger card styles
+  // Danger card styles - ✅ Card elevation added via elevation="sm" prop
   dangerCard: {
-    backgroundColor: `${Theme.colors.semantic.error}10`,
+    backgroundColor: `${Theme.colors.semantic.error}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 2,
     borderColor: `${Theme.colors.semantic.error}40`,
   },
@@ -484,7 +491,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.semantic.error}20`,
+    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ Already correct at 20%
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -502,10 +509,10 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.semantic.error,
   },
   
-  // Warning card styles
+  // Warning card styles - ✅ Card elevation added via elevation="sm" prop
   warningCard: {
     marginTop: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.warning}10`,
+    backgroundColor: `${Theme.colors.semantic.warning}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.warning}30`,
   },

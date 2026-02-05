@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Screen Component (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Screen Component (v2.2 - Modal Fix Edition)
  * Safe area wrapper with automatic bottom tab bar spacing
  * 
  * @module components/Screen
+ * 
+ * CHANGELOG v2.2:
+ * - ✅ FIXED: Modal screens no longer get unwanted tab bar padding
+ * - ✅ Better detection of tab navigator context
+ * - ✅ Smarter bottom padding calculation
  * 
  * CHANGELOG v2.1:
  * - ✅ FIXED: Automatic bottom padding for tab bar (no more hidden content!)
@@ -58,15 +63,22 @@ export interface ScreenProps {
 
 /**
  * Hook to get tab bar height with fallback
+ * Returns both the height and whether we're actually in a tab navigator
  */
-function useTabBarHeightSafe(): number {
+function useTabBarHeightSafe(): { height: number; isInTabNavigator: boolean } {
   try {
     // Try to get actual tab bar height from navigation
     const tabBarHeight = useBottomTabBarHeight();
-    return tabBarHeight;
+    return { 
+      height: tabBarHeight, 
+      isInTabNavigator: true 
+    };
   } catch {
-    // Fallback to theme value if not in tab navigator
-    return Theme.dimensions.tabBar.height;
+    // Not in a tab navigator context
+    return { 
+      height: 0, 
+      isInTabNavigator: false 
+    };
   }
 }
 
@@ -76,7 +88,7 @@ function useTabBarHeightSafe(): number {
  * 
  * @example
  * ```tsx
- * // Scrollable screen (automatic bottom spacing)
+ * // Scrollable screen in tab navigator (automatic bottom spacing)
  * <Screen scroll>
  *   <Text>Content will automatically clear the tab bar!</Text>
  * </Screen>
@@ -86,9 +98,14 @@ function useTabBarHeightSafe(): number {
  *   <View>Content here</View>
  * </Screen>
  * 
- * // Modal (no tab bar spacing)
+ * // Modal (no tab bar spacing - automatically detected)
+ * <Screen>
+ *   <Text>Modal content - no extra padding added!</Text>
+ * </Screen>
+ * 
+ * // Force disable tab bar spacing
  * <Screen disableTabBarSpacing>
- *   <Text>Modal content</Text>
+ *   <Text>Manual override</Text>
  * </Screen>
  * ```
  */
@@ -113,22 +130,30 @@ export function Screen({
   // Get safe area insets
   const insets = useSafeAreaInsets();
   
-  // Get tab bar height (with fallback)
-  const tabBarHeight = useTabBarHeightSafe();
+  // Get tab bar height and context
+  const { height: tabBarHeight, isInTabNavigator } = useTabBarHeightSafe();
   
   /**
    * Calculate bottom padding
    * This ensures content is visible above the tab bar
+   * 
+   * ✅ FIXED: Only adds padding if we're actually in a tab navigator
    */
   const bottomPadding = React.useMemo(() => {
+    // If disabled explicitly, return 0
     if (!safeAreaBottom || disableTabBarSpacing) {
       return 0;
     }
     
-    // Tab bar height + extra spacing for breathing room
-    // Uses the larger value between device inset and tab bar
+    // ✅ NEW: Only add tab bar padding if we're in a tab navigator
+    if (!isInTabNavigator) {
+      // For modals/non-tab screens, just use safe area inset
+      return insets.bottom;
+    }
+    
+    // For tab navigator screens: tab bar height + extra spacing
     return Math.max(insets.bottom, tabBarHeight) + Theme.spacing.m;
-  }, [safeAreaBottom, disableTabBarSpacing, insets.bottom, tabBarHeight]);
+  }, [safeAreaBottom, disableTabBarSpacing, isInTabNavigator, insets.bottom, tabBarHeight]);
   
   // Base Container Style
   const containerStyle: ViewStyle = {
@@ -174,45 +199,43 @@ export function Screen({
   );
   
   // Render content based on scroll behavior
-// Render content based on scroll behavior
-const renderContent = () => {
-  if (scroll) {
+  const renderContent = () => {
+    if (scroll) {
+      return (
+        <ScrollView
+          style={styles.scrollView}
+          contentContainerStyle={[
+            styles.scrollContentContainer,
+            {
+              paddingBottom: bottomPadding,
+            },
+            contentContainerStyle,
+          ]}
+          bounces={bounces}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+          refreshControl={refreshControl}
+          testID={testID ? `${testID}-scroll` : undefined}
+        >
+          {children}
+        </ScrollView>
+      );
+    }
+    
     return (
-      <ScrollView
-        style={styles.scrollView}
-        contentContainerStyle={[
-          styles.scrollContentContainer,
+      <View 
+        style={[
+          styles.contentContainer, 
           {
             paddingBottom: bottomPadding,
           },
-          contentContainerStyle,
+          style,
         ]}
-        bounces={bounces}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
-        refreshControl={refreshControl}  // ✅ ADD THIS LINE
-        testID={testID ? `${testID}-scroll` : undefined}
       >
         {children}
-      </ScrollView>
+      </View>
     );
-  }
-  
-  return (
-    <View 
-      style={[
-        styles.contentContainer, 
-        {
-          paddingBottom: bottomPadding,
-        },
-        style,
-      ]}
-    >
-      {children}
-    </View>
-  );
-};
-
+  };
   
   // Wrap with keyboard avoiding view if needed
   const content = keyboardAvoiding ? (

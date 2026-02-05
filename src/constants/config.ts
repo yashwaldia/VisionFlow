@@ -36,8 +36,8 @@ export const API_CONFIG = {
   // Google Gemini AI
   gemini: {
     apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
-    reminderModel: 'gemini-2.0-flash-exp', // Fast model for reminders
-    patternModel: 'gemini-2.0-flash-thinking-exp-1219', // Advanced model for patterns
+    reminderModel: 'gemini-2.5-flash',
+    patternModel: 'gemini-2.5-flash', // Advanced model for patterns
     timeout: 30000, // 30 seconds
     maxRetries: 3,
   },

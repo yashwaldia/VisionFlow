@@ -1,12 +1,15 @@
 /**
- * VisionFlow AI - Reminders List Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Reminders List Screen (v2.2 - FULLY Harmonized Edition)
  * Display and manage all reminders
  * 
  * @module screens/RemindersScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Removed hardcoded paddingBottom (uses theme constant)
- * - ✅ Consistent filter chip styling
+ * CHANGELOG v2.2:
+ * - ✅ Fixed inline status badge opacity (15% → 20%)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Scroll padding already using theme constant (80px)
+ * - ✅ Filter chips already using correct 20% opacity
  */
 
 import React, { useState, useMemo } from 'react';
@@ -185,6 +188,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
     
     return (
       <Card
+        elevation="sm"
         pressable
         onPress={() => handleReminderPress(item)}
         style={styles.reminderCard}
@@ -237,9 +241,9 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             </View>
           </View>
           
-          {/* Right: Status badge */}
+          {/* Right: Status badge - ✅ FIXED: Inline opacity 20% */}
           <View style={styles.statusBadgeContainer}>
-            <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}15` }]}>
+            <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
               <Icon name={statusConfig.icon} size="xs" color={statusConfig.color} />
             </View>
             <Icon name="chevron-forward-outline" size="sm" color={Theme.colors.text.tertiary} />
@@ -252,7 +256,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
   return (
     <Screen>
       <Container padding="none">
-        {/* Fixed Header */}
+        {/* Fixed Header - ✅ ENHANCED: Added shadow */}
         <View style={styles.header}>
           <Container padding="m">
             <View style={styles.headerTop}>
@@ -375,11 +379,12 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     backgroundColor: Theme.colors.background.secondary,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerTop: {
     flexDirection: 'row',
@@ -411,7 +416,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.s,
   },
   
-  // Filters styles - ✅ Consistent with theme
+  // Filters styles - ✅ Already correct (20% opacity)
   filtersContainer: {
     paddingVertical: Theme.spacing.s,
     backgroundColor: Theme.colors.background.primary,
@@ -432,7 +437,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
   },
   filterChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`,  // ✅ 20% opacity
+    backgroundColor: `${Theme.colors.primary[500]}20`,  // ✅ Already correct 20% opacity
     borderColor: Theme.colors.primary[500],
   },
   countBadge: {
@@ -448,14 +453,14 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.primary[500]}25`,
   },
   
-  // List styles - ✅ FIXED: Uses theme constant instead of hardcoded value
+  // List styles - ✅ Already correct (uses theme constant)
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme constant (80)
+    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Already correct (80px)
     gap: Theme.spacing.s,
   },
   
-  // Card styles
+  // Card styles - ✅ Card elevation added via elevation="sm" prop
   reminderCard: {
     padding: Theme.spacing.m,
     borderWidth: 1,

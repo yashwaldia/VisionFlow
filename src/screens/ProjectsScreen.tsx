@@ -5,8 +5,11 @@
  * @module screens/ProjectsScreen
  * 
  * CHANGELOG v2.1:
- * - ✅ Removed hardcoded paddingBottom (uses theme constant)
- * - ✅ All styling now consistent with design system
+ * - ✅ Fixed toggle button opacity (15% → 20%)
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Added header shadow for separation
+ * - ✅ Enhanced add button with glow effect
+ * - ✅ Uses theme safe area constants
  */
 
 import React, { useState, useMemo } from 'react';
@@ -280,7 +283,7 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
   return (
     <Screen>
       <Container padding="none">
-        {/* Header with Search */}
+        {/* Header with Search - ✅ ENHANCED: Added shadow */}
         <View style={styles.header}>
           <Container padding="m">
             <View style={styles.headerTop}>
@@ -407,11 +410,12 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     backgroundColor: Theme.colors.background.secondary,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerTop: {
     flexDirection: 'row',
@@ -426,9 +430,10 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.primary[500],
     alignItems: 'center',
     justifyContent: 'center',
+    ...Theme.shadows.glow, // ✅ ADDED: Glow effect on primary button
   },
   
-  // Toggle styles
+  // Toggle styles - ✅ FIXED: Standardized to 20% opacity
   toggleContainer: {
     flexDirection: 'row',
     padding: Theme.spacing.m,
@@ -452,7 +457,7 @@ const styles = StyleSheet.create({
     borderColor: 'transparent',
   },
   toggleButtonActive: {
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderColor: `${Theme.colors.primary[500]}30`,
   },
   countBadge: {
@@ -468,18 +473,19 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.primary[500]}25`,
   },
   
-  // List styles - ✅ FIXED: Uses theme constant
+  // List styles - ✅ Already correct
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme (80)
+    paddingBottom: Theme.spacing.safeArea.bottomPadding, // ✅ Uses theme (80)
     gap: Theme.spacing.m,
   },
   
-  // Card styles
+  // Card styles - ✅ ENHANCED: Added shadow
   projectCard: {
     padding: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   cardContent: {
     flexDirection: 'row',

@@ -1,8 +1,15 @@
 /**
- * VisionFlow AI - Project Detail Screen (Professional v2.0)
+ * VisionFlow AI - Project Detail Screen (v2.1 - Harmonized Edition)
  * View and manage a single project
  * 
  * @module screens/ProjectDetailScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
+ * - ✅ Standardized icon background opacity to 20%
+ * - ✅ Standardized status badge opacity to 20%
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Added header shadow for separation
  */
 
 import React, { useState, useEffect } from 'react';
@@ -140,7 +147,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -199,7 +206,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </View>
 
-          {/* Description */}
+          {/* Description - ✅ ENHANCED: Added shadow */}
           {project.description && (
             <Card style={styles.descriptionCard}>
               <View style={styles.descriptionHeader}>
@@ -212,7 +219,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </Card>
           )}
 
-          {/* Stats Overview Card */}
+          {/* Stats Overview Card - ✅ ENHANCED: Added shadow */}
           <Card style={styles.statsCard}>
             <View style={styles.statsHeader}>
               <View style={styles.statsHeaderLeft}>
@@ -290,7 +297,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </Card>
 
-          {/* Project Info Card */}
+          {/* Project Info Card - ✅ ENHANCED: Added shadow */}
           <Card style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="information-circle-outline" size="sm" color={Theme.colors.text.secondary} />
@@ -356,7 +363,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </Card>
 
-          {/* Quick Actions */}
+          {/* Quick Actions - ✅ ENHANCED: Added shadows */}
           <View style={styles.actionsContainer}>
             <Text variant="caption" color="tertiary" style={styles.actionsTitle}>
               QUICK ACTIONS
@@ -412,7 +419,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -422,6 +429,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -435,9 +443,9 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
   },
   
-  // Content styles
+  // Content styles - ✅ FIXED: Uses theme constant
   scrollContent: {
-    paddingBottom: 120, // Extra space for safe area
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
   },
   
   // Not found styles
@@ -455,7 +463,7 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // Project header styles
+  // Project header styles - ✅ FIXED: Opacity standardized
   projectHeader: {
     alignItems: 'center',
     marginBottom: Theme.spacing.l,
@@ -468,7 +476,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderWidth: 2,
     borderColor: `${Theme.colors.primary[500]}30`,
     alignItems: 'center',
@@ -516,14 +524,15 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.s,
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.s,
-    backgroundColor: `${Theme.colors.semantic.warning}15`,
+    backgroundColor: `${Theme.colors.semantic.warning}20`, // ✅ FIXED: 20% opacity (was 15%)
   },
   
-  // Description card styles
+  // Description card styles - ✅ ENHANCED: Added shadow
   descriptionCard: {
     marginBottom: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   descriptionHeader: {
     flexDirection: 'row',
@@ -535,11 +544,12 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   
-  // Stats card styles
+  // Stats card styles - ✅ ENHANCED: Added shadow
   statsCard: {
     marginBottom: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   statsHeader: {
     flexDirection: 'row',
@@ -595,11 +605,12 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   
-  // Info card styles
+  // Info card styles - ✅ ENHANCED: Added shadow
   infoCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   infoHeader: {
     flexDirection: 'row',
@@ -632,7 +643,7 @@ const styles = StyleSheet.create({
     marginVertical: Theme.spacing.m,
   },
   
-  // Actions styles
+  // Actions styles - ✅ ENHANCED: Added shadows
   actionsContainer: {
     gap: Theme.spacing.m,
   },
@@ -655,6 +666,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
     gap: Theme.spacing.xs,
+    ...Theme.shadows.sm, // ✅ ADDED: Action card shadow for depth
   },
   actionIconContainer: {
     width: 56,

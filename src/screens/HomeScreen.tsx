@@ -203,7 +203,7 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
             <Text variant="caption" color="tertiary" style={styles.greeting}>
               {getGreeting().toUpperCase()}
             </Text>
-            <Text variant="h1" style={styles.headerTitle}>
+            <Text variant="h2" style={styles.headerTitle}>
               VisionFlow AI
             </Text>
           </View>

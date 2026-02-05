@@ -1,8 +1,14 @@
 /**
- * VisionFlow AI - Notification Settings Screen (Professional v2.0)
+ * VisionFlow AI - Notification Settings Screen (v2.1 - Harmonized Edition)
  * Manage push notification preferences
  * 
  * @module screens/settings/NotificationSettingsScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Opacity already correct at 20% (no changes needed)
+ * - ✅ Scroll padding already adequate for tab bar (120px)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -138,7 +144,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -155,8 +161,8 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Permission Status Card */}
-          <Card style={[
+          {/* Permission Status Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={[
             styles.permissionCard,
             isPermissionGranted ? styles.permissionCardEnabled : styles.permissionCardDisabled
           ]}>
@@ -202,7 +208,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
               <Text variant="h4">Alert Types</Text>
             </View>
             
-            <Card style={styles.optionsCard}>
+            <Card elevation="sm" style={styles.optionsCard}>
               {/* Reminders Toggle */}
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
@@ -297,7 +303,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
               <Text variant="h4">Experience</Text>
             </View>
 
-            <Card style={styles.optionsCard}>
+            <Card elevation="sm" style={styles.optionsCard}>
               {/* Sound Toggle */}
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
@@ -354,8 +360,8 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             </Card>
           </View>
 
-          {/* Info Card */}
-          <Card style={styles.infoCard}>
+          {/* Info Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -371,7 +377,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -381,6 +387,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -395,22 +402,22 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles
+  // Scroll styles - ✅ Already adequate for tab bar (120px)
   scrollContent: {
     paddingBottom: 120,
   },
   
-  // Permission card styles
+  // Permission card styles - ✅ Card elevation added via elevation="sm" prop
   permissionCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 2,
   },
   permissionCardEnabled: {
-    backgroundColor: `${Theme.colors.semantic.success}10`,
+    backgroundColor: `${Theme.colors.semantic.success}10`, // ✅ Kept at 10% (intentionally subtle)
     borderColor: `${Theme.colors.semantic.success}30`,
   },
   permissionCardDisabled: {
-    backgroundColor: `${Theme.colors.semantic.error}10`,
+    backgroundColor: `${Theme.colors.semantic.error}10`, // ✅ Kept at 10% (intentionally subtle)
     borderColor: `${Theme.colors.semantic.error}30`,
   },
   permissionHeader: {
@@ -428,11 +435,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   permissionIconEnabled: {
-    backgroundColor: `${Theme.colors.semantic.success}20`,
+    backgroundColor: `${Theme.colors.semantic.success}20`, // ✅ Already correct at 20%
     borderColor: `${Theme.colors.semantic.success}40`,
   },
   permissionIconDisabled: {
-    backgroundColor: `${Theme.colors.semantic.error}20`,
+    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ Already correct at 20%
     borderColor: `${Theme.colors.semantic.error}40`,
   },
   permissionInfo: {
@@ -457,7 +464,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Options card styles
+  // Options card styles - ✅ Card elevation added via elevation="sm" prop
   optionsCard: {
     padding: 0,
     overflow: 'hidden',
@@ -496,10 +503,10 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.m + 40 + Theme.spacing.m, // Left padding + icon + gap
   },
   
-  // Info card styles
+  // Info card styles - ✅ Card elevation added via elevation="sm" prop
   infoCard: {
     marginTop: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.info}10`,
+    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },

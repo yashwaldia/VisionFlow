@@ -1,13 +1,15 @@
 /**
- * VisionFlow AI - Settings Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Settings Screen (v2.2 - FULLY Harmonized Edition)
  * App configuration and preferences
  * 
  * @module screens/SettingsScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Changed title from h1 to h2 for consistency
- * - ✅ Removed hardcoded paddingBottom (Screen component handles it)
- * - ✅ Improved visual hierarchy
+ * CHANGELOG v2.2:
+ * - ✅ Fixed ALL icon background opacities (15% → 20%)
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Title already h2 (correct)
+ * - ✅ Screen component handles scroll padding
+ * - ✅ Badge background already correct at 20%
  */
 
 import React from 'react';
@@ -140,7 +142,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     }
   };
   
-  // Settings sections
+  // Settings sections - ✅ FIXED: All opacity values changed to 20%
   const appSettings: SettingItem[] = [
     {
       id: 'notifications',
@@ -150,7 +152,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleNotificationSettings,
       rightElement: 'chevron',
       iconColor: Theme.colors.primary[500],
-      iconBgColor: `${Theme.colors.primary[500]}15`,
+      iconBgColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
     },
     {
       id: 'theme',
@@ -160,7 +162,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleThemeSettings,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.warning,
-      iconBgColor: `${Theme.colors.semantic.warning}15`,
+      iconBgColor: `${Theme.colors.semantic.warning}20`, // ✅ FIXED: 20% (was 15%)
     },
     {
       id: 'data',
@@ -170,7 +172,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleDataManagement,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.info,
-      iconBgColor: `${Theme.colors.semantic.info}15`,
+      iconBgColor: `${Theme.colors.semantic.info}20`, // ✅ FIXED: 20% (was 15%)
     },
   ];
   
@@ -183,7 +185,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleRateApp,
       rightElement: 'chevron',
       iconColor: '#facc15',
-      iconBgColor: 'rgba(250, 204, 21, 0.15)',
+      iconBgColor: 'rgba(250, 204, 21, 0.2)', // ✅ FIXED: 0.2 (was 0.15)
     },
     {
       id: 'share',
@@ -193,7 +195,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleShareApp,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.success,
-      iconBgColor: `${Theme.colors.semantic.success}15`,
+      iconBgColor: `${Theme.colors.semantic.success}20`, // ✅ FIXED: 20% (was 15%)
     },
     {
       id: 'support',
@@ -236,11 +238,11 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleAbout,
       rightElement: 'chevron',
       iconColor: Theme.colors.primary[500],
-      iconBgColor: `${Theme.colors.primary[500]}15`,
+      iconBgColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
     },
   ];
   
-  // Debug mode (dev only)
+  // Debug mode (dev only) - ✅ FIXED: Opacity changed to 20%
   const debugSettings: SettingItem[] = __DEV__ ? [
     {
       id: 'debug',
@@ -251,7 +253,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       rightElement: 'badge',
       badgeText: 'DEV',
       iconColor: Theme.colors.semantic.error,
-      iconBgColor: `${Theme.colors.semantic.error}15`,
+      iconBgColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% (was 15%)
     },
   ] : [];
   
@@ -266,7 +268,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         <View style={styles.settingLeft}>
           <View style={[
             styles.iconContainer,
-            { backgroundColor: item.iconBgColor || `${Theme.colors.primary[500]}15` },
+            { backgroundColor: item.iconBgColor || `${Theme.colors.primary[500]}20` }, // ✅ FIXED: Default 20%
             item.destructive && styles.iconContainerDestructive,
           ]}>
             <Icon
@@ -312,7 +314,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   return (
     <Screen scroll>
       <Container padding="m">
-        {/* Header - ✅ UPDATED */}
+        {/* Header - ✅ Already correct (h2) */}
         <View style={styles.header}>
           <Text variant="h2">Settings</Text>
           <Text variant="body" color="secondary" style={styles.headerSubtitle}>
@@ -320,8 +322,8 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </Text>
         </View>
         
-        {/* App Info Card */}
-        <Card style={styles.appInfoCard}>
+        {/* App Info Card - ✅ ENHANCED: Added elevation */}
+        <Card elevation="sm" style={styles.appInfoCard}>
           <View style={styles.appInfoContent}>
             <View style={styles.appIconContainer}>
               <Icon name="aperture" size="lg" color={Theme.colors.primary[500]} />
@@ -342,7 +344,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </View>
         </Card>
         
-        {/* App Settings */}
+        {/* App Settings - ✅ ENHANCED: Added elevation */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name="settings-outline" size="xs" color={Theme.colors.text.tertiary} />
@@ -350,7 +352,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               APP SETTINGS
             </Text>
           </View>
-          <Card padding={0} style={styles.card}>
+          <Card elevation="sm" padding={0} style={styles.card}>
             {appSettings.map((item, index) => (
               <React.Fragment key={item.id}>
                 {renderSettingItem(item)}
@@ -360,7 +362,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </Card>
         </View>
         
-        {/* Support */}
+        {/* Support - ✅ ENHANCED: Added elevation */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name="heart-outline" size="xs" color={Theme.colors.text.tertiary} />
@@ -368,7 +370,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               SUPPORT & FEEDBACK
             </Text>
           </View>
-          <Card padding={0} style={styles.card}>
+          <Card elevation="sm" padding={0} style={styles.card}>
             {supportSettings.map((item, index) => (
               <React.Fragment key={item.id}>
                 {renderSettingItem(item)}
@@ -378,7 +380,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </Card>
         </View>
         
-        {/* Legal & About */}
+        {/* Legal & About - ✅ ENHANCED: Added elevation */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Icon name="document-outline" size="xs" color={Theme.colors.text.tertiary} />
@@ -386,7 +388,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
               LEGAL & ABOUT
             </Text>
           </View>
-          <Card padding={0} style={styles.card}>
+          <Card elevation="sm" padding={0} style={styles.card}>
             {legalSettings.map((item, index) => (
               <React.Fragment key={item.id}>
                 {renderSettingItem(item)}
@@ -396,7 +398,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </Card>
         </View>
         
-        {/* Debug Mode (Dev Only) */}
+        {/* Debug Mode (Dev Only) - ✅ ENHANCED: Added elevation */}
         {debugSettings.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -405,7 +407,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
                 DEVELOPER
               </Text>
             </View>
-            <Card padding={0} style={styles.card}>
+            <Card elevation="sm" padding={0} style={styles.card}>
               {debugSettings.map((item) => renderSettingItem(item))}
             </Card>
           </View>
@@ -429,7 +431,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // ✅ REMOVED: paddingBottom (Screen component handles it automatically)
+  // ✅ Screen component handles scroll padding automatically
   
   // Header styles
   header: {
@@ -439,7 +441,7 @@ const styles = StyleSheet.create({
     marginTop: 4,
   },
   
-  // App Info Card
+  // App Info Card - ✅ Card elevation added via elevation="sm" prop
   appInfoCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
@@ -454,7 +456,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -519,7 +521,7 @@ const styles = StyleSheet.create({
     borderColor: `${Theme.colors.border.default}20`,
   },
   iconContainerDestructive: {
-    backgroundColor: `${Theme.colors.semantic.error}15`,
+    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% (was 15%)
     borderColor: `${Theme.colors.semantic.error}30`,
   },
   settingInfo: {
@@ -538,17 +540,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.s,
     paddingVertical: 4,
     borderRadius: Theme.borderRadius.s,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ Already correct at 20%
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}30`,
   },
   
-  // Footer styles - ✅ UPDATED
+  // Footer styles - ✅ Screen component handles padding
   footer: {
     marginTop: Theme.spacing.xl,
     gap: Theme.spacing.s,
     alignItems: 'center',
-    // No marginBottom needed - Screen component handles it!
   },
   footerContent: {
     flexDirection: 'row',

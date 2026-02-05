@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Camera Modal (Professional v2.0)
+ * VisionFlow AI - Camera Modal (v2.1 - Harmonized Edition)
  * Full-screen camera capture interface
  * 
  * @module screens/modals/CameraModal
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed loading icon container opacity (15% → 20%)
+ * - ✅ Fixed permission icon container opacity (15% → 20%)
+ * - ✅ Camera UI overlays kept as rgba() values (intentional transparency)
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -370,7 +375,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  // Loading State
+  // Loading State - ✅ FIXED opacity
   loadingContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
@@ -383,7 +388,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -396,7 +401,7 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
 
-  // Permission State
+  // Permission State - ✅ FIXED opacity
   permissionContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
@@ -409,7 +414,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.semantic.error}15`,
+    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% opacity (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -433,10 +438,10 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.m,
   },
 
-  // Processing State
+  // Processing State - ✅ rgba() intentionally kept for overlay transparency
   processingContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)',
+    backgroundColor: 'rgba(0, 0, 0, 0.95)', // ✅ Intentional rgba for dark overlay
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -449,7 +454,7 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.m,
   },
 
-  // Top Bar
+  // Top Bar - ✅ rgba() intentionally kept for camera UI transparency
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -457,7 +462,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingTop: Platform.OS === 'ios' ? 60 : Theme.spacing.l,
     paddingBottom: Theme.spacing.m,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // ✅ Intentional rgba for semi-transparent overlay
   },
   topButton: {
     width: 52,
@@ -467,14 +472,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)', // ✅ Intentional rgba for glass effect
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonInnerActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // ✅ Intentional rgba for active state
     borderColor: Theme.colors.primary[500],
   },
   modeIndicator: {
@@ -484,9 +489,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 10,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)', // ✅ Intentional rgba for mode badge
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
   },
   modeIconContainer: {
     width: 28,
@@ -500,7 +505,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // Grid Overlay
+  // Grid Overlay - ✅ rgba() intentionally kept for subtle grid lines
   gridOverlay: {
     position: 'absolute',
     top: 0,
@@ -515,7 +520,7 @@ const styles = StyleSheet.create({
   gridRowBorder: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.15)', // ✅ Intentional rgba for grid transparency
   },
   gridCell: {
     flex: 1,
@@ -523,10 +528,10 @@ const styles = StyleSheet.create({
   gridCellBorder: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.15)', // ✅ Intentional rgba for grid transparency
   },
 
-  // Focus Frame
+  // Focus Frame - ✅ Uses theme color (no change needed)
   focusFrame: {
     position: 'absolute',
     top: '25%',
@@ -570,7 +575,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: Theme.borderRadius.m,
   },
 
-  // Bottom Bar
+  // Bottom Bar - ✅ rgba() intentionally kept for camera UI transparency
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -582,19 +587,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.xl,
     paddingBottom: Platform.OS === 'ios' ? 48 : Theme.spacing.xl,
     paddingTop: Theme.spacing.xl,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.4)', // ✅ Intentional rgba for semi-transparent overlay
   },
   sideButton: {
     width: 60,
     height: 60,
   },
 
-  // Capture Button
+  // Capture Button - ✅ rgba() intentionally kept for button styling
   captureButton: {
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.3)', // ✅ Intentional rgba for outer ring
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
@@ -611,7 +616,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Hint
+  // Hint - ✅ rgba() intentionally kept for hint bubble transparency
   hintContainer: {
     position: 'absolute',
     bottom: 180,
@@ -627,9 +632,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 12,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.8)', // ✅ Intentional rgba for dark bubble
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
     maxWidth: 320,
   },
   hintText: {

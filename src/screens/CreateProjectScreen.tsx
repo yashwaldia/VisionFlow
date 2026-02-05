@@ -1,9 +1,17 @@
 /**
- * VisionFlow AI - Create Project Screen (Professional v2.0)
+ * VisionFlow AI - Create Project Screen (v3.0 - UI Pattern Consistency)
  * Create a new project
  * 
  * @module screens/CreateProjectScreen
+ * 
+ * CHANGELOG v3.0:
+ * - 🔧 Fixed category chips to match AIReviewModal pattern (consistent width)
+ * - 🔧 Fixed button layout with wrapper pattern (equal width buttons)
+ * - 🔧 Fixed footer positioning (absolute, outside ScrollView)
+ * - 🔧 Removed bottom tab bar visibility issue
+ * - 🔧 Simplified category chip design for consistency
  */
+
 
 import React, { useState } from 'react';
 import {
@@ -31,20 +39,20 @@ import {
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
 
+
 type CreateProjectScreenProps = NativeStackScreenProps<ProjectStackParamList, 'CreateProject'>;
 
+
 /**
- * Get category icon
+ * Category configuration matching AIReviewModal pattern
  */
-const getCategoryIcon = (category: ReminderCategory): string => {
-  const icons: Record<string, string> = {
-    [ReminderCategory.PERSONAL]: 'home',
-    [ReminderCategory.WORK]: 'briefcase',
-    [ReminderCategory.HEALTH]: 'fitness',
-    [ReminderCategory.MONEY]: 'cash',
-  };
-  return icons[category] || 'pricetag';
+const categoryConfig = {
+  [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
+  [ReminderCategory.WORK]: { icon: 'briefcase', color: Theme.colors.semantic.info },
+  [ReminderCategory.HEALTH]: { icon: 'fitness', color: Theme.colors.semantic.success },
+  [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
 };
+
 
 /**
  * CreateProjectScreen Component
@@ -110,25 +118,30 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
   const isFormValid = name.trim();
 
   return (
-    <Screen>
-      {/* Header */}
-      <View style={styles.header}>
-        <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
-          <Icon name="close" size="md" color={Theme.colors.text.primary} />
-        </Pressable>
-        <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">New Project</Text>
-          <Text variant="caption" color="tertiary">
-            Create a project to organize reminders
-          </Text>
-        </View>
-        <View style={{ width: 40 }} />
-      </View>
-
+    <Screen 
+      safeAreaTop 
+      safeAreaBottom={false} 
+      disableTabBarSpacing={true}
+    >
       <KeyboardAvoidingView
         style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
+        {/* Header */}
+        <View style={styles.header}>
+          <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
+            <Icon name="close" size="md" color={Theme.colors.text.primary} />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text variant="h4" weight="600">New Project</Text>
+            <Text variant="caption" color="tertiary">
+              Create a project to organize reminders
+            </Text>
+          </View>
+          <View style={{ width: 40 }} />
+        </View>
+
+        {/* Scrollable Content */}
         <ScrollView
           style={styles.scrollView}
           contentContainerStyle={styles.scrollContent}
@@ -155,7 +168,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
                 <Text variant="h4">Basic Information</Text>
               </View>
               
-              <Card style={styles.formCard}>
+              <Card elevation="sm" style={styles.formCard}>
                 <View style={styles.inputGroup}>
                   <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
                     PROJECT NAME *
@@ -185,7 +198,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
               </Card>
             </View>
 
-            {/* Category Selection */}
+            {/* Category Selection - Matching AIReviewModal Pattern */}
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -193,41 +206,37 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
               </View>
               
               <View style={styles.categoryGrid}>
-                {[
-                  ReminderCategory.PERSONAL,
-                  ReminderCategory.WORK,
-                  ReminderCategory.HEALTH,
-                  ReminderCategory.MONEY,
-                ].map((cat) => {
+                {Object.entries(categoryConfig).map(([cat, config]) => {
                   const isSelected = category === cat;
-                  const iconName = getCategoryIcon(cat);
-                  
                   return (
                     <Pressable
                       key={cat}
                       onPress={() => {
-                        setCategory(cat);
+                        setCategory(cat as ReminderCategory);
                         Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                       }}
+                      haptic="light"
                       style={[
                         styles.categoryChip,
-                        isSelected ? styles.categoryChipActive : {},
+                        ...(isSelected ? [{ 
+                          backgroundColor: config.color,
+                          borderColor: config.color 
+                        }] : []),
                       ]}
                     >
-                      <View style={[
-                        styles.categoryIconContainer,
-                        isSelected ? styles.categoryIconContainerActive : {},
-                      ]}>
-                        <Icon 
-                          name={iconName as any} 
-                          size="md" 
-                          color={isSelected ? Theme.colors.background.primary : Theme.colors.primary[500]} 
-                        />
-                      </View>
+                      <Icon 
+                        name={config.icon as any} 
+                        size="sm" 
+                        color={isSelected ? Theme.colors.background.primary : config.color} 
+                      />
                       <Text
-                        variant="body"
+                        variant="caption"
                         weight="700"
-                        customColor={isSelected ? Theme.colors.background.primary : Theme.colors.text.primary}
+                        customColor={
+                          isSelected
+                            ? Theme.colors.background.primary
+                            : Theme.colors.text.primary
+                        }
                       >
                         {cat}
                       </Text>
@@ -239,7 +248,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
 
             {/* Info Cards */}
             <View style={styles.infoCardsContainer}>
-              <Card style={styles.infoCard}>
+              <Card elevation="sm" style={styles.infoCard}>
                 <View style={styles.infoRow}>
                   <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
                   <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -248,7 +257,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
                 </View>
               </Card>
 
-              <Card style={styles.benefitsCard}>
+              <Card elevation="sm" style={styles.benefitsCard}>
                 <View style={styles.benefitsHeader}>
                   <Icon name="checkmark-circle" size="sm" color={Theme.colors.semantic.success} />
                   <Text variant="caption" color="secondary" weight="600">BENEFITS</Text>
@@ -272,37 +281,44 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
           </Container>
         </ScrollView>
 
-        {/* Footer Actions */}
-        <View style={styles.footer}>
-          <Button
-            label="Cancel"
-            variant="outline"
-            size="large"
-            onPress={handleCancel}
-            style={styles.footerButton}
-            disabled={isSaving}
-          />
-          <Button
-            label={isSaving ? 'Creating...' : 'Create Project'}
-            variant="primary"
-            size="large"
-            leftIcon={isSaving ? undefined : "add-circle"}
-            onPress={handleSave}
-            style={styles.footerButtonPrimary}
-            disabled={isSaving || !isFormValid}
-          />
+        {/* Fixed Footer - Outside ScrollView */}
+        <View style={styles.footerContainer}>
+          <View style={styles.footer}>
+            <View style={styles.footerButton}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                size="large"
+                onPress={handleCancel}
+                disabled={isSaving}
+                fullWidth
+              />
+            </View>
+            <View style={styles.footerButton}>
+              <Button
+                label={isSaving ? 'Creating...' : 'Create Project'}
+                variant="primary"
+                size="large"
+                leftIcon={isSaving ? undefined : "add-circle"}
+                onPress={handleSave}
+                disabled={isSaving || !isFormValid}
+                loading={isSaving}
+                fullWidth
+              />
+            </View>
+          </View>
         </View>
       </KeyboardAvoidingView>
     </Screen>
   );
 }
 
+
 const styles = StyleSheet.create({
-  // Container styles
   container: {
     flex: 1,
   },
-  
+
   // Header styles
   header: {
     flexDirection: 'row',
@@ -313,6 +329,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -326,15 +343,15 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 2,
   },
-  
+
   // Scroll styles
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: Theme.spacing.xl,
+    paddingBottom: 140, // Clearance for fixed footer
   },
-  
+
   // Icon section
   iconSection: {
     alignItems: 'center',
@@ -348,13 +365,13 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderWidth: 2,
     borderColor: `${Theme.colors.primary[500]}30`,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  
+
   // Section styles
   section: {
     marginBottom: Theme.spacing.l,
@@ -365,7 +382,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
-  
+
   // Form card styles
   formCard: {
     borderWidth: 1,
@@ -384,42 +401,26 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
   },
-  
-  // Category grid styles
+
+  // Category grid - Matching AIReviewModal pattern
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Theme.spacing.m,
-  },
-  categoryChip: {
-    width: '47%',
-    alignItems: 'center',
-    padding: Theme.spacing.m,
-    borderRadius: Theme.borderRadius.l,
-    backgroundColor: Theme.colors.background.secondary,
-    borderWidth: 2,
-    borderColor: Theme.colors.border.default,
     gap: Theme.spacing.s,
   },
-  categoryChipActive: {
-    backgroundColor: Theme.colors.primary[500],
-    borderColor: Theme.colors.primary[500],
-  },
-  categoryIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+  categoryChip: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: `${Theme.colors.primary[500]}30`,
+    gap: 6,
+    paddingHorizontal: Theme.spacing.m,
+    paddingVertical: 10,
+    borderRadius: Theme.borderRadius.m,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderWidth: 2,
+    borderColor: Theme.colors.border.medium,
+    minWidth: 100, // Fixed minimum width for consistency
   },
-  categoryIconContainerActive: {
-    backgroundColor: Theme.colors.background.primary,
-    borderColor: Theme.colors.background.primary,
-  },
-  
+
   // Info cards styles
   infoCardsContainer: {
     gap: Theme.spacing.m,
@@ -438,7 +439,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
-  
+
   // Benefits card styles
   benefitsCard: {
     backgroundColor: `${Theme.colors.semantic.success}10`,
@@ -465,22 +466,28 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: Theme.colors.semantic.success,
   },
-  
-  // Footer styles
+
+  // Fixed footer - Matching AIReviewModal pattern
+  footerContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: Theme.colors.background.secondary,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border.light,
+    ...Theme.shadows.sm,
+    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
+  },
   footer: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
-    paddingBottom: Theme.spacing.l,
-    borderTopWidth: 1,
-    borderTopColor: Theme.colors.border.light,
-    backgroundColor: Theme.colors.background.secondary,
+    paddingTop: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
   },
+  // Equal width for both buttons
   footerButton: {
     flex: 1,
-  },
-  footerButtonPrimary: {
-    flex: 2,
   },
 });

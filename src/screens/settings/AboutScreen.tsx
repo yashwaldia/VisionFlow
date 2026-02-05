@@ -1,8 +1,15 @@
 /**
- * VisionFlow AI - About Screen (Professional v2.0)
+ * VisionFlow AI - About Screen (v2.1 - Harmonized Edition)
  * App information, legal links, and version details
  * 
  * @module screens/settings/AboutScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed logo container opacity (15% → 20%)
+ * - ✅ Fixed version badge opacity (15% → 20%)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Scroll padding already adequate for tab bar (120px)
  */
 
 import React from 'react';
@@ -57,7 +64,7 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -139,7 +146,7 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
               <Text variant="h4">Connect With Us</Text>
             </View>
             
-            <Card style={styles.linkCard}>
+            <Card elevation="sm" style={styles.linkCard}>
               {renderLinkItem('Official Website', EXTERNAL_LINKS.website, 'globe', Theme.colors.primary[500])}
               <View style={styles.divider} />
               {renderLinkItem('Get Support', EXTERNAL_LINKS.support, 'help-buoy', Theme.colors.semantic.info)}
@@ -157,15 +164,15 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
               <Text variant="h4">Legal & Privacy</Text>
             </View>
             
-            <Card style={styles.linkCard}>
+            <Card elevation="sm" style={styles.linkCard}>
               {renderLinkItem('Privacy Policy', EXTERNAL_LINKS.privacyPolicy, 'shield-checkmark', Theme.colors.semantic.success)}
               <View style={styles.divider} />
               {renderLinkItem('Terms of Service', EXTERNAL_LINKS.termsOfService, 'document-text', Theme.colors.semantic.warning)}
             </Card>
           </View>
 
-          {/* App Info Card */}
-          <Card style={styles.infoCard}>
+          {/* App Info Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" weight="600">ABOUT THIS APP</Text>
@@ -175,8 +182,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
             </Text>
           </Card>
 
-          {/* Tech Stack Card */}
-          <Card style={styles.techCard}>
+          {/* Tech Stack Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.techCard}>
             <View style={styles.techHeader}>
               <Icon name="code-slash" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="caption" color="secondary" weight="600">BUILT WITH</Text>
@@ -217,7 +224,7 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -227,6 +234,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -241,12 +249,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles
+  // Scroll styles - ✅ Already adequate for tab bar (120px)
   scrollContent: {
     paddingBottom: 120,
   },
   
-  // App info styles
+  // App info styles - ✅ FIXED: Standardized opacity
   appInfoContainer: {
     alignItems: 'center',
     marginVertical: Theme.spacing.xl,
@@ -256,7 +264,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 24,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Theme.spacing.m,
@@ -270,7 +278,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}30`,
   },
@@ -322,7 +330,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Link card styles
+  // Link card styles - ✅ Card elevation added via elevation="sm" prop
   linkCard: {
     padding: 0,
     overflow: 'hidden',
@@ -356,10 +364,10 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.m + 40 + Theme.spacing.m,
   },
   
-  // Info card styles
+  // Info card styles - ✅ Card elevation added via elevation="sm" prop
   infoCard: {
     marginBottom: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.info}10`,
+    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },
@@ -373,10 +381,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   
-  // Tech card styles
+  // Tech card styles - ✅ Card elevation added via elevation="sm" prop
   techCard: {
     marginBottom: Theme.spacing.l,
-    backgroundColor: `${Theme.colors.primary[500]}05`,
+    backgroundColor: `${Theme.colors.primary[500]}05`, // ✅ Kept at 5% (ultra-subtle tech showcase)
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}20`,
   },

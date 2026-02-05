@@ -1,8 +1,14 @@
 /**
- * VisionFlow AI - Theme Settings Screen (Professional v2.0)
+ * VisionFlow AI - Theme Settings Screen (v2.1 - Harmonized Edition)
  * Customize app appearance and display preferences
  * 
  * @module screens/settings/ThemeSettingsScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed theme icon container opacity (15% → 20%)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Scroll padding already adequate for tab bar (120px)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -118,7 +124,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
   }
 
   const renderThemeOption = (
-    mode: 'light' | 'dark' | 'auto', 
+    mode: 'light' |'dark' | 'auto', 
     icon: string, 
     label: string,
     description: string
@@ -171,7 +177,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -202,7 +208,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
               {renderThemeOption('auto', 'phone-portrait', 'Auto', 'Match system')}
             </View>
 
-            <Card style={styles.themeInfoCard}>
+            <Card elevation="sm" style={styles.themeInfoCard}>
               <View style={styles.infoRow}>
                 <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
                 <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -219,7 +225,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
               <Text variant="h4">Interface</Text>
             </View>
             
-            <Card style={styles.optionsCard}>
+            <Card elevation="sm" style={styles.optionsCard}>
               
               {/* Compact Mode */}
               <View style={styles.optionRow}>
@@ -278,7 +284,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
               <Text variant="h4">Content Display</Text>
             </View>
             
-            <Card style={styles.optionsCard}>
+            <Card elevation="sm" style={styles.optionsCard}>
               
               {/* Category Emojis */}
               <View style={styles.optionRow}>
@@ -330,8 +336,8 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
             </Card>
           </View>
 
-          {/* Preview Card */}
-          <Card style={styles.previewCard}>
+          {/* Preview Card - ✅ ENHANCED: Added elevation */}
+          <Card elevation="sm" style={styles.previewCard}>
             <View style={styles.previewHeader}>
               <Icon name="eye" size="sm" color={Theme.colors.semantic.success} />
               <Text variant="caption" color="secondary" weight="600">LIVE PREVIEW</Text>
@@ -350,7 +356,7 @@ export function ThemeSettingsScreen({ navigation }: ThemeSettingsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -360,6 +366,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerButton: {
     width: 40,
@@ -374,7 +381,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles
+  // Scroll styles - ✅ Already adequate for tab bar (120px)
   scrollContent: {
     paddingBottom: 120,
   },
@@ -390,7 +397,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Theme grid styles
+  // Theme grid styles - ✅ FIXED: Standardized opacity
   themeGrid: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -416,7 +423,7 @@ const styles = StyleSheet.create({
     width: 52,
     height: 52,
     borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: 4,
@@ -439,14 +446,14 @@ const styles = StyleSheet.create({
     borderRadius: 12,
   },
   
-  // Theme info card
+  // Theme info card - ✅ Card elevation added via elevation="sm" prop
   themeInfoCard: {
-    backgroundColor: `${Theme.colors.semantic.info}10`,
+    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },
   
-  // Options card styles
+  // Options card styles - ✅ Card elevation added via elevation="sm" prop
   optionsCard: {
     padding: 0,
     overflow: 'hidden',
@@ -496,10 +503,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   
-  // Preview card styles
+  // Preview card styles - ✅ Card elevation added via elevation="sm" prop
   previewCard: {
     marginTop: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.success}10`,
+    backgroundColor: `${Theme.colors.semantic.success}10`, // ✅ Kept at 10% (intentionally subtle)
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.success}30`,
   },

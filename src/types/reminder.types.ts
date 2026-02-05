@@ -39,10 +39,10 @@ export enum ReminderStatus {
  * Priority levels for reminders (Phase 2 feature)
  */
 export enum ReminderPriority {
-  LOW = 'low',
-  MEDIUM = 'medium',
-  HIGH = 'high',
-  URGENT = 'urgent',
+  LOW = 'Low',
+  MEDIUM = 'Medium',
+  HIGH = 'High',
+  URGENT = 'Urgent',
 }
 
 /**

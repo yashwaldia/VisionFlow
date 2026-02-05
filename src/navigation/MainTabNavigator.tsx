@@ -1,7 +1,10 @@
 /**
- * VisionFlow AI - Main Tab Navigator (v2.0 HUD Upgrade)
+ * VisionFlow AI - Main Tab Navigator (v2.2 FINAL FIX)
  * Floating "Command Deck" navigation
- * * @module navigation/MainTabNavigator
+ * 
+ * @module navigation/MainTabNavigator
+ * 
+ * FIX: Used tabBarItemStyle for proper React Navigation centering
  */
 
 import React from 'react';
@@ -31,7 +34,8 @@ export function MainTabNavigator() {
         headerShown: false,
         // Floating HUD Style
         tabBarStyle: styles.tabBar,
-        tabBarShowLabel: false, // Cleaner look, relying on icons
+        tabBarItemStyle: styles.tabBarItem, // 🔧 KEY FIX: Control individual tab item layout
+        tabBarShowLabel: false,
         tabBarActiveTintColor: Theme.colors.primary[500],
         tabBarInactiveTintColor: Theme.colors.text.tertiary,
         tabBarIcon: ({ focused, color, size }) => {
@@ -40,13 +44,13 @@ export function MainTabNavigator() {
           // Icon Mapping
           switch (route.name) {
             case 'HomeTab':
-              iconName = focused ? 'terminal' : 'terminal-outline'; // More techy than 'home'
+              iconName = focused ? 'terminal' : 'terminal-outline';
               break;
             case 'RemindersTab':
               iconName = focused ? 'notifications' : 'notifications-outline';
               break;
             case 'PatternsTab':
-              iconName = focused ? 'scan' : 'scan-outline'; // 'Scan' fits patterns better
+              iconName = focused ? 'scan' : 'scan-outline';
               break;
             case 'ProjectsTab':
               iconName = focused ? 'layers' : 'layers-outline';
@@ -100,7 +104,14 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.5,
     shadowRadius: 20,
-    paddingBottom: 0, // Reset default padding
+    paddingBottom: 0,
+    paddingTop: 0,
+  },
+  // 🔧 CRITICAL FIX: This controls each individual tab button
+  tabBarItem: {
+    paddingVertical: 0,
+    paddingHorizontal: 0,
+    margin: 14,
   },
   iconContainer: {
     alignItems: 'center',

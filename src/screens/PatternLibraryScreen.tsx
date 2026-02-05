@@ -1,7 +1,13 @@
 /**
- * VisionFlow AI - Pattern Library Screen (FIXED)
+ * VisionFlow AI - Pattern Library Screen (v2.1 - Harmonized Edition)
  * Browse and manage all discovered patterns
- * * @module screens/PatternLibraryScreen
+ * 
+ * @module screens/PatternLibraryScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
+ * - ✅ Added header shadow for separation
+ * - ✅ Added card elevation for visual depth
  */
 
 import React, { useState, useEffect } from 'react';
@@ -132,6 +138,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 
   return (
     <Screen>
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <Container padding="m" style={styles.header}>
         <View style={styles.headerTop}>
           <Text variant="h2">Pattern Library</Text>
@@ -233,7 +240,6 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           data={filteredPatterns}
           renderItem={renderPattern}
           keyExtractor={(item) => item.id}
-          // FIXED: Increased bottom padding to ensure visibility above tab bar
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -250,11 +256,13 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 }
 
 const styles = StyleSheet.create({
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerTop: {
     flexDirection: 'row',
@@ -296,13 +304,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  // List styles - ✅ FIXED: Uses theme constant
   listContent: {
     padding: Theme.spacing.m,
     gap: Theme.spacing.s,
-    paddingBottom: 120, // FIXED: Ensure content is visible above bottom tab bar
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
   },
+  // Card styles - ✅ ENHANCED: Added shadow
   patternCard: {
     marginBottom: Theme.spacing.s,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   patternContent: {
     flexDirection: 'row',
@@ -325,7 +336,7 @@ const styles = StyleSheet.create({
   patternIconPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: `${Theme.colors.primary[500]}10`,
+    backgroundColor: `${Theme.colors.primary[500]}10`, // ✅ Kept at 10% (intentionally subtle)
     alignItems: 'center',
     justifyContent: 'center',
   },

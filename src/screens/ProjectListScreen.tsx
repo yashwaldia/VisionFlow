@@ -1,8 +1,15 @@
 /**
- * VisionFlow AI - Project List Screen (Professional v2.0)
+ * VisionFlow AI - Project List Screen (v2.1 - Harmonized Edition)
  * Browse and manage all projects
  * 
  * @module screens/ProjectListScreen
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPadding)
+ * - ✅ Standardized filter chip opacity to 20%
+ * - ✅ Added card elevation for visual depth
+ * - ✅ Added header shadow for separation
+ * - ✅ Enhanced create button with glow effect
  */
 
 import React, { useState, useMemo } from 'react';
@@ -255,7 +262,7 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - ✅ ENHANCED: Added shadow */}
       <Container padding="m" style={styles.header}>
         <View style={styles.headerTop}>
           <View>
@@ -426,11 +433,12 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles - ✅ ENHANCED: Added shadow
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
+    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
   },
   headerTop: {
     flexDirection: 'row',
@@ -446,12 +454,13 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: Theme.borderRadius.m,
+    ...Theme.shadows.glow, // ✅ ADDED: Glow effect on primary button
   },
   searchBar: {
     marginBottom: Theme.spacing.m,
   },
   
-  // Toggle styles
+  // Toggle styles - ✅ FIXED: Standardized to 20% opacity
   toggleRow: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -470,11 +479,11 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.default,
   },
   toggleButtonActive: {
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderColor: Theme.colors.primary[500],
   },
   
-  // Category filter styles
+  // Category filter styles - ✅ FIXED: Standardized to 20% opacity
   categoryFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -492,11 +501,11 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.default,
   },
   categoryChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}15`,
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
     borderColor: Theme.colors.primary[500],
   },
   
-  // List styles
+  // List styles - ✅ FIXED: Uses theme constant
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -504,14 +513,15 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: 120, // Space for bottom tab bar
+    paddingBottom: Theme.spacing.safeArea.bottomPadding, // ✅ FIXED: 80 from theme (was hardcoded 120)
     gap: Theme.spacing.m,
   },
   
-  // Project card styles
+  // Project card styles - ✅ ENHANCED: Added shadow
   projectCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
   },
   projectContent: {
     flexDirection: 'row',
