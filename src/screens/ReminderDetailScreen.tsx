@@ -1,10 +1,11 @@
 /**
- * VisionFlow AI - Reminder Detail Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Reminder Detail Screen (v2.2 - Navigation Fix)
  * View and manage a single reminder
  * 
  * @module screens/ReminderDetailScreen
  * 
- * CHANGELOG v2.1:
+ * CHANGELOG v2.2:
+ * - 🐛 FIXED: Updated navigation to EditReminderScreen (was EditReminder)
  * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
  * - ✅ Added card elevation for visual depth
  * - ✅ Added header shadow for separation
@@ -124,8 +125,11 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
   const statusConfig = getStatusConfig(reminder.status);
   const isDone = reminder.status === ReminderStatus.DONE;
 
+  // ✅ FIXED: Navigate to EditReminderScreen in root stack
   const handleEdit = () => {
-    navigation.navigate('EditReminder', { reminder: reminder });
+    console.log('📝 Edit button pressed, navigating to EditReminderScreen');
+    // Navigate to root stack since EditReminderScreen is now there
+    (navigation as any).getParent()?.navigate('EditReminderScreen', { reminder });
   };
 
   const handleMarkDone = async () => {
@@ -163,7 +167,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow for depth */}
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -186,7 +190,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Image - ✅ ENHANCED: Added card elevation */}
+          {/* Image */}
           {reminder.imageUri && (
             <Card padding={0} style={styles.imageCard}>
               <Image 
@@ -217,7 +221,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </View>
 
-          {/* Details Card - ✅ ENHANCED: Added elevation */}
+          {/* Details Card */}
           <Card style={styles.detailsCard}>
             {/* Date & Time */}
             <View style={styles.detailSection}>
@@ -292,7 +296,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </Card>
 
-          {/* Smart Note - ✅ ENHANCED: Added elevation */}
+          {/* Smart Note */}
           <View style={styles.noteSection}>
             <View style={styles.noteSectionHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
@@ -333,7 +337,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         </Container>
       </ScrollView>
 
-      {/* Footer Actions - ✅ ENHANCED: Added glow to button */}
+      {/* Footer Actions */}
       {!isDone && (
         <View style={styles.footer}>
           <Container padding="m">
@@ -353,7 +357,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -363,7 +367,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -377,9 +381,9 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
   },
   
-  // Content styles - ✅ FIXED: Uses theme constant
+  // Content styles
   scrollContent: {
-    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 96 from theme (was hardcoded 120)
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
   
   // Not found styles
@@ -397,17 +401,17 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // Image styles - ✅ ENHANCED: Added shadow
+  // Image styles
   imageCard: {
     marginBottom: Theme.spacing.l,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.md, // ✅ ADDED: Image card shadow for depth
+    ...Theme.shadows.md,
   },
   image: {
     width: '100%',
-    height: SCREEN_WIDTH * 0.75, // 4:3 aspect ratio
+    height: SCREEN_WIDTH * 0.75,
   },
   
   // Title section styles
@@ -446,12 +450,12 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
   },
   
-  // Details card styles - ✅ ENHANCED: Added shadow
+  // Details card styles
   detailsCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Details card shadow for depth
+    ...Theme.shadows.sm,
   },
   detailSection: {
     gap: Theme.spacing.m,
@@ -488,7 +492,7 @@ const styles = StyleSheet.create({
     marginVertical: Theme.spacing.m,
   },
   
-  // Note section styles - ✅ ENHANCED: Added shadow
+  // Note section styles
   noteSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -501,7 +505,7 @@ const styles = StyleSheet.create({
   noteCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Note card shadow for depth
+    ...Theme.shadows.sm,
   },
   noteText: {
     lineHeight: 24,
@@ -520,13 +524,13 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   
-  // Footer styles - ✅ ENHANCED: Added shadow
+  // Footer styles
   footer: {
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingBottom: Theme.spacing.s,
-    ...Theme.shadows.md, // ✅ ADDED: Footer shadow for separation
+    ...Theme.shadows.md,
   },
   footerButton: {
     width: '100%',

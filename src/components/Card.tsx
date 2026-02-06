@@ -1,7 +1,12 @@
 /**
- * VisionFlow AI - Card Component (v2.0 HUD Upgrade)
+ * VisionFlow AI - Card Component (v2.1 - Keyboard Support Edition)
  * Tactical surfaces with glassmorphism and scanline support
- * * @module components/Card
+ * 
+ * @module components/Card
+ * 
+ * CHANGELOG v2.1:
+ * - ✅ Added pointerEvents prop for keyboard interaction fixes
+ * - ✅ Proper touch event propagation for forms inside cards
  */
 
 import React from 'react';
@@ -34,12 +39,18 @@ export interface CardProps {
   borderColor?: string;
   borderRadius?: number;
   padding?: number;
-  style?: ViewStyle | ViewStyle[]; // ✅ Accept array or single style
+  style?: ViewStyle | ViewStyle[];
   testID?: string;
   /**
    * If true, applies a subtle active state border/glow
    */
   active?: boolean;
+  /**
+   * Touch event handling
+   * Use 'box-none' for cards containing inputs to allow keyboard interaction
+   * @default 'auto'
+   */
+  pointerEvents?: 'box-none' | 'none' | 'box-only' | 'auto';
 }
 
 /**
@@ -59,6 +70,7 @@ function getShadowStyle(elevation: CardElevation): ViewStyle {
 
 /**
  * Card Component
+ * ✅ Now supports pointerEvents for proper keyboard handling in forms
  */
 export function Card({
   children,
@@ -73,6 +85,7 @@ export function Card({
   active = false,
   style,
   testID,
+  pointerEvents = 'auto',
 }: CardProps) {
   
   // Get variant-specific styles
@@ -99,7 +112,6 @@ export function Card({
         };
 
       case 'hud':
-        // Tactical opaque block with thin borders
         return {
           backgroundColor: backgroundColor || Theme.colors.background.tertiary,
           borderWidth: 1,
@@ -123,7 +135,7 @@ export function Card({
     backgroundColor: variant === 'glass' 
       ? Theme.glassmorphism.tint 
       : Theme.colors.background.tertiary,
-    ...Theme.shadows.glow, // Add glow when active
+    ...Theme.shadows.glow,
   } : {};
 
   // Base card style
@@ -139,14 +151,12 @@ export function Card({
   // Combine styles
   const combinedStyles: ViewStyle[] = [cardStyle];
   if (style) {
-    // ✅ Handle both array and single style
     if (Array.isArray(style)) {
       combinedStyles.push(...style);
     } else {
       combinedStyles.push(style);
     }
   }
-
   
   // Render pressable or static card
   if (pressable && onPress) {
@@ -165,7 +175,11 @@ export function Card({
   }
   
   return (
-    <View style={combinedStyles} testID={testID}>
+    <View 
+      style={combinedStyles} 
+      testID={testID}
+      pointerEvents={pointerEvents}
+    >
       {children}
     </View>
   );

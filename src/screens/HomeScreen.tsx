@@ -178,10 +178,10 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
   const handleReminderDetail = (reminderId: string) => {
     console.log('📝 Reminder detail navigation:', reminderId);
     // TODO: Uncomment when ReminderDetail is ready
-    // navigation.navigate('RemindersTab', {
-    //   screen: 'ReminderDetail',
-    //   params: { reminderId },
-    // });
+    navigation.navigate('RemindersTab', {
+      screen: 'ReminderDetail',
+      params: { reminderId },
+    });
   };
 
   return (

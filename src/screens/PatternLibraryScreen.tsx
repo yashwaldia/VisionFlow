@@ -1,17 +1,19 @@
 /**
- * VisionFlow AI - Pattern Library Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Pattern Library Screen (v3.0 - Unified Edition)
  * Browse and manage all discovered patterns
  * 
  * @module screens/PatternLibraryScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
- * - ✅ Added header shadow for separation
- * - ✅ Added card elevation for visual depth
+ * CHANGELOG v3.0:
+ * - ✅ Added Search Bar (matching Reminder screen UI)
+ * - ✅ Unified Heading + Action Button styling
+ * - ✅ Added icons to filter chips
+ * - ✅ Enhanced visual consistency with Reminder screen
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Platform } from 'react-native';
+
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { View, StyleSheet, FlatList, RefreshControl, Platform, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PatternStackParamList } from '../types/navigation.types';
 import { PatternType } from '../types/pattern.types';
@@ -21,7 +23,6 @@ import {
   Container,
   Text,
   Card,
-  Button,
   Icon,
   Pressable,
   EmptyState,
@@ -30,10 +31,11 @@ import {
 import { usePatterns } from '../hooks/usePatterns';
 import * as Haptics from 'expo-haptics';
 
+
 type PatternLibraryScreenProps = NativeStackScreenProps<PatternStackParamList, 'PatternLibrary'>;
 
+
 export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreenProps) {
-  // FIXED: Handle undefined params safely to prevent crash
   const { filterType } = route.params || {};
   
   const {
@@ -46,8 +48,11 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
     setFilters,
   } = usePatterns();
 
+  const searchInputRef = useRef<TextInput>(null);
+
   const [refreshing, setRefreshing] = useState(false);
   const [selectedType, setSelectedType] = useState<PatternType | 'all'>('all');
+  const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     if (filterType) {
@@ -55,6 +60,19 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
       setFilters({ type: filterType, source: 'all' });
     }
   }, [filterType]);
+
+  // Filter by search query
+  const searchFilteredPatterns = useMemo(() => {
+    if (!searchQuery.trim()) return filteredPatterns;
+    
+    const query = searchQuery.toLowerCase();
+    return filteredPatterns.filter(
+      (p) =>
+        p.name.toLowerCase().includes(query) ||
+        p.type.toLowerCase().includes(query) ||
+        p.source.toLowerCase().includes(query)
+    );
+  }, [filteredPatterns, searchQuery]);
 
   const handleRefresh = async () => {
     setRefreshing(true);
@@ -138,19 +156,47 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow */}
+      {/* Header - ✅ UNIFIED with Reminder Screen */}
       <Container padding="m" style={styles.header}>
         <View style={styles.headerTop}>
-          <Text variant="h2">Pattern Library</Text>
-          <Button
-            label="Discover"
-            leftIcon="sparkles-outline"
-            variant="primary"
-            size="small"
+          <View>
+            <Text variant="h2">Pattern Library</Text>
+          </View>
+          {/* ✅ UPDATED: Unified button style matching CAPTURE button */}
+          <Pressable 
             onPress={() => navigation.navigate('CameraModal' as any, { mode: 'pattern' })}
-          />
+            style={styles.discoverButton}
+          >
+            <Icon name="sparkles" size="sm" color={Theme.colors.background.primary} />
+            <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+              DISCOVER
+            </Text>
+          </Pressable>
         </View>
 
+        {/* ✅ NEW: Search Bar - Matching Reminder Screen */}
+        <View style={styles.searchContainer}>
+          <Icon name="search-outline" size="sm" color={Theme.colors.text.tertiary} />
+          <TextInput
+            ref={searchInputRef}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search patterns..."
+            placeholderTextColor={Theme.colors.text.tertiary}
+            style={styles.searchInput}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Icon name="close-circle" size="sm" color={Theme.colors.text.tertiary} />
+            </Pressable>
+          )}
+        </View>
+
+        {/* Stats Row - ✅ UNCHANGED (Perfect as is) */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text variant="h4" customColor={Theme.colors.primary[500]}>
@@ -172,6 +218,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           </View>
         </View>
 
+        {/* ✅ UPDATED: Filter chips with icons */}
         <View style={styles.typeFilter}>
           <Pressable
             onPress={() => handleTypeFilter('all')}
@@ -180,12 +227,17 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
               selectedType === 'all' ? styles.typeChipActive : {},
             ]}
           >
+            <Icon 
+              name="apps-outline" 
+              size="xs" 
+              color={selectedType === 'all' ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
+            />
             <Text
               variant="caption"
-              weight="600"
+              weight="700"
               customColor={
                 selectedType === 'all'
-                  ? Theme.colors.text.inverse
+                  ? Theme.colors.primary[500]
                   : Theme.colors.text.secondary
               }
             >
@@ -194,29 +246,34 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           </Pressable>
 
           {[
-            PatternType.FIBONACCI,
-            PatternType.GEOMETRIC,
-            PatternType.SYMMETRY,
-            PatternType.CUSTOM,
+            { key: PatternType.FIBONACCI, icon: 'git-branch-outline', label: 'Fibonacci' },
+            { key: PatternType.GEOMETRIC, icon: 'shapes-outline', label: 'Geometric' },
+            { key: PatternType.SYMMETRY, icon: 'contract-outline', label: 'Symmetry' },
+            { key: PatternType.CUSTOM, icon: 'create-outline', label: 'Custom' },
           ].map((type) => (
             <Pressable
-              key={type}
-              onPress={() => handleTypeFilter(type)}
+              key={type.key}
+              onPress={() => handleTypeFilter(type.key)}
               style={[
                 styles.typeChip,
-                selectedType === type ? styles.typeChipActive : {},
+                selectedType === type.key ? styles.typeChipActive : {},
               ]}
             >
+              <Icon 
+                name={type.icon as any} 
+                size="xs" 
+                color={selectedType === type.key ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
+              />
               <Text
                 variant="caption"
-                weight="600"
+                weight="700"
                 customColor={
-                  selectedType === type
-                    ? Theme.colors.text.inverse
+                  selectedType === type.key
+                    ? Theme.colors.primary[500]
                     : Theme.colors.text.secondary
                 }
               >
-                {type.toUpperCase().replace('_', ' ')}
+                {type.label.toUpperCase()}
               </Text>
             </Pressable>
           ))}
@@ -227,7 +284,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
         <View style={styles.loadingContainer}>
           <LoadingSpinner size="large" />
         </View>
-      ) : filteredPatterns.length === 0 ? (
+      ) : searchFilteredPatterns.length === 0 && !searchQuery ? (
         <EmptyState
           icon="sparkles-outline"
           title="No patterns found"
@@ -237,9 +294,22 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
         />
       ) : (
         <FlatList
-          data={filteredPatterns}
+          data={searchFilteredPatterns}
           renderItem={renderPattern}
           keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            searchQuery ? (
+              <View style={styles.emptySearch}>
+                <Icon name="search-outline" size="xl" color={Theme.colors.text.tertiary} />
+                <Text variant="h4" align="center" style={{ marginTop: Theme.spacing.m }}>
+                  No matching patterns
+                </Text>
+                <Text variant="body" color="secondary" align="center">
+                  Try adjusting your search
+                </Text>
+              </View>
+            ) : null
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -249,27 +319,67 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             />
           }
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
         />
       )}
     </Screen>
   );
 }
 
+
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
   },
+  // ✅ UPDATED: Unified button style
+  discoverButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: Theme.colors.primary[500],
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: Theme.borderRadius.m,
+    ...Theme.shadows.glow,
+  },
+
+  // ✅ NEW: Search bar styles (from Reminder screen)
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.s,
+    height: 48,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+    paddingHorizontal: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Theme.colors.text.primary,
+    fontFamily: Theme.typography.fontFamily.mono,
+    height: '100%',
+  },
+  clearButton: {
+    padding: 4,
+  },
+
+  // Stats styles - ✅ UNCHANGED (Perfect)
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -281,6 +391,8 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
   },
+
+  // ✅ UPDATED: Filter chips with icon support
   typeFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -288,32 +400,45 @@ const styles = StyleSheet.create({
     paddingBottom: Theme.spacing.xs,
   },
   typeChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.xs,
     borderRadius: Theme.borderRadius.full,
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 1,
-    borderColor: Theme.colors.border.medium,
+    borderColor: Theme.colors.border.default,
   },
   typeChipActive: {
-    backgroundColor: Theme.colors.primary[500],
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
   },
+
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  // List styles - ✅ FIXED: Uses theme constant
+
+  // ✅ NEW: Empty search state
+  emptySearch: {
+    padding: Theme.spacing.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  // List styles
   listContent: {
     padding: Theme.spacing.m,
     gap: Theme.spacing.s,
-    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
-  // Card styles - ✅ ENHANCED: Added shadow
+
+  // Card styles
   patternCard: {
     marginBottom: Theme.spacing.s,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   patternContent: {
     flexDirection: 'row',
@@ -336,7 +461,7 @@ const styles = StyleSheet.create({
   patternIconPlaceholder: {
     width: '100%',
     height: '100%',
-    backgroundColor: `${Theme.colors.primary[500]}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.primary[500]}10`,
     alignItems: 'center',
     justifyContent: 'center',
   },

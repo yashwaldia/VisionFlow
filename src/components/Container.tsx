@@ -1,8 +1,12 @@
 /**
- * VisionFlow AI - Container Component
+ * VisionFlow AI - Container Component (v2.0 - Keyboard Support)
  * Content wrapper with consistent padding
  * 
  * @module components/Container
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ Added pointerEvents support for keyboard interaction
+ * - ✅ Proper touch event propagation for forms
  */
 
 import React from 'react';
@@ -52,6 +56,13 @@ export interface ContainerProps {
    * Test ID
    */
   testID?: string;
+  
+  /**
+   * Touch event handling
+   * Use 'box-none' for containers with inputs to allow keyboard interaction
+   * @default 'auto'
+   */
+  pointerEvents?: 'box-none' | 'none' | 'box-only' | 'auto';
 }
 
 /**
@@ -78,6 +89,7 @@ function getPaddingValue(preset: ContainerPadding): number {
 
 /**
  * Container Component
+ * ✅ Now supports pointerEvents for proper keyboard handling in forms
  * 
  * @example
  * ```tsx
@@ -87,6 +99,10 @@ function getPaddingValue(preset: ContainerPadding): number {
  * 
  * <Container paddingHorizontal="l" center>
  *   <Text>Centered content</Text>
+ * </Container>
+ * 
+ * <Container padding="m" pointerEvents="box-none">
+ *   <Input /> {/* Keyboard will work properly *\/}
  * </Container>
  * ```
  */
@@ -98,6 +114,7 @@ export function Container({
   center = false,
   style,
   testID,
+  pointerEvents = 'auto',
 }: ContainerProps) {
   // Calculate padding
   const containerStyle: ViewStyle = {};
@@ -119,7 +136,11 @@ export function Container({
   }
   
   return (
-    <View style={[styles.container, containerStyle, style]} testID={testID}>
+    <View 
+      style={[styles.container, containerStyle, style]} 
+      testID={testID}
+      pointerEvents={pointerEvents}
+    >
       {children}
     </View>
   );

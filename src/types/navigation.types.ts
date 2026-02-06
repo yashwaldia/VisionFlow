@@ -8,7 +8,7 @@
 
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { Reminder, ReminderCategory } from './reminder.types';
-import type { Pattern, PatternType } from './pattern.types';
+import type { Pattern, PatternType, AIPatternAnalysis } from './pattern.types';
 
 /**
  * Root Stack Navigator
@@ -30,9 +30,27 @@ export type RootStackParamList = {
     analysisType: 'reminder' | 'pattern';
     aiResult: any; // Will be AIReminderAnalysis | AIPatternAnalysis
   };
+  PatternResultsScreen: {
+    analysisResult: AIPatternAnalysis;
+    processedImages: {
+      original: string;
+      edges: string;
+      width: number;
+      height: number;
+    };
+  };
   PermissionsModal: {
     permission: 'camera' | 'notifications' | 'photos';
     returnRoute?: keyof RootStackParamList;
+  };
+  
+  // ✅ Reminder modals (moved from ReminderStackParamList for fullScreenModal presentation)
+  CreateReminderScreen: {
+    imageUri?: string;
+    aiSuggestion?: any; // AIReminderAnalysis
+  };
+  EditReminderScreen: {
+    reminder: Reminder;
   };
 };
 
@@ -73,6 +91,9 @@ export type HomeStackParamList = {
 /**
  * Reminder Stack Navigator
  * Reminder management screens
+ * 
+ * NOTE: CreateReminder and EditReminder moved to RootStackParamList
+ * as fullScreenModals to properly hide tab bar
  */
 export type ReminderStackParamList = {
   ReminderList: {
@@ -82,13 +103,7 @@ export type ReminderStackParamList = {
   ReminderDetail: {
     reminderId: string;
   };
-  CreateReminder: {
-    imageUri?: string;
-    aiSuggestion?: any; // AIReminderAnalysis
-  };
-  EditReminder: {
-    reminder: Reminder;
-  };
+  // ❌ REMOVED: CreateReminder and EditReminder (now CreateReminderScreen and EditReminderScreen in RootStackParamList)
 };
 
 /**

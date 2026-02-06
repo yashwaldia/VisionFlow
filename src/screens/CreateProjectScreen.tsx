@@ -1,37 +1,34 @@
 /**
- * VisionFlow AI - Create Project Screen (v3.0 - UI Pattern Consistency)
+ * VisionFlow AI - Create Project Screen (v3.4 - Footer Fix)
  * Create a new project
  * 
  * @module screens/CreateProjectScreen
  * 
- * CHANGELOG v3.0:
- * - 🔧 Fixed category chips to match AIReviewModal pattern (consistent width)
- * - 🔧 Fixed button layout with wrapper pattern (equal width buttons)
- * - 🔧 Fixed footer positioning (absolute, outside ScrollView)
- * - 🔧 Removed bottom tab bar visibility issue
- * - 🔧 Simplified category chip design for consistency
+ * CHANGELOG v3.4:
+ * - 🐛 FIXED: Footer now sticky/fixed at bottom (position: absolute)
+ * - 🐛 FIXED: Equal width buttons (both flex: 1)
+ * - 🐛 FIXED: ScrollView padding increased to 140 for footer clearance
+ * - 🐛 FIXED: Footer structure matches AIReviewModel reference
  */
 
 
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import {
   View,
   StyleSheet,
   ScrollView,
-  KeyboardAvoidingView,
   Platform,
   Alert,
+  TextInput,
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProjectStackParamList } from '../types/navigation.types';
 import { ReminderCategory } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
-  Screen,
-  Container,
   Text,
   Button,
-  Input,
   Card,
   Icon,
   Pressable,
@@ -44,10 +41,10 @@ type CreateProjectScreenProps = NativeStackScreenProps<ProjectStackParamList, 'C
 
 
 /**
- * Category configuration matching AIReviewModal pattern
+ * Category configuration
  */
 const categoryConfig = {
-  [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
+  [ReminderCategory.PERSONAL]: { icon: 'home', color: Theme.colors.primary[500] },
   [ReminderCategory.WORK]: { icon: 'briefcase', color: Theme.colors.semantic.info },
   [ReminderCategory.HEALTH]: { icon: 'fitness', color: Theme.colors.semantic.success },
   [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
@@ -60,6 +57,12 @@ const categoryConfig = {
 export function CreateProjectScreen({ navigation, route }: CreateProjectScreenProps) {
   const { suggestedName, suggestedCategory } = route.params;
   const { createProject } = useProjects();
+  const insets = useSafeAreaInsets();
+
+
+  const nameInputRef = useRef<TextInput>(null);
+  const descriptionInputRef = useRef<TextInput>(null);
+
 
   const [name, setName] = useState(suggestedName || '');
   const [description, setDescription] = useState('');
@@ -68,16 +71,18 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
   );
   const [isSaving, setIsSaving] = useState(false);
 
+
   const handleSave = async () => {
-    // Validation
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Please enter a project name.');
       return;
     }
 
+
     try {
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
 
       await createProject({
         id: `project_${Date.now()}`,
@@ -89,6 +94,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
         updatedAt: Date.now(),
       } as any);
 
+
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       navigation.goBack();
     } catch (error: any) {
@@ -99,6 +105,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
       setIsSaving(false);
     }
   };
+
 
   const handleCancel = () => {
     if (name.trim() || description.trim()) {
@@ -115,201 +122,212 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
     }
   };
 
+
   const isFormValid = name.trim();
 
+
   return (
-    <Screen 
-      safeAreaTop 
-      safeAreaBottom={false} 
-      disableTabBarSpacing={true}
-    >
-      <KeyboardAvoidingView
-        style={styles.container}
-        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+    <View style={styles.container}>
+      {/* Header */}
+      <View style={styles.header}>
+        <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
+          <Icon name="close" size="md" color={Theme.colors.text.primary} />
+        </Pressable>
+        <View style={styles.headerCenter}>
+          <Text variant="h4" weight="600">New Project</Text>
+          <Text variant="caption" color="tertiary">
+            Create a project to organize reminders
+          </Text>
+        </View>
+        <View style={{ width: 40 }} />
+      </View>
+
+
+      {/* Content */}
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollContent}
+        keyboardShouldPersistTaps="always"
+        keyboardDismissMode="none"
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
-            <Icon name="close" size="md" color={Theme.colors.text.primary} />
-          </Pressable>
-          <View style={styles.headerCenter}>
-            <Text variant="h4" weight="600">New Project</Text>
-            <Text variant="caption" color="tertiary">
-              Create a project to organize reminders
+        <View style={styles.content}>
+          {/* Project Icon Preview */}
+          <View style={styles.iconSection}>
+            <View style={styles.iconWrapper}>
+              <View style={styles.iconCircle}>
+                <Icon name="folder" size="xl" color={Theme.colors.primary[500]} />
+              </View>
+            </View>
+            <Text variant="caption" color="tertiary" align="center">
+              All projects use the folder icon
             </Text>
           </View>
-          <View style={{ width: 40 }} />
-        </View>
 
-        {/* Scrollable Content */}
-        <ScrollView
-          style={styles.scrollView}
-          contentContainerStyle={styles.scrollContent}
-          keyboardShouldPersistTaps="handled"
-          showsVerticalScrollIndicator={false}
-        >
-          <Container padding="m">
-            {/* Project Icon Preview */}
-            <View style={styles.iconSection}>
-              <View style={styles.iconWrapper}>
-                <View style={styles.iconCircle}>
-                  <Icon name="folder" size="xl" color={Theme.colors.primary[500]} />
-                </View>
-              </View>
-              <Text variant="caption" color="tertiary" align="center">
-                All projects use the folder icon
-              </Text>
+
+          {/* Basic Information */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Basic Information</Text>
             </View>
-
-            {/* Basic Information */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
-                <Text variant="h4">Basic Information</Text>
+            
+            <Card elevation="sm" style={styles.formCard}>
+              <View style={styles.inputGroup}>
+                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  PROJECT NAME *
+                </Text>
+                <TextInput
+                  ref={nameInputRef}
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter project name"
+                  placeholderTextColor={Theme.colors.text.tertiary}
+                  autoFocus
+                  returnKeyType="next"
+                  blurOnSubmit={false}
+                  onSubmitEditing={() => descriptionInputRef.current?.focus()}
+                  style={styles.textInput}
+                />
               </View>
-              
-              <Card elevation="sm" style={styles.formCard}>
-                <View style={styles.inputGroup}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
-                    PROJECT NAME *
-                  </Text>
-                  <Input
-                    value={name}
-                    onChangeText={setName}
-                    placeholder="Enter project name"
-                    autoFocus
-                  />
-                </View>
 
-                <View style={styles.divider} />
 
-                <View style={styles.inputGroup}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
-                    DESCRIPTION (OPTIONAL)
-                  </Text>
-                  <Input
-                    value={description}
-                    onChangeText={setDescription}
-                    placeholder="What is this project about?"
-                    multiline
-                    numberOfLines={4}
-                  />
-                </View>
-              </Card>
+              <View style={styles.divider} />
+
+
+              <View style={styles.inputGroup}>
+                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  DESCRIPTION (OPTIONAL)
+                </Text>
+                <TextInput
+                  ref={descriptionInputRef}
+                  value={description}
+                  onChangeText={setDescription}
+                  placeholder="What is this project about?"
+                  placeholderTextColor={Theme.colors.text.tertiary}
+                  blurOnSubmit={false}
+                  style={styles.textInput}
+                />
+              </View>
+            </Card>
+          </View>
+
+
+          {/* Category Selection */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
+              <Text variant="h4">Primary Category</Text>
             </View>
-
-            {/* Category Selection - Matching AIReviewModal Pattern */}
-            <View style={styles.section}>
-              <View style={styles.sectionHeader}>
-                <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
-                <Text variant="h4">Primary Category</Text>
-              </View>
-              
-              <View style={styles.categoryGrid}>
-                {Object.entries(categoryConfig).map(([cat, config]) => {
-                  const isSelected = category === cat;
-                  return (
-                    <Pressable
-                      key={cat}
-                      onPress={() => {
-                        setCategory(cat as ReminderCategory);
-                        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                      }}
-                      haptic="light"
-                      style={[
-                        styles.categoryChip,
-                        ...(isSelected ? [{ 
-                          backgroundColor: config.color,
-                          borderColor: config.color 
-                        }] : []),
-                      ]}
+            
+            <View style={styles.categoryGrid}>
+              {Object.entries(categoryConfig).map(([cat, config]) => {
+                const isSelected = category === cat;
+                return (
+                  <Pressable
+                    key={cat}
+                    onPress={() => {
+                      setCategory(cat as ReminderCategory);
+                      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                    }}
+                    haptic="light"
+                    style={[
+                      styles.categoryChip,
+                      isSelected ? {  // ✅ Use ternary with empty object
+                        backgroundColor: config.color,
+                        borderColor: config.color,
+                      } : {},
+                    ]}
+                  >
+                    <Icon 
+                      name={config.icon as any} 
+                      size="sm" 
+                      color={isSelected ? Theme.colors.background.primary : config.color} 
+                    />
+                    <Text
+                      variant="caption"
+                      weight="700"
+                      customColor={
+                        isSelected
+                          ? Theme.colors.background.primary
+                          : Theme.colors.text.primary
+                      }
                     >
-                      <Icon 
-                        name={config.icon as any} 
-                        size="sm" 
-                        color={isSelected ? Theme.colors.background.primary : config.color} 
-                      />
-                      <Text
-                        variant="caption"
-                        weight="700"
-                        customColor={
-                          isSelected
-                            ? Theme.colors.background.primary
-                            : Theme.colors.text.primary
-                        }
-                      >
-                        {cat}
-                      </Text>
-                    </Pressable>
-                  );
-                })}
-              </View>
-            </View>
-
-            {/* Info Cards */}
-            <View style={styles.infoCardsContainer}>
-              <Card elevation="sm" style={styles.infoCard}>
-                <View style={styles.infoRow}>
-                  <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-                  <Text variant="caption" color="secondary" style={styles.infoText}>
-                    Projects help you organize related reminders. You can assign reminders to this project later.
-                  </Text>
-                </View>
-              </Card>
-
-              <Card elevation="sm" style={styles.benefitsCard}>
-                <View style={styles.benefitsHeader}>
-                  <Icon name="checkmark-circle" size="sm" color={Theme.colors.semantic.success} />
-                  <Text variant="caption" color="secondary" weight="600">BENEFITS</Text>
-                </View>
-                <View style={styles.benefitsList}>
-                  <View style={styles.benefitItem}>
-                    <View style={styles.benefitDot} />
-                    <Text variant="caption" color="secondary">Group related reminders together</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <View style={styles.benefitDot} />
-                    <Text variant="caption" color="secondary">Track progress by project</Text>
-                  </View>
-                  <View style={styles.benefitItem}>
-                    <View style={styles.benefitDot} />
-                    <Text variant="caption" color="secondary">View analytics per project</Text>
-                  </View>
-                </View>
-              </Card>
-            </View>
-          </Container>
-        </ScrollView>
-
-        {/* Fixed Footer - Outside ScrollView */}
-        <View style={styles.footerContainer}>
-          <View style={styles.footer}>
-            <View style={styles.footerButton}>
-              <Button
-                label="Cancel"
-                variant="outline"
-                size="large"
-                onPress={handleCancel}
-                disabled={isSaving}
-                fullWidth
-              />
-            </View>
-            <View style={styles.footerButton}>
-              <Button
-                label={isSaving ? 'Creating...' : 'Create Project'}
-                variant="primary"
-                size="large"
-                leftIcon={isSaving ? undefined : "add-circle"}
-                onPress={handleSave}
-                disabled={isSaving || !isFormValid}
-                loading={isSaving}
-                fullWidth
-              />
+                      {cat}
+                    </Text>
+                  </Pressable>
+                );
+              })}
             </View>
           </View>
+
+
+          {/* Info Cards */}
+          <View style={styles.infoCardsContainer}>
+            <Card elevation="sm" style={styles.infoCard}>
+              <View style={styles.infoRow}>
+                <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
+                <Text variant="caption" color="secondary" style={styles.infoText}>
+                  Projects help you organize related reminders. You can assign reminders to this project later.
+                </Text>
+              </View>
+            </Card>
+
+
+            <Card elevation="sm" style={styles.benefitsCard}>
+              <View style={styles.benefitsHeader}>
+                <Icon name="checkmark-circle" size="sm" color={Theme.colors.semantic.success} />
+                <Text variant="caption" color="secondary" weight="600">BENEFITS</Text>
+              </View>
+              <View style={styles.benefitsList}>
+                <View style={styles.benefitItem}>
+                  <View style={styles.benefitDot} />
+                  <Text variant="caption" color="secondary">Group related reminders together</Text>
+                </View>
+                <View style={styles.benefitItem}>
+                  <View style={styles.benefitDot} />
+                  <Text variant="caption" color="secondary">Track progress by project</Text>
+                </View>
+                <View style={styles.benefitItem}>
+                  <View style={styles.benefitDot} />
+                  <Text variant="caption" color="secondary">View analytics per project</Text>
+                </View>
+              </View>
+            </Card>
+          </View>
         </View>
-      </KeyboardAvoidingView>
-    </Screen>
+      </ScrollView>
+
+
+      {/* Footer - Fixed at bottom */}
+      <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
+        <View style={styles.footer}>
+          <View style={styles.footerButton}>
+            <Button
+              label="Cancel"
+              variant="outline"
+              size="large"
+              leftIcon="close"
+              onPress={handleCancel}
+              disabled={isSaving}
+              fullWidth
+            />
+          </View>
+          <View style={styles.footerButton}>
+            <Button
+              label={isSaving ? 'Creating...' : 'Create Project'}
+              variant="primary"
+              size="large"
+              leftIcon={isSaving ? undefined : "checkmark"}
+              onPress={handleSave}
+              disabled={isSaving || !isFormValid}
+              loading={isSaving}
+              fullWidth
+            />
+          </View>
+        </View>
+      </View>
+    </View>
   );
 }
 
@@ -317,7 +335,9 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+    backgroundColor: Theme.colors.background.primary,
   },
+
 
   // Header styles
   header: {
@@ -344,13 +364,22 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
+
   // Scroll styles
   scrollView: {
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 140, // Clearance for fixed footer
+    flexGrow: 1,
+    paddingBottom: 140, // ✅ FIXED: Increased from 120 to match reference
   },
+
+
+  // Content padding
+  content: {
+    padding: Theme.spacing.m,
+  },
+
 
   // Icon section
   iconSection: {
@@ -372,6 +401,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
+
   // Section styles
   section: {
     marginBottom: Theme.spacing.l,
@@ -382,6 +412,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
+
 
   // Form card styles
   formCard: {
@@ -396,13 +427,25 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
     fontSize: 10,
   },
+  textInput: {
+    height: 48,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+    paddingHorizontal: Theme.spacing.m,
+    fontSize: 16,
+    color: Theme.colors.text.primary,
+    fontFamily: Theme.typography.fontFamily.mono,
+  },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
   },
 
-  // Category grid - Matching AIReviewModal pattern
+
+  // Category grid styles (matches reference)
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -418,8 +461,9 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    minWidth: 100, // Fixed minimum width for consistency
+    minWidth: 100,
   },
+
 
   // Info cards styles
   infoCardsContainer: {
@@ -439,6 +483,7 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
+
 
   // Benefits card styles
   benefitsCard: {
@@ -467,9 +512,10 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.semantic.success,
   },
 
-  // Fixed footer - Matching AIReviewModal pattern
+
+  // ✅ FIXED: Footer styles matching AIReviewModel reference
   footerContainer: {
-    position: 'absolute',
+    position: 'absolute', // ✅ Makes footer sticky
     bottom: 0,
     left: 0,
     right: 0,
@@ -477,7 +523,6 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
     ...Theme.shadows.sm,
-    paddingBottom: Platform.OS === 'ios' ? 34 : 16,
   },
   footer: {
     flexDirection: 'row',
@@ -486,8 +531,7 @@ const styles = StyleSheet.create({
     paddingTop: Theme.spacing.m,
     paddingBottom: Theme.spacing.m,
   },
-  // Equal width for both buttons
   footerButton: {
-    flex: 1,
+    flex: 1, // ✅ Equal width buttons (both flex: 1)
   },
 });

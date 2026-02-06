@@ -9,6 +9,7 @@ import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { AIReminderAnalysis, ReminderCategory } from '../types/reminder.types';
 import { AIPatternAnalysis, PatternType } from '../types/pattern.types';
 import { API_CONFIG, AI_CONFIG } from '../constants/config';
+import * as ImageService from './image.service';
 
 /**
  * Gemini service error
@@ -242,7 +243,7 @@ export async function analyzeReminderImage(base64Image: string): Promise<AIRemin
           temperature: AI_CONFIG.reminder.temperature,
           maxOutputTokens: AI_CONFIG.reminder.maxTokens,
           responseMimeType: 'application/json',
-          responseSchema: reminderResponseSchema as any, // Type assertion to fix strict type check
+          responseSchema: reminderResponseSchema as any,
         },
       });
     });
@@ -415,7 +416,7 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
           temperature: AI_CONFIG.pattern.temperature,
           maxOutputTokens: AI_CONFIG.pattern.maxTokens,
           responseMimeType: 'application/json',
-          responseSchema: patternResponseSchema as any, // Type assertion to fix strict type check
+          responseSchema: patternResponseSchema as any,
         },
       });
     });
@@ -462,6 +463,77 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
     throw new GeminiError(
       'Failed to analyze image for patterns. Please try again.',
       'ANALYSIS_FAILED',
+      error
+    );
+  }
+}
+
+/**
+ * Complete pattern analysis workflow
+ * Prepares images (original + edges) and runs AI analysis
+ * 
+ * @param imageUri - Source image URI (file:// or data:)
+ * @returns Complete analysis with processed images
+ */
+export async function analyzePatternImageComplete(imageUri: string): Promise<{
+  analysis: AIPatternAnalysis;
+  images: {
+    original: string;
+    edges: string;
+    width: number;
+    height: number;
+  };
+}> {
+  try {
+    const startTime = Date.now();
+    
+    // Step 1: Prepare images (original + edge-enhanced)
+    console.log('[Gemini] Preparing pattern images...');
+    const processedImages = await ImageService.preparePatternImages(imageUri);
+    
+    // Step 2: Extract base64 for AI analysis
+    const base64 = await ImageService.extractBase64(processedImages.original);
+    
+    // Step 3: Run AI pattern analysis
+    console.log('[Gemini] Running AI pattern detection...');
+    const analysis = await analyzePatternImage(base64);
+    
+    // Step 4: Update metadata with processing time and edge detection flag
+    const processingTime = Date.now() - startTime;
+    analysis.metadata = {
+      ...analysis.metadata,
+      processingTime,
+      edgeDetectionApplied: true,
+    };
+    
+    console.log(`[Gemini] Pattern analysis complete in ${processingTime}ms`);
+    console.log(`[Gemini] Detected ${analysis.patterns.length} pattern(s)`);
+    
+    // Step 5: Return complete result
+    return {
+      analysis,
+      images: processedImages,
+    };
+    
+  } catch (error: any) {
+    console.error('[Gemini] Complete pattern analysis failed:', error);
+    
+    if (error instanceof GeminiError) {
+      throw error;
+    }
+    
+    // Check if it's an image processing error
+    if (error.name === 'ImageProcessingError') {
+      throw new GeminiError(
+        'Failed to process image for analysis. Please try a different image.',
+        'IMAGE_PROCESSING_FAILED',
+        error
+      );
+    }
+    
+    throw new GeminiError(
+      'Failed to complete pattern analysis. Please try again.',
+      'ANALYSIS_WORKFLOW_FAILED',
       error
     );
   }

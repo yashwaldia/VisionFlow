@@ -1,33 +1,33 @@
 /**
- * VisionFlow AI - Reminder List Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Reminder List Screen (v5.0 - Keyboard & Layout Fix)
  * Browse and manage all reminders
  * 
  * @module screens/ReminderListScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPadding)
- * - ✅ Standardized filter chip opacity to 20%
- * - ✅ Added card elevation for visual depth
- * - ✅ Enhanced stats cards with shadows
+ * CHANGELOG v5.0:
+ * - ✅ CRITICAL FIX: Applied Pattern screen keyboard handling (keyboardShouldPersistTaps/keyboardDismissMode)
+ * - ✅ CRITICAL FIX: Replaced View wrapper with Screen component (Pattern baseline)
+ * - ✅ CRITICAL FIX: Moved header outside FlatList to prevent keyboard interference
+ * - ✅ LAYOUT FIX: Removed manual safe area insets (Screen handles it)
+ * - ✅ LAYOUT FIX: TextInput fontSize locked at 16px (prevents iOS zoom)
+ * - ✅ Preserved Reminder's superior list styling (borders + status dots)
  */
 
-import React, { useState, useEffect, useMemo } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl, Platform } from 'react-native';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import { View, StyleSheet, FlatList, RefreshControl, Platform, TextInput } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ReminderStackParamList } from '../types/navigation.types';
-import { ReminderCategory, ReminderStatus, CATEGORY_EMOJIS } from '../types/reminder.types';
+import { ReminderCategory, ReminderStatus } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
   Screen,
   Container,
   Text,
   Card,
-  Button,
   Icon,
   Pressable,
   EmptyState,
   LoadingSpinner,
-  SearchBar,
 } from '../components';
 import { useReminders } from '../hooks/useReminders';
 import * as Haptics from 'expo-haptics';
@@ -102,6 +102,8 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
     deleteReminder,
     setFilters,
   } = useReminders();
+
+  const searchInputRef = useRef<TextInput>(null);
 
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ReminderCategory | 'all'>('all');
@@ -178,10 +180,11 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
         key={item.id}
         pressable
         onPress={() => handleReminderTap(item.id)}
-        style={StyleSheet.flatten([
+        elevation="sm"
+        style={[
           styles.reminderCard,
-          isDone && styles.reminderCardDone
-        ])}
+          isDone ? styles.reminderCardDone : {},
+        ]}
       >
         <View style={styles.reminderContent}>
           {/* Emoji Icon with Status Indicator */}
@@ -263,14 +266,12 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - Fixed Outside FlatList (Pattern Baseline) */}
       <Container padding="m" style={styles.header}>
+        {/* Header Top */}
         <View style={styles.headerTop}>
           <View>
             <Text variant="h2">Reminders</Text>
-            <Text variant="caption" color="tertiary">
-              {filteredReminders.length} {filteredReminders.length === 1 ? 'reminder' : 'reminders'}
-            </Text>
           </View>
           <Pressable 
             onPress={() => navigation.navigate('CameraModal' as any, { mode: 'reminder' })}
@@ -285,47 +286,52 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
         </View>
 
         {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search reminders..."
-          style={styles.searchBar}
-        />
+        <View style={styles.searchContainer}>
+          <Icon name="search-outline" size="sm" color={Theme.colors.text.tertiary} />
+          <TextInput
+            ref={searchInputRef}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search reminders..."
+            placeholderTextColor={Theme.colors.text.tertiary}
+            style={styles.searchInput}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Icon name="close-circle" size="sm" color={Theme.colors.text.tertiary} />
+            </Pressable>
+          )}
+        </View>
 
-        {/* Stats Cards - ✅ ENHANCED: Added shadows for depth */}
+        {/* Stats Row */}
         <View style={styles.statsRow}>
-          <Card elevation="sm" style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.primary[500]}15` }]}>
-              <Icon name="time-outline" size="sm" color={Theme.colors.primary[500]} />
-            </View>
-            <Text variant="h3" customColor={Theme.colors.primary[500]}>
+          <View style={styles.statItem}>
+            <Text variant="h4" customColor={Theme.colors.primary[500]}>
               {stats.upcoming}
             </Text>
             <Text variant="caption" color="secondary">Upcoming</Text>
-          </Card>
+          </View>
           
-          <Card elevation="sm" style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.success}15` }]}>
-              <Icon name="checkmark-circle-outline" size="sm" color={Theme.colors.semantic.success} />
-            </View>
-            <Text variant="h3" customColor={Theme.colors.semantic.success}>
+          <View style={styles.statItem}>
+            <Text variant="h4" customColor={Theme.colors.semantic.success}>
               {stats.done}
             </Text>
             <Text variant="caption" color="secondary">Done</Text>
-          </Card>
+          </View>
           
-          <Card elevation="sm" style={styles.statCard}>
-            <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.error}15` }]}>
-              <Icon name="alert-circle-outline" size="sm" color={Theme.colors.semantic.error} />
-            </View>
-            <Text variant="h3" customColor={Theme.colors.semantic.error}>
+          <View style={styles.statItem}>
+            <Text variant="h4" customColor={Theme.colors.semantic.error}>
               {stats.overdue}
             </Text>
             <Text variant="caption" color="secondary">Overdue</Text>
-          </Card>
+          </View>
         </View>
 
-        {/* Category Filter - ✅ FIXED: Standardized opacity to 20% */}
+        {/* Category Filter */}
         <View style={styles.categoryFilter}>
           <Pressable
             onPress={() => handleCategoryFilter('all')}
@@ -387,28 +393,36 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
         </View>
       </Container>
 
-      {/* List */}
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <LoadingSpinner size="large" text="Loading reminders..." />
+          <LoadingSpinner size="large" />
         </View>
-      ) : searchFilteredReminders.length === 0 ? (
+      ) : searchFilteredReminders.length === 0 && !searchQuery ? (
         <EmptyState
           icon="document-text-outline"
-          title={searchQuery ? "No matching reminders" : "No reminders found"}
-          description={
-            searchQuery
-              ? "Try adjusting your search"
-              : "Capture your first reminder to get started!"
-          }
-          actionLabel={searchQuery ? undefined : "Capture Reminder"}
-          onActionPress={searchQuery ? undefined : () => navigation.navigate('CameraModal' as any, { mode: 'reminder' })}
+          title="No reminders found"
+          description="Capture your first reminder to get started!"
+          actionLabel="Capture Reminder"
+          onActionPress={() => navigation.navigate('CameraModal' as any, { mode: 'reminder' })}
         />
       ) : (
         <FlatList
           data={searchFilteredReminders}
           renderItem={renderReminder}
           keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            searchQuery ? (
+              <View style={styles.emptySearch}>
+                <Icon name="search-outline" size="xl" color={Theme.colors.text.tertiary} />
+                <Text variant="h4" align="center" style={{ marginTop: Theme.spacing.m }}>
+                  No matching reminders
+                </Text>
+                <Text variant="body" color="secondary" align="center">
+                  Try adjusting your search
+                </Text>
+              </View>
+            ) : null
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -418,6 +432,8 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
             />
           }
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
         />
       )}
     </Screen>
@@ -431,7 +447,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerTop: {
     flexDirection: 'row',
@@ -447,37 +463,47 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: Theme.borderRadius.m,
-    ...Theme.shadows.glow, // ✅ ADDED: Glow effect on primary button
+    ...Theme.shadows.glow,
   },
-  searchBar: {
+
+  // Search bar styles
+  searchContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.s,
+    height: 48,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: Theme.colors.border.default,
+    paddingHorizontal: Theme.spacing.m,
     marginBottom: Theme.spacing.m,
+  },
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Theme.colors.text.primary,
+    fontFamily: Theme.typography.fontFamily.mono,
+    height: '100%',
+  },
+  clearButton: {
+    padding: 4,
   },
   
   // Stats styles
   statsRow: {
     flexDirection: 'row',
-    gap: Theme.spacing.s,
+    justifyContent: 'space-around',
     marginBottom: Theme.spacing.m,
-  },
-  statCard: {
-    flex: 1,
-    alignItems: 'center',
-    paddingVertical: Theme.spacing.m,
-    paddingHorizontal: Theme.spacing.xs,
-    gap: 6,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-  },
-  statIconContainer: {
-    width: 36,
-    height: 36,
+    paddingVertical: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.tertiary,
     borderRadius: Theme.borderRadius.m,
+  },
+  statItem: {
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 2,
   },
   
-  // Category filter styles - ✅ FIXED: Standardized to 20% opacity
+  // Category filter styles
   categoryFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -496,11 +522,11 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.default,
   },
   categoryChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
   },
   
-  // List styles - ✅ FIXED: Uses theme constant instead of hardcoded 120
+  // List styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -508,15 +534,21 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding, // ✅ FIXED: 80 from theme (was hardcoded 120)
     gap: Theme.spacing.s,
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
+  },
+  emptySearch: {
+    padding: Theme.spacing.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   
-  // Reminder card styles - ✅ ENHANCED: Added shadow for depth
+  // Reminder card styles
   reminderCard: {
+    marginBottom: Theme.spacing.s,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   reminderCardDone: {
     opacity: 0.7,

@@ -1,8 +1,12 @@
 /**
- * VisionFlow AI - Root Stack Navigator (UPDATED)
+ * VisionFlow AI - Root Stack Navigator (v2.1 - Reminder Modals Added)
  * Top-level stack containing tab navigator and modal screens
  * 
  * @module navigation/RootStackNavigator
+ * 
+ * CHANGELOG v2.1:
+ * - Added CreateReminderScreen and EditReminderScreen as fullScreenModals
+ * - Ensures tab bar is properly hidden on these screens
  */
 
 import React from 'react';
@@ -10,9 +14,14 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../types/navigation.types';
 import { MainTabNavigator } from './MainTabNavigator';
 
-// Modal Screens - NOW IMPORTED
+// Camera & AI Modal Screens
 import { CameraModal } from '../screens/modals/CameraModal';
 import { AIReviewModal } from '../screens/modals/AIReviewModal';
+import { PatternResultsScreen } from '../screens/PatternResultsScreen';
+
+// Reminder Modal Screens
+import { CreateReminderScreen } from '../screens/CreateReminderScreen';
+import { EditReminderScreen } from '../screens/EditReminderScreen';
 
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
@@ -23,6 +32,9 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * - MainApp (default) - Bottom tab navigation
  * - CameraModal - Full screen camera capture
  * - AIReviewModal - Review AI-extracted data
+ * - PatternResultsScreen - Visual pattern analysis results
+ * - CreateReminderScreen - Create new reminder (fullScreenModal)
+ * - EditReminderScreen - Edit existing reminder (fullScreenModal)
  */
 export function RootStackNavigator() {
   return (
@@ -32,7 +44,7 @@ export function RootStackNavigator() {
         animation: 'fade',
       }}
     >
-      {/* Main App */}
+      {/* Main App with Tab Navigation */}
       <Stack.Screen 
         name="MainApp" 
         component={MainTabNavigator}
@@ -41,7 +53,7 @@ export function RootStackNavigator() {
         }}
       />
 
-      {/* Modal Screens - NOW ACTIVE */}
+      {/* Camera & AI Modal Screens */}
       <Stack.Screen 
         name="CameraModal" 
         component={CameraModal}
@@ -59,6 +71,40 @@ export function RootStackNavigator() {
         options={{
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',
+        }}
+      />
+      
+      <Stack.Screen 
+        name="PatternResultsScreen" 
+        component={PatternResultsScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+        }}
+      />
+
+      {/* Reminder Modal Screens */}
+      <Stack.Screen 
+        name="CreateReminderScreen" 
+        component={CreateReminderScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+        }}
+      />
+
+      <Stack.Screen 
+        name="EditReminderScreen" 
+        component={EditReminderScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
         }}
       />
     </Stack.Navigator>

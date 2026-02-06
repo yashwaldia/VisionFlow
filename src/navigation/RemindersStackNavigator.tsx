@@ -1,7 +1,12 @@
 /**
- * VisionFlow AI - Reminders Stack Navigator (UPDATED)
+ * VisionFlow AI - Reminders Stack Navigator (v2.0 - Modal Screens Moved)
  * Navigation stack for Reminders tab
- * * @module navigation/RemindersStackNavigator
+ * 
+ * @module navigation/RemindersStackNavigator
+ * 
+ * CHANGELOG v2.0:
+ * - Moved CreateReminder and EditReminder to RootStackNavigator
+ * - These screens now render as fullScreenModals to properly hide tab bar
  */
 
 import React from 'react';
@@ -9,18 +14,19 @@ import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ReminderStackParamList } from '../types/navigation.types';
 import { ReminderListScreen } from '../screens/ReminderListScreen';
 import { ReminderDetailScreen } from '../screens/ReminderDetailScreen';
-import { CreateReminderScreen } from '../screens/CreateReminderScreen';
-import { EditReminderScreen } from '../screens/EditReminderScreen';
 
 const Stack = createNativeStackNavigator<ReminderStackParamList>();
 
 /**
  * RemindersStackNavigator Component
- * * Stack Structure:
+ * 
+ * Stack Structure:
  * - ReminderList (default) - List of all reminders
  * - ReminderDetail - Full reminder details
- * - CreateReminder - Manual reminder creation
- * - EditReminder - Edit existing reminder
+ * 
+ * Modal Screens (moved to RootStackNavigator):
+ * - CreateReminderScreen - Manual reminder creation
+ * - EditReminderScreen - Edit existing reminder
  */
 export function RemindersStackNavigator() {
   return (
@@ -43,23 +49,10 @@ export function RemindersStackNavigator() {
         }}
       />
 
-      <Stack.Screen 
-        name="CreateReminder" 
-        component={CreateReminderScreen}
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-        }}
-      />
-
-      <Stack.Screen 
-        name="EditReminder" 
-        component={EditReminderScreen}
-        options={{
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-        }}
-      />
+      {/* ❌ REMOVED: CreateReminder and EditReminder */}
+      {/* These screens are now in RootStackNavigator as fullScreenModals */}
+      {/* Access them via: navigation.navigate('CreateReminderScreen') */}
+      {/* Access them via: navigation.navigate('EditReminderScreen', { reminder }) */}
     </Stack.Navigator>
   );
 }

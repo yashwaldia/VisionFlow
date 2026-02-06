@@ -180,7 +180,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
   };
   
   const handleCreateManual = () => {
-    navigation.navigate('CreateReminder', {});
+    navigation.navigate('CreateReminderScreen', {});
   };
   
   const renderReminderCard = ({ item }: { item: Reminder }) => {

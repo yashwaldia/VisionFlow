@@ -1,19 +1,20 @@
 /**
- * VisionFlow AI - Project List Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Project List Screen (v5.0 - Keyboard & Layout Fix)
  * Browse and manage all projects
  * 
  * @module screens/ProjectListScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPadding)
- * - ✅ Standardized filter chip opacity to 20%
- * - ✅ Added card elevation for visual depth
- * - ✅ Added header shadow for separation
- * - ✅ Enhanced create button with glow effect
+ * CHANGELOG v5.0:
+ * - ✅ CRITICAL FIX: Applied Pattern screen keyboard handling (keyboardShouldPersistTaps/keyboardDismissMode)
+ * - ✅ CRITICAL FIX: Replaced View wrapper with Screen component (Pattern baseline)
+ * - ✅ CRITICAL FIX: Moved header outside FlatList to prevent keyboard interference
+ * - ✅ LAYOUT FIX: Removed manual safe area insets (Screen handles it)
+ * - ✅ LAYOUT FIX: TextInput fontSize locked at 16px (prevents iOS zoom)
+ * - ✅ Preserved Project's superior list styling (borders + arrows)
  */
 
-import React, { useState, useMemo } from 'react';
-import { View, StyleSheet, FlatList, RefreshControl } from 'react-native';
+import React, { useState, useMemo, useRef, useCallback } from 'react';
+import { View, StyleSheet, FlatList, RefreshControl, TextInput, Platform } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ProjectStackParamList } from '../types/navigation.types';
 import { ReminderCategory } from '../types/reminder.types';
@@ -23,12 +24,10 @@ import {
   Container,
   Text,
   Card,
-  Button,
   Icon,
   Pressable,
   EmptyState,
   LoadingSpinner,
-  SearchBar,
 } from '../components';
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
@@ -53,7 +52,7 @@ const formatLastUpdated = (timestamp: number): string => {
 };
 
 /**
- * Get category icon (simple string return, cast at usage)
+ * Get category icon
  */
 const getCategoryIcon = (category: ReminderCategory | 'all'): string => {
   const icons: Record<string, string> = {
@@ -73,7 +72,6 @@ const getCategoryIcon = (category: ReminderCategory | 'all'): string => {
  * - List all projects with stats
  * - Search projects
  * - Filter by category
- * - Toggle archived projects
  * - Pull-to-refresh
  */
 export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
@@ -85,10 +83,11 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
     setFilters,
   } = useProjects();
 
+  const searchInputRef = useRef<TextInput>(null);
+
   const [refreshing, setRefreshing] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState<ReminderCategory | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
-  const [showArchived, setShowArchived] = useState(false);
 
   // Filter by search query
   const searchFilteredProjects = useMemo(() => {
@@ -104,10 +103,13 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
   }, [filteredProjects, searchQuery]);
 
   // Count stats
-  const projectCounts = useMemo(() => ({
-    active: filteredProjects.filter((p) => !p.isArchived).length,
-    archived: filteredProjects.filter((p) => p.isArchived).length,
-  }), [filteredProjects]);
+  const projectStats = useMemo(() => {
+    const total = filteredProjects.length;
+    const active = filteredProjects.filter((p) => !p.isArchived).length;
+    const archived = filteredProjects.filter((p) => p.isArchived).length;
+    
+    return { total, active, archived };
+  }, [filteredProjects]);
 
   // Pull to refresh
   const handleRefresh = async () => {
@@ -117,38 +119,27 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
   };
 
   // Handle category filter
-  const handleCategoryFilter = (category: ReminderCategory | 'all') => {
+  const handleCategoryFilter = useCallback((category: ReminderCategory | 'all') => {
     setSelectedCategory(category);
     setFilters({ 
       category: category as any,
-      isArchived: showArchived,
+      isArchived: false,
     });
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
-
-  // Toggle archived
-  const handleToggleArchived = () => {
-    const newShowArchived = !showArchived;
-    setShowArchived(newShowArchived);
-    setFilters({
-      category: selectedCategory as any,
-      isArchived: newShowArchived,
-    });
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-  };
+  }, [setFilters]);
 
   // Handle project tap
-  const handleProjectTap = (projectId: string) => {
+  const handleProjectTap = useCallback((projectId: string) => {
     navigation.navigate('ProjectDetail', { projectId });
-  };
+  }, [navigation]);
 
   // Handle create project
-  const handleCreateProject = () => {
+  const handleCreateProject = useCallback(() => {
     navigation.navigate('CreateProject', {});
-  };
+  }, [navigation]);
 
   // Render project card
-  const renderProject = ({ item }: { item: any }) => {
+  const renderProject = useCallback(({ item }: { item: any }) => {
     const completionRate = item.stats?.completionRate || 0;
     const totalReminders = item.stats?.totalReminders || 0;
     const activeReminders = item.stats?.activeCount || 0;
@@ -160,6 +151,7 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
         key={item.id}
         pressable
         onPress={() => handleProjectTap(item.id)}
+        elevation="sm"
         style={styles.projectCard}
       >
         <View style={styles.projectContent}>
@@ -258,18 +250,16 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
         </View>
       </Card>
     );
-  };
+  }, [handleProjectTap]);
 
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow */}
+      {/* Header - Fixed Outside FlatList (Pattern Baseline) */}
       <Container padding="m" style={styles.header}>
+        {/* Header Top */}
         <View style={styles.headerTop}>
           <View>
             <Text variant="h2">Projects</Text>
-            <Text variant="caption" color="tertiary">
-              {projectCounts.active} active • {projectCounts.archived} archived
-            </Text>
           </View>
           <Pressable 
             onPress={handleCreateProject}
@@ -284,51 +274,49 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
         </View>
 
         {/* Search Bar */}
-        <SearchBar
-          value={searchQuery}
-          onChangeText={setSearchQuery}
-          placeholder="Search projects..."
-          style={styles.searchBar}
-        />
+        <View style={styles.searchContainer}>
+          <Icon name="search-outline" size="sm" color={Theme.colors.text.tertiary} />
+          <TextInput
+            ref={searchInputRef}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            placeholder="Search projects..."
+            placeholderTextColor={Theme.colors.text.tertiary}
+            style={styles.searchInput}
+            returnKeyType="search"
+            clearButtonMode="while-editing"
+            autoCorrect={false}
+            autoCapitalize="none"
+          />
+          {searchQuery.length > 0 && (
+            <Pressable onPress={() => setSearchQuery('')} style={styles.clearButton}>
+              <Icon name="close-circle" size="sm" color={Theme.colors.text.tertiary} />
+            </Pressable>
+          )}
+        </View>
 
-        {/* Archive Toggle */}
-        <View style={styles.toggleRow}>
-          <Pressable
-            onPress={() => !showArchived && handleToggleArchived()}
-            style={[
-              styles.toggleButton,
-              !showArchived ? styles.toggleButtonActive : {},
-            ]}
-          >
-            <Text
-              variant="caption"
-              weight="700"
-              customColor={!showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
-            >
-              ACTIVE
+        {/* Stats Row */}
+        <View style={styles.statsContainer}>
+          <View style={styles.statBox}>
+            <Text variant="h4" customColor={Theme.colors.primary[500]}>
+              {projectStats.total}
             </Text>
-          </Pressable>
+            <Text variant="caption" color="secondary">Total</Text>
+          </View>
           
-          <Pressable
-            onPress={() => showArchived && handleToggleArchived()}
-            style={[
-              styles.toggleButton,
-              showArchived ? styles.toggleButtonActive : {},
-            ]}
-          >
-            <Icon 
-              name="archive-outline" 
-              size="xs" 
-              color={showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary} 
-            />
-            <Text
-              variant="caption"
-              weight="700"
-              customColor={showArchived ? Theme.colors.primary[500] : Theme.colors.text.secondary}
-            >
-              ARCHIVED
+          <View style={styles.statBox}>
+            <Text variant="h4" customColor={Theme.colors.semantic.success}>
+              {projectStats.active}
             </Text>
-          </Pressable>
+            <Text variant="caption" color="secondary">Active</Text>
+          </View>
+          
+          <View style={styles.statBox}>
+            <Text variant="h4" customColor={Theme.colors.text.tertiary}>
+              {projectStats.archived}
+            </Text>
+            <Text variant="caption" color="secondary">Archived</Text>
+          </View>
         </View>
 
         {/* Category Filter with Icons */}
@@ -393,30 +381,36 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
         </View>
       </Container>
 
-      {/* List */}
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <LoadingSpinner size="large" text="Loading projects..." />
+          <LoadingSpinner size="large" />
         </View>
-      ) : searchFilteredProjects.length === 0 ? (
+      ) : searchFilteredProjects.length === 0 && !searchQuery ? (
         <EmptyState
           icon="folder-outline"
-          title={searchQuery ? "No matching projects" : showArchived ? "No archived projects" : "No projects found"}
-          description={
-            searchQuery
-              ? "Try adjusting your search"
-              : showArchived
-              ? "Archived projects will appear here"
-              : "Create your first project to organize reminders!"
-          }
-          actionLabel={searchQuery || showArchived ? undefined : "Create Project"}
-          onActionPress={searchQuery || showArchived ? undefined : handleCreateProject}
+          title="No projects found"
+          description="Create your first project to organize reminders!"
+          actionLabel="Create Project"
+          onActionPress={handleCreateProject}
         />
       ) : (
         <FlatList
           data={searchFilteredProjects}
           renderItem={renderProject}
           keyExtractor={(item) => item.id}
+          ListEmptyComponent={
+            searchQuery ? (
+              <View style={styles.emptySearch}>
+                <Icon name="search-outline" size="xl" color={Theme.colors.text.tertiary} />
+                <Text variant="h4" align="center" style={{ marginTop: Theme.spacing.m }}>
+                  No matching projects
+                </Text>
+                <Text variant="body" color="secondary" align="center">
+                  Try adjusting your search
+                </Text>
+              </View>
+            ) : null
+          }
           contentContainerStyle={styles.listContent}
           refreshControl={
             <RefreshControl
@@ -426,6 +420,8 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
             />
           }
           showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="always"
+          keyboardDismissMode="none"
         />
       )}
     </Screen>
@@ -433,12 +429,13 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
+    ...Theme.shadows.sm,
   },
   headerTop: {
     flexDirection: 'row',
@@ -454,40 +451,52 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     paddingHorizontal: 14,
     borderRadius: Theme.borderRadius.m,
-    ...Theme.shadows.glow, // ✅ ADDED: Glow effect on primary button
+    ...Theme.shadows.glow,
   },
-  searchBar: {
-    marginBottom: Theme.spacing.m,
-  },
-  
-  // Toggle styles - ✅ FIXED: Standardized to 20% opacity
-  toggleRow: {
-    flexDirection: 'row',
-    gap: Theme.spacing.s,
-    marginBottom: Theme.spacing.m,
-  },
-  toggleButton: {
-    flex: 1,
+
+  // Search bar styles
+  searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    paddingVertical: Theme.spacing.s,
-    borderRadius: Theme.borderRadius.m,
+    gap: Theme.spacing.s,
+    height: 48,
     backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
     borderWidth: 1,
     borderColor: Theme.colors.border.default,
+    paddingHorizontal: Theme.spacing.m,
+    marginBottom: Theme.spacing.m,
   },
-  toggleButtonActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
-    borderColor: Theme.colors.primary[500],
+  searchInput: {
+    flex: 1,
+    fontSize: 16,
+    color: Theme.colors.text.primary,
+    fontFamily: Theme.typography.fontFamily.mono,
+    height: '100%',
+  },
+  clearButton: {
+    padding: 4,
   },
   
-  // Category filter styles - ✅ FIXED: Standardized to 20% opacity
+  // Stats container
+  statsContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    marginBottom: Theme.spacing.m,
+    paddingVertical: Theme.spacing.s,
+    backgroundColor: Theme.colors.background.tertiary,
+    borderRadius: Theme.borderRadius.m,
+  },
+  statBox: {
+    alignItems: 'center',
+  },
+  
+  // Category filter styles
   categoryFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
     flexWrap: 'wrap',
+    paddingBottom: Theme.spacing.xs,
   },
   categoryChip: {
     flexDirection: 'row',
@@ -501,11 +510,11 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.default,
   },
   categoryChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
   },
   
-  // List styles - ✅ FIXED: Uses theme constant
+  // List styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -513,15 +522,21 @@ const styles = StyleSheet.create({
   },
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding, // ✅ FIXED: 80 from theme (was hardcoded 120)
-    gap: Theme.spacing.m,
+    gap: Theme.spacing.s,
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
+  },
+  emptySearch: {
+    padding: Theme.spacing.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
   
-  // Project card styles - ✅ ENHANCED: Added shadow
+  // Project card styles
   projectCard: {
+    marginBottom: Theme.spacing.s,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   projectContent: {
     flexDirection: 'row',
