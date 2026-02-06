@@ -1,15 +1,15 @@
 /**
- * VisionFlow AI - Edit Project Screen (v3.0 - Keyboard Nuclear Fix)
+ * VisionFlow AI - Edit Project Screen (v4.0 - Safe Area & Navigation Fix)
  * Edit an existing project
  * 
  * @module screens/EditProjectScreen
  * 
- * CHANGELOG v3.0:
- * - 🐛 FIXED: Removed KeyboardAvoidingView (was causing immediate keyboard dismiss)
- * - 🐛 FIXED: Using raw TextInput to bypass wrapper component issues
- * - 🐛 FIXED: Removed Screen component to prevent re-renders
- * - 🐛 FIXED: Fixed conditional style operators (changed && to ternary)
- * - ✅ Keyboard now stays open reliably
+ * CHANGELOG v4.0:
+ * - ✅ CRITICAL FIX: Added top safe area padding to header
+ * - ✅ CRITICAL FIX: Updated type to use RootStackParamList
+ * - ✅ CRITICAL FIX: Now receives full project object (not just ID)
+ * - ✅ LAYOUT FIX: Header paddingTop uses safe area insets
+ * - ✅ All fixes from v3.0 preserved
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ProjectStackParamList } from '../types/navigation.types';
+import { RootStackParamList } from '../types/navigation.types'; // ✅ CHANGED
 import { ReminderCategory } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
@@ -36,7 +36,7 @@ import {
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
 
-type EditProjectScreenProps = NativeStackScreenProps<ProjectStackParamList, 'EditProject'>;
+type EditProjectScreenProps = NativeStackScreenProps<RootStackParamList, 'EditProjectScreen'>; // ✅ CHANGED
 
 /**
  * Get category icon
@@ -55,11 +55,9 @@ const getCategoryIcon = (category: ReminderCategory): string => {
  * EditProjectScreen Component
  */
 export function EditProjectScreen({ navigation, route }: EditProjectScreenProps) {
-  const { projectId } = route.params;
-  const { getProjectById, updateProject } = useProjects();
+  const { project } = route.params; // ✅ CHANGED: Receive full project object
+  const { updateProject } = useProjects();
   const insets = useSafeAreaInsets();
-
-  const project = getProjectById(projectId);
 
   const nameInputRef = useRef<TextInput>(null);
   const descriptionInputRef = useRef<TextInput>(null);
@@ -82,6 +80,15 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
   if (!project) {
     return (
       <View style={styles.container}>
+        <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
+          <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
+            <Icon name="close" size="md" color={Theme.colors.text.primary} />
+          </Pressable>
+          <View style={styles.headerCenter}>
+            <Text variant="h4" weight="600">Edit Project</Text>
+          </View>
+          <View style={{ width: 40 }} />
+        </View>
         <View style={styles.notFoundContainer}>
           <Icon name="alert-circle-outline" size="xl" color={Theme.colors.text.tertiary} />
           <Text variant="h3" align="center" style={styles.notFoundTitle}>
@@ -106,7 +113,7 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      await updateProject(projectId, {
+      await updateProject(project.id, { // ✅ Use project.id from params
         name: name.trim(),
         description: description.trim() || undefined,
         primaryCategory: category,
@@ -148,8 +155,8 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header - ✅ FIXED: Added top safe area */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
@@ -336,7 +343,7 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
         </View>
       </ScrollView>
 
-      {/* Footer */}
+      {/* Footer - ✅ Fixed positioning */}
       <View style={[styles.footer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
         <Button
           label="Cancel"
@@ -367,13 +374,14 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // Header styles
+  // Header styles - ✅ FIXED: Top padding now dynamic with safe area
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
+    // paddingTop is dynamic (applied inline with insets.top)
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -592,12 +600,16 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Footer styles
+  // Footer styles - ✅ Should be fixed at bottom
   footer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
     flexDirection: 'row',
     gap: Theme.spacing.m,
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingTop: Theme.spacing.m,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,

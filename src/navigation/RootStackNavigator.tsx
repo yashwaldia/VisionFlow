@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Root Stack Navigator (v2.1 - Reminder Modals Added)
+ * VisionFlow AI - Root Stack Navigator (v2.2 - Project Modals Added)
  * Top-level stack containing tab navigator and modal screens
  * 
  * @module navigation/RootStackNavigator
+ * 
+ * CHANGELOG v2.2:
+ * - ✅ Added CreateProjectScreen and EditProjectScreen as fullScreenModals
+ * - ✅ Matches Reminder pattern for consistent tab bar hiding
+ * - ✅ All modal screens now properly hide tab bar
  * 
  * CHANGELOG v2.1:
  * - Added CreateReminderScreen and EditReminderScreen as fullScreenModals
@@ -23,6 +28,10 @@ import { PatternResultsScreen } from '../screens/PatternResultsScreen';
 import { CreateReminderScreen } from '../screens/CreateReminderScreen';
 import { EditReminderScreen } from '../screens/EditReminderScreen';
 
+// ✅ Project Modal Screens
+import { CreateProjectScreen } from '../screens/CreateProjectScreen';
+import { EditProjectScreen } from '../screens/EditProjectScreen';
+
 const Stack = createNativeStackNavigator<RootStackParamList>();
 
 /**
@@ -35,6 +44,8 @@ const Stack = createNativeStackNavigator<RootStackParamList>();
  * - PatternResultsScreen - Visual pattern analysis results
  * - CreateReminderScreen - Create new reminder (fullScreenModal)
  * - EditReminderScreen - Edit existing reminder (fullScreenModal)
+ * - CreateProjectScreen - Create new project (fullScreenModal)
+ * - EditProjectScreen - Edit existing project (fullScreenModal)
  */
 export function RootStackNavigator() {
   return (
@@ -100,6 +111,29 @@ export function RootStackNavigator() {
       <Stack.Screen 
         name="EditReminderScreen" 
         component={EditReminderScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+        }}
+      />
+
+      {/* ✅ Project Modal Screens */}
+      <Stack.Screen 
+        name="CreateProjectScreen" 
+        component={CreateProjectScreen}
+        options={{
+          presentation: 'fullScreenModal',
+          animation: 'slide_from_bottom',
+          gestureEnabled: true,
+          gestureDirection: 'vertical',
+        }}
+      />
+
+      <Stack.Screen 
+        name="EditProjectScreen" 
+        component={EditProjectScreen}
         options={{
           presentation: 'fullScreenModal',
           animation: 'slide_from_bottom',

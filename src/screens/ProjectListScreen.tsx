@@ -1,16 +1,13 @@
 /**
- * VisionFlow AI - Project List Screen (v5.0 - Keyboard & Layout Fix)
+ * VisionFlow AI - Project List Screen (v6.0 - Navigation Alignment)
  * Browse and manage all projects
  * 
  * @module screens/ProjectListScreen
  * 
- * CHANGELOG v5.0:
- * - ✅ CRITICAL FIX: Applied Pattern screen keyboard handling (keyboardShouldPersistTaps/keyboardDismissMode)
- * - ✅ CRITICAL FIX: Replaced View wrapper with Screen component (Pattern baseline)
- * - ✅ CRITICAL FIX: Moved header outside FlatList to prevent keyboard interference
- * - ✅ LAYOUT FIX: Removed manual safe area insets (Screen handles it)
- * - ✅ LAYOUT FIX: TextInput fontSize locked at 16px (prevents iOS zoom)
- * - ✅ Preserved Project's superior list styling (borders + arrows)
+ * CHANGELOG v6.0:
+ * - ✅ NAVIGATION FIX: Updated CreateProject navigation to match new architecture
+ * - ✅ ALIGNED WITH REMINDER: Uses getParent().navigate() for modal screens
+ * - ✅ All other fixes from v5.0 preserved
  */
 
 import React, { useState, useMemo, useRef, useCallback } from 'react';
@@ -134,8 +131,11 @@ export function ProjectListScreen({ navigation }: ProjectListScreenProps) {
   }, [navigation]);
 
   // Handle create project
+  // ✅ FIXED: Navigate to root stack modal (matches Reminder pattern)
   const handleCreateProject = useCallback(() => {
-    navigation.navigate('CreateProject', {});
+    console.log('📝 Create project button pressed, navigating to CreateProjectScreen');
+    // Navigate to root stack since CreateProjectScreen is now there
+    (navigation as any).getParent()?.navigate('CreateProjectScreen', {});
   }, [navigation]);
 
   // Render project card

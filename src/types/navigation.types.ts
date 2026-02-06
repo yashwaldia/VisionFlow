@@ -9,6 +9,7 @@
 import type { NavigatorScreenParams } from '@react-navigation/native';
 import type { Reminder, ReminderCategory } from './reminder.types';
 import type { Pattern, PatternType, AIPatternAnalysis } from './pattern.types';
+import type { Project } from './project.types'; // ✅ ADDED
 
 /**
  * Root Stack Navigator
@@ -44,13 +45,22 @@ export type RootStackParamList = {
     returnRoute?: keyof RootStackParamList;
   };
   
-  // ✅ Reminder modals (moved from ReminderStackParamList for fullScreenModal presentation)
+  // ✅ Reminder modals (fullScreenModal presentation)
   CreateReminderScreen: {
     imageUri?: string;
     aiSuggestion?: any; // AIReminderAnalysis
   };
   EditReminderScreen: {
     reminder: Reminder;
+  };
+  
+  // ✅ Project modals (fullScreenModal presentation - matches Reminder pattern)
+  CreateProjectScreen: {
+    suggestedName?: string;
+    suggestedCategory?: ReminderCategory;
+  };
+  EditProjectScreen: {
+    project: Project;
   };
 };
 
@@ -131,22 +141,19 @@ export type PatternStackParamList = {
 /**
  * Project Stack Navigator
  * Project management screens
+ * 
+ * NOTE: CreateProject and EditProject moved to RootStackParamList
+ * as fullScreenModals to properly hide tab bar (matches Reminder pattern)
  */
 export type ProjectStackParamList = {
   ProjectList: undefined;
   ProjectDetail: {
     projectId: string;
   };
-  CreateProject: {
-    suggestedName?: string;
-    suggestedCategory?: ReminderCategory;
-  };
-  EditProject: {
-    projectId: string;
-  };
   ProjectAnalytics: {
     projectId: string;
   };
+  // ❌ REMOVED: CreateProject and EditProject (now CreateProjectScreen and EditProjectScreen in RootStackParamList)
 };
 
 /**

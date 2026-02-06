@@ -109,6 +109,38 @@ export function useProjects(): UseProjectsResult {
   }, []);
   
   /**
+   * Update projectsWithStats when projects change
+   * ✅ NEW: Sync stats immediately when projects update
+   */
+  useEffect(() => {
+    const syncStats = async () => {
+      const withStats = await Promise.all(
+        projects.map(async (project) => {
+          const stats = await StorageService.getProjectStats(project.id);
+          return {
+            ...project,
+            stats: stats || {
+              projectId: project.id,
+              totalReminders: 0,
+              upcomingCount: 0,
+              doneCount: 0,
+              overdueCount: 0,
+              completionRate: 0,
+              lastActivityAt: project.updatedAt,
+              categoryBreakdown: {},
+            },
+          };
+        })
+      );
+      setProjectsWithStats(withStats);
+    };
+    
+    if (projects.length > 0 || projectsWithStats.length > 0) {
+      syncStats();
+    }
+  }, [projects]); // ✅ Only depends on projects, not projectsWithStats
+  
+  /**
    * Initial load
    */
   useEffect(() => {
@@ -179,45 +211,45 @@ export function useProjects(): UseProjectsResult {
   
   /**
    * Create project
+   * ✅ FIXED: No more double reload - matches Reminder pattern
    */
   const createProject = useCallback(async (project: Project) => {
     try {
       const updated = await StorageService.saveProject(project);
-      setProjects(updated);
-      await loadProjects(); // Reload with stats
+      setProjects(updated); // ✅ Single state update triggers useEffect above
     } catch (err: any) {
       console.error('[useProjects] Create failed:', err);
       throw err;
     }
-  }, [loadProjects]);
+  }, []); // ✅ No dependencies
   
   /**
    * Update project
+   * ✅ FIXED: No more double reload - matches Reminder pattern
    */
   const updateProject = useCallback(async (id: string, updates: Partial<Project>) => {
     try {
       const updated = await StorageService.updateProject(id, updates);
-      setProjects(updated);
-      await loadProjects(); // Reload with stats
+      setProjects(updated); // ✅ Single state update triggers useEffect above
     } catch (err: any) {
       console.error('[useProjects] Update failed:', err);
       throw err;
     }
-  }, [loadProjects]);
+  }, []); // ✅ No dependencies
   
   /**
    * Delete project
+   * ✅ FIXED: No more double reload - matches Reminder pattern
    */
   const deleteProject = useCallback(async (id: string) => {
     try {
       const { projects: updated } = await StorageService.deleteProject(id);
-      setProjects(updated);
-      await loadProjects(); // Reload with stats
+      setProjects(updated); // ✅ Single state update triggers useEffect above
     } catch (err: any) {
       console.error('[useProjects] Delete failed:', err);
       throw err;
     }
-  }, [loadProjects]);
+  }, []); // ✅ No dependencies
   
   /**
    * Set sorting

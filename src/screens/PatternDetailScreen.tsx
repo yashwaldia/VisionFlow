@@ -1,19 +1,20 @@
 /**
- * VisionFlow AI - Pattern Detail Screen (v3.0 - Complete Intelligence Dashboard)
+ * VisionFlow AI - Pattern Detail Screen (v4.0 - Layout Consistency Fix)
  * View and manage discovered AI patterns with full visual analysis
  * 
  * @module screens/PatternDetailScreen
  * 
- * CHANGELOG v3.0:
- * - ✅ Added image display with edge toggle
- * - ✅ Display AI insights (explanation + secretMessage)
- * - ✅ Show all measurements with proper formatting
- * - ✅ Enhanced visual hierarchy
- * - ✅ Production-ready pattern visualization
+ * CHANGELOG v4.0:
+ * - ✅ CONSISTENCY FIX: Aligned header structure with Reminder/Project screens
+ * - ✅ CONSISTENCY FIX: Removed manual safe area inset handling (Screen handles it)
+ * - ✅ CONSISTENCY FIX: Standardized header button wrappers and actions
+ * - ✅ CONSISTENCY FIX: Added consistent card borders and shadows
+ * - ✅ CONSISTENCY FIX: Matched padding and spacing patterns
+ * - ✅ Visual parity with Reminder and Project detail screens achieved
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Platform, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PatternStackParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
@@ -46,15 +47,29 @@ const getPatternColor = (type: PatternType): string => {
 
 export function PatternDetailScreen({ navigation, route }: PatternDetailScreenProps) {
   const { patternId } = route.params || {};
-  const { getPatternById, deletePattern } = usePatterns();
+  const { getPatternById, patterns, deletePattern } = usePatterns();
   
   const [pattern, setPattern] = useState(getPatternById(patternId));
   const [showEdges, setShowEdges] = useState(false);
 
+  // Refresh pattern when patterns array updates
+  useEffect(() => {
+    if (patternId) {
+      const refreshedPattern = getPatternById(patternId);
+      if (refreshedPattern) {
+        setPattern(refreshedPattern);
+      }
+    }
+  }, [patterns, patternId, getPatternById]);
+
+  // Refresh on screen focus
   useEffect(() => {
     const unsubscribe = navigation.addListener('focus', () => {
       if (patternId) {
-        setPattern(getPatternById(patternId));
+        const focusedPattern = getPatternById(patternId);
+        if (focusedPattern) {
+          setPattern(focusedPattern);
+        }
       }
     });
     return unsubscribe;
@@ -63,10 +78,17 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
   if (!pattern) {
     return (
       <Screen>
-        <Container padding="m" style={styles.centered}>
-          <Icon name="alert-circle-outline" size="xl" color={Theme.colors.text.secondary} />
-          <Text variant="h3" style={styles.notFoundTitle}>Pattern not found</Text>
-          <Button label="Go Back" onPress={() => navigation.goBack()} />
+        <Container padding="m">
+          <View style={styles.notFoundContainer}>
+            <Icon name="alert-circle-outline" size="xl" color={Theme.colors.text.tertiary} />
+            <Text variant="h3" align="center" style={styles.notFoundTitle}>
+              Pattern not found
+            </Text>
+            <Text variant="body" color="secondary" align="center">
+              This pattern may have been deleted
+            </Text>
+            <Button label="Go Back" onPress={() => navigation.goBack()} style={styles.notFoundButton} />
+          </View>
         </Container>
       </Screen>
     );
@@ -105,25 +127,25 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
     setShowEdges(!showEdges);
   };
 
-  // Get display image (edge or original)
   const displayImage = showEdges && pattern.edgeImageUri 
     ? pattern.edgeImageUri 
     : pattern.imageUri;
 
-  // Check if we have measurements to display
   const hasMeasurements = pattern.measurements && Object.keys(pattern.measurements).length > 0;
 
   return (
     <Screen>
       {/* Header */}
       <View style={styles.header}>
-        <Pressable onPress={() => navigation.goBack()} haptic="light">
+        <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
-        <Text variant="h4" weight="600">Pattern Details</Text>
-        <Pressable onPress={handleDelete} haptic="medium">
-          <Icon name="trash-outline" size="md" color={Theme.colors.semantic.error} />
-        </Pressable>
+        <Text variant="h4" weight="600">Details</Text>
+        <View style={styles.headerActions}>
+          <Pressable onPress={handleDelete} haptic="medium" style={styles.headerButton}>
+            <Icon name="trash-outline" size="md" color={Theme.colors.semantic.error} />
+          </Pressable>
+        </View>
       </View>
 
       <ScrollView 
@@ -133,7 +155,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
         <Container padding="m">
           {/* Image Display */}
           {displayImage && (
-            <Card elevation="sm" style={styles.imageCard}>
+            <Card padding={0} style={styles.imageCard}>
               <Image
                 source={{ uri: displayImage }}
                 style={styles.patternImage}
@@ -195,7 +217,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
           {/* Confidence Score Card */}
           {pattern.confidence !== undefined && (
-            <Card elevation="sm" style={styles.card}>
+            <Card style={styles.detailsCard}>
               <View style={styles.confidenceHeader}>
                 <Text variant="h4">AI Confidence</Text>
                 <Text variant="h2" weight="700" customColor={confidenceColor}>
@@ -218,7 +240,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             <>
               {/* Explanation */}
               {pattern.insights.explanation && (
-                <Card elevation="sm" style={styles.insightsCard}>
+                <Card style={styles.insightsCard}>
                   <View style={styles.cardHeader}>
                     <Icon name="bulb-outline" size="md" color={Theme.colors.secondary[500]} />
                     <Text variant="h4">AI Insights</Text>
@@ -233,7 +255,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
               {/* Secret Message */}
               {pattern.insights.secretMessage && (
-                <Card elevation="sm" style={styles.anomalyCard}>
+                <Card style={styles.anomalyCard}>
                   <View style={styles.cardHeader}>
                     <Icon name="lock-closed-outline" size="md" color={Theme.colors.semantic.warning} />
                     <Text variant="h4">Hidden Meaning</Text>
@@ -255,7 +277,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
           {/* Measurements */}
           {hasMeasurements && (
-            <Card elevation="sm" style={styles.card}>
+            <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
                 <Icon name="calculator-outline" size="md" color={Theme.colors.semantic.info} />
                 <Text variant="h4">Measurements</Text>
@@ -307,7 +329,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
           {/* Anchor Points */}
           {pattern.anchors && pattern.anchors.length > 0 && (
-            <Card elevation="sm" style={styles.card}>
+            <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
                 <Icon name="scan-outline" size="md" color={patternColor} />
                 <Text variant="h4">Anchor Points</Text>
@@ -327,42 +349,48 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
           {/* User Notes */}
           {pattern.userNotes && (
-            <Card elevation="sm" style={styles.card}>
+            <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
                 <Icon name="document-text-outline" size="md" color={Theme.colors.primary[500]} />
                 <Text variant="h4">Notes</Text>
               </View>
-              <Text variant="body">{pattern.userNotes}</Text>
+              <Text variant="body" style={styles.noteText}>{pattern.userNotes}</Text>
             </Card>
           )}
 
-          {/* Metadata Card */}
-          <Card elevation="sm" style={styles.card}>
-            <View style={styles.detailRow}>
-              <Icon name="calendar-outline" size="sm" color={Theme.colors.text.secondary} />
-              <Text variant="body" color="secondary">Discovered:</Text>
-              <Text variant="body" weight="600">
-                {formatDate(new Date(pattern.createdAt))}
+          {/* Metadata */}
+          <View style={styles.metadataSection}>
+            <View style={styles.metadataRow}>
+              <Icon name="calendar-outline" size="xs" color={Theme.colors.text.tertiary} />
+              <Text variant="caption" color="tertiary">
+                Discovered {new Date(pattern.createdAt).toLocaleDateString(undefined, { 
+                  month: 'short', 
+                  day: 'numeric',
+                  year: 'numeric',
+                })}
               </Text>
             </View>
-            <View style={styles.detailRow}>
-              <Icon name="time-outline" size="sm" color={Theme.colors.text.secondary} />
-              <Text variant="body" color="secondary">Last Updated:</Text>
-              <Text variant="body" weight="600">
-                {formatDate(new Date(pattern.updatedAt))}
-              </Text>
-            </View>
+            {pattern.updatedAt !== pattern.createdAt && (
+              <View style={styles.metadataRow}>
+                <Icon name="time-outline" size="xs" color={Theme.colors.text.tertiary} />
+                <Text variant="caption" color="tertiary">
+                  Updated {new Date(pattern.updatedAt).toLocaleDateString(undefined, { 
+                    month: 'short', 
+                    day: 'numeric',
+                    year: 'numeric',
+                  })}
+                </Text>
+              </View>
+            )}
             {pattern.tags && pattern.tags.length > 0 && (
-              <View style={styles.detailRow}>
-                <Icon name="pricetag-outline" size="sm" color={Theme.colors.text.secondary} />
-                <Text variant="body" color="secondary">Tags:</Text>
-                <Text variant="body" weight="600">
+              <View style={styles.metadataRow}>
+                <Icon name="pricetag-outline" size="xs" color={Theme.colors.text.tertiary} />
+                <Text variant="caption" color="tertiary">
                   {pattern.tags.join(', ')}
                 </Text>
               </View>
             )}
-          </Card>
-
+          </View>
         </Container>
       </ScrollView>
     </Screen>
@@ -370,6 +398,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 }
 
 const styles = StyleSheet.create({
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -379,27 +408,47 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
     ...Theme.shadows.sm,
   },
+  headerButton: {
+    width: 40,
+    height: 40,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderRadius: Theme.borderRadius.m,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: Theme.spacing.xs,
+  },
+  
+  // Content styles
   scrollContent: {
     paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
-  centered: {
+  
+  // Not found styles
+  notFoundContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    paddingVertical: Theme.spacing.xxl,
     gap: Theme.spacing.m,
   },
   notFoundTitle: {
-    textAlign: 'center',
-    marginBottom: Theme.spacing.s,
+    marginTop: Theme.spacing.s,
+  },
+  notFoundButton: {
+    marginTop: Theme.spacing.l,
   },
 
+  // Image styles
   imageCard: {
-    padding: 0,
-    overflow: 'hidden',
     marginBottom: Theme.spacing.l,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.md,
   },
   patternImage: {
     width: '100%',
@@ -440,6 +489,7 @@ const styles = StyleSheet.create({
     ...Theme.shadows.sm,
   },
 
+  // Title section styles
   titleSection: {
     alignItems: 'center',
     marginBottom: Theme.spacing.l,
@@ -462,9 +512,12 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.full,
   },
 
-  card: {
-    marginBottom: Theme.spacing.m,
-    gap: Theme.spacing.m,
+  // Details card styles
+  detailsCard: {
+    marginBottom: Theme.spacing.l,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
+    ...Theme.shadows.sm,
   },
   cardHeader: {
     flexDirection: 'row',
@@ -472,10 +525,12 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.s,
   },
 
+  // Confidence styles
   confidenceHeader: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
+    marginBottom: Theme.spacing.m,
   },
   confidenceBarBg: {
     height: 8,
@@ -488,12 +543,13 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.full,
   },
 
+  // Insights card styles
   insightsCard: {
-    marginBottom: Theme.spacing.m,
-    gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.l,
     backgroundColor: `${Theme.colors.secondary[500]}08`,
     borderWidth: 1,
     borderColor: `${Theme.colors.secondary[500]}20`,
+    ...Theme.shadows.sm,
   },
   quoteContainer: {
     paddingLeft: Theme.spacing.m,
@@ -504,12 +560,13 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 
+  // Anomaly card styles
   anomalyCard: {
-    marginBottom: Theme.spacing.m,
-    gap: Theme.spacing.m,
+    marginBottom: Theme.spacing.l,
     backgroundColor: `${Theme.colors.semantic.warning}08`,
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.warning}30`,
+    ...Theme.shadows.sm,
   },
   classifiedBadge: {
     marginLeft: 'auto',
@@ -526,10 +583,12 @@ const styles = StyleSheet.create({
     borderColor: `${Theme.colors.semantic.warning}40`,
   },
 
+  // Measurements styles
   measurementsGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
+    marginTop: Theme.spacing.m,
   },
   measurementItem: {
     backgroundColor: Theme.colors.background.tertiary,
@@ -539,10 +598,12 @@ const styles = StyleSheet.create({
     gap: 4,
   },
 
+  // Context/Anchor styles
   contextGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
+    marginTop: Theme.spacing.m,
   },
   contextItem: {
     backgroundColor: Theme.colors.background.tertiary,
@@ -552,10 +613,21 @@ const styles = StyleSheet.create({
     gap: 4,
   },
 
-  detailRow: {
+  // Note text styles
+  noteText: {
+    lineHeight: 24,
+  },
+
+  // Metadata styles
+  metadataSection: {
+    gap: Theme.spacing.xs,
+    paddingTop: Theme.spacing.s,
+    borderTopWidth: 1,
+    borderTopColor: Theme.colors.border.light,
+  },
+  metadataRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: Theme.spacing.s,
-    flexWrap: 'wrap',
+    gap: 6,
   },
 });

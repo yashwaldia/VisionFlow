@@ -1,8 +1,12 @@
 /**
- * VisionFlow AI - AI Review Modal (v4.0 - NUCLEAR KEYBOARD FIX)
+ * VisionFlow AI - AI Review Modal (v4.1 - Safe Area Fix)
  * 
- * Applied same keyboard fixes as other screens:
- * - ❌ Removed KeyboardAvoidingView
+ * CHANGELOG v4.1:
+ * - ✅ FIXED: Added top safe area padding to header
+ * - ✅ Header now respects notches/dynamic islands
+ * 
+ * CHANGELOG v4.0:
+ * - ✅ Removed KeyboardAvoidingView
  * - ✅ Raw TextInput with refs
  * - ✅ Proper keyboard persistence
  * - ✅ Safe area handling
@@ -383,8 +387,8 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header - ✅ FIXED: Added top safe area */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <TouchableOpacity onPress={handleDiscard} style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </TouchableOpacity>
@@ -689,7 +693,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         </Container>
       </ScrollView>
 
-      {/* Footer */}
+      {/* Footer - ✅ Already correct with absolute positioning */}
       {!isAnalyzing && (
         <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
           <View style={styles.footer}>
@@ -729,12 +733,14 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
   
+  // ✅ FIXED: Header with dynamic top padding
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
+    // paddingTop is dynamic (applied inline with insets.top)
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -938,6 +944,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.m,
   },
 
+  // ✅ Footer already has correct absolute positioning
   footerContainer: {
     position: 'absolute',
     bottom: 0,

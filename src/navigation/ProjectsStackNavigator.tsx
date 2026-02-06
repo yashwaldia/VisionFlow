@@ -1,27 +1,28 @@
 /**
- * VisionFlow AI - Projects Stack Navigator (v2.0 - Tab Bar Control)
+ * VisionFlow AI - Projects Stack Navigator (v3.0 - Harmonized with Reminder)
  * Navigation stack for Projects tab
  * 
  * @module navigation/ProjectsStackNavigator
  * 
- * CHANGELOG v2.0:
- * - 🔧 Added tab bar hiding for CreateProject and EditProject modal screens
- * - ✅ Footer buttons no longer hidden behind floating tab bar
+ * CHANGELOG v3.0:
+ * - ✅ ALIGNED WITH REMINDER: Moved CreateProject and EditProject to RootStackNavigator
+ * - ✅ REMOVED: Complex tab bar hiding logic (no longer needed)
+ * - ✅ SIMPLIFIED: Only list, detail, and analytics screens remain
+ * - ✅ CLEAN: Matches RemindersStackNavigator pattern exactly
+ * 
+ * MIGRATION NOTE:
+ * CreateProject and EditProject are now in RootStackNavigator as fullScreenModals.
+ * Access them via: navigation.navigate('CreateProjectScreen') or navigation.navigate('EditProjectScreen', { project })
  */
-
 
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ProjectStackParamList } from '../types/navigation.types';
 import { ProjectListScreen } from '../screens/ProjectListScreen';
 import { ProjectDetailScreen } from '../screens/ProjectDetailScreen';
-import { CreateProjectScreen } from '../screens/CreateProjectScreen';
-import { EditProjectScreen } from '../screens/EditProjectScreen';
 import { ProjectAnalyticsScreen } from '../screens/ProjectAnalyticsScreen';
 
-
 const Stack = createNativeStackNavigator<ProjectStackParamList>();
-
 
 /**
  * ProjectsStackNavigator Component
@@ -29,9 +30,11 @@ const Stack = createNativeStackNavigator<ProjectStackParamList>();
  * Stack Structure:
  * - ProjectList (default) - List of all projects
  * - ProjectDetail - Full project details with reminders
- * - CreateProject - Create new project (tab bar hidden)
- * - EditProject - Edit existing project (tab bar hidden)
  * - ProjectAnalytics - Charts and stats
+ * 
+ * Modal Screens (moved to RootStackNavigator):
+ * - CreateProjectScreen - Manual project creation
+ * - EditProjectScreen - Edit existing project
  */
 export function ProjectsStackNavigator() {
   return (
@@ -55,96 +58,17 @@ export function ProjectsStackNavigator() {
       />
 
       <Stack.Screen 
-        name="CreateProject" 
-        component={CreateProjectScreen}
-        options={({ navigation }) => ({
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-          // 🔧 Hide tab bar when this screen is active
-          tabBarStyle: { display: 'none' },
-        })}
-        listeners={({ navigation }) => ({
-          focus: () => {
-            // Hide tab bar when screen gains focus
-            navigation.getParent()?.setOptions({
-              tabBarStyle: { display: 'none' }
-            });
-          },
-          beforeRemove: () => {
-            // Show tab bar when leaving screen
-            navigation.getParent()?.setOptions({
-              tabBarStyle: {
-                position: 'absolute',
-                bottom: 30,
-                left: 20,
-                right: 20,
-                elevation: 0,
-                backgroundColor: 'rgba(8, 8, 10, 0.9)',
-                borderRadius: 32,
-                height: 70,
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-                paddingBottom: 0,
-                paddingTop: 0,
-              }
-            });
-          },
-        })}
-      />
-
-      <Stack.Screen 
-        name="EditProject" 
-        component={EditProjectScreen}
-        options={({ navigation }) => ({
-          presentation: 'modal',
-          animation: 'slide_from_bottom',
-          // 🔧 Hide tab bar when this screen is active
-          tabBarStyle: { display: 'none' },
-        })}
-        listeners={({ navigation }) => ({
-          focus: () => {
-            // Hide tab bar when screen gains focus
-            navigation.getParent()?.setOptions({
-              tabBarStyle: { display: 'none' }
-            });
-          },
-          beforeRemove: () => {
-            // Show tab bar when leaving screen
-            navigation.getParent()?.setOptions({
-              tabBarStyle: {
-                position: 'absolute',
-                bottom: 30,
-                left: 20,
-                right: 20,
-                elevation: 0,
-                backgroundColor: 'rgba(8, 8, 10, 0.9)',
-                borderRadius: 32,
-                height: 70,
-                borderWidth: 1,
-                borderColor: 'rgba(255, 255, 255, 0.1)',
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 10 },
-                shadowOpacity: 0.5,
-                shadowRadius: 20,
-                paddingBottom: 0,
-                paddingTop: 0,
-              }
-            });
-          },
-        })}
-      />
-
-      <Stack.Screen 
         name="ProjectAnalytics" 
         component={ProjectAnalyticsScreen}
         options={{
           animation: 'slide_from_right',
         }}
       />
+
+      {/* ❌ REMOVED: CreateProject and EditProject */}
+      {/* These screens are now in RootStackNavigator as fullScreenModals */}
+      {/* Access them via: navigation.navigate('CreateProjectScreen') */}
+      {/* Access them via: navigation.navigate('EditProjectScreen', { project }) */}
     </Stack.Navigator>
   );
 }

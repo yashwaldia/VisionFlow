@@ -1,15 +1,14 @@
 /**
- * VisionFlow AI - Project Detail Screen (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Project Detail Screen (v3.0 - Navigation Alignment)
  * View and manage a single project
  * 
  * @module screens/ProjectDetailScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
- * - ✅ Standardized icon background opacity to 20%
- * - ✅ Standardized status badge opacity to 20%
- * - ✅ Added card elevation for visual depth
- * - ✅ Added header shadow for separation
+ * CHANGELOG v3.0:
+ * - ✅ NAVIGATION FIX: Updated Edit navigation to match new architecture
+ * - ✅ ALIGNED WITH REMINDER: Uses getParent().navigate() for modal screens
+ * - ✅ ALIGNED WITH REMINDER: Passes full project object to EditProjectScreen
+ * - ✅ All other fixes from v2.1 preserved
  */
 
 import React, { useState, useEffect } from 'react';
@@ -97,8 +96,11 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
     );
   }
 
+  // ✅ FIXED: Navigate to root stack modal (matches Reminder pattern)
   const handleEdit = () => {
-    navigation.navigate('EditProject', { projectId });
+    console.log('📝 Edit button pressed, navigating to EditProjectScreen');
+    // Navigate to root stack since EditProjectScreen is now there
+    (navigation as any).getParent()?.navigate('EditProjectScreen', { project });
   };
 
   const handleArchive = async () => {
@@ -429,7 +431,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -445,7 +447,7 @@ const styles = StyleSheet.create({
   
   // Content styles - ✅ FIXED: Uses theme constant
   scrollContent: {
-    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge, // ✅ FIXED: 120 from theme (was hardcoded)
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
   
   // Not found styles
@@ -476,7 +478,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderWidth: 2,
     borderColor: `${Theme.colors.primary[500]}30`,
     alignItems: 'center',
@@ -524,7 +526,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.s,
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.s,
-    backgroundColor: `${Theme.colors.semantic.warning}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.semantic.warning}20`,
   },
   
   // Description card styles - ✅ ENHANCED: Added shadow
@@ -532,7 +534,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   descriptionHeader: {
     flexDirection: 'row',
@@ -549,7 +551,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   statsHeader: {
     flexDirection: 'row',
@@ -610,7 +612,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm, // ✅ ADDED: Card shadow for depth
+    ...Theme.shadows.sm,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -666,7 +668,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
     gap: Theme.spacing.xs,
-    ...Theme.shadows.sm, // ✅ ADDED: Action card shadow for depth
+    ...Theme.shadows.sm,
   },
   actionIconContainer: {
     width: 56,

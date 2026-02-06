@@ -1,16 +1,16 @@
 /**
- * VisionFlow AI - Create Project Screen (v3.4 - Footer Fix)
+ * VisionFlow AI - Create Project Screen (v4.0 - Safe Area & Navigation Fix)
  * Create a new project
  * 
  * @module screens/CreateProjectScreen
  * 
- * CHANGELOG v3.4:
- * - 🐛 FIXED: Footer now sticky/fixed at bottom (position: absolute)
- * - 🐛 FIXED: Equal width buttons (both flex: 1)
- * - 🐛 FIXED: ScrollView padding increased to 140 for footer clearance
- * - 🐛 FIXED: Footer structure matches AIReviewModel reference
+ * CHANGELOG v4.0:
+ * - ✅ CRITICAL FIX: Added top safe area padding to header
+ * - ✅ CRITICAL FIX: Updated type to use RootStackParamList
+ * - ✅ CRITICAL FIX: Navigation now matches Reminder pattern (explicit route)
+ * - ✅ LAYOUT FIX: Header paddingTop uses safe area insets
+ * - ✅ All fixes from v3.4 preserved
  */
-
 
 import React, { useState, useRef } from 'react';
 import {
@@ -23,7 +23,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { ProjectStackParamList } from '../types/navigation.types';
+import { RootStackParamList } from '../types/navigation.types'; // ✅ CHANGED
 import { ReminderCategory } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
@@ -36,9 +36,7 @@ import {
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
 
-
-type CreateProjectScreenProps = NativeStackScreenProps<ProjectStackParamList, 'CreateProject'>;
-
+type CreateProjectScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateProjectScreen'>; // ✅ CHANGED
 
 /**
  * Category configuration
@@ -50,19 +48,16 @@ const categoryConfig = {
   [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
 };
 
-
 /**
  * CreateProjectScreen Component
  */
 export function CreateProjectScreen({ navigation, route }: CreateProjectScreenProps) {
-  const { suggestedName, suggestedCategory } = route.params;
+  const { suggestedName, suggestedCategory } = route.params || {}; // ✅ Added optional chaining
   const { createProject } = useProjects();
   const insets = useSafeAreaInsets();
 
-
   const nameInputRef = useRef<TextInput>(null);
   const descriptionInputRef = useRef<TextInput>(null);
-
 
   const [name, setName] = useState(suggestedName || '');
   const [description, setDescription] = useState('');
@@ -71,18 +66,15 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
   );
   const [isSaving, setIsSaving] = useState(false);
 
-
   const handleSave = async () => {
     if (!name.trim()) {
       Alert.alert('Validation Error', 'Please enter a project name.');
       return;
     }
 
-
     try {
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
 
       await createProject({
         id: `project_${Date.now()}`,
@@ -94,9 +86,16 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
         updatedAt: Date.now(),
       } as any);
 
-
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      navigation.goBack();
+      
+      // ✅ FIXED: Navigate explicitly to ProjectList (matches Reminder pattern)
+      navigation.navigate('MainApp', {
+        screen: 'ProjectsTab',
+        params: {
+          screen: 'ProjectList',
+          params: {},
+        },
+      } as any);
     } catch (error: any) {
       console.error('[CreateProject] Save failed:', error);
       Alert.alert('Save Failed', error.message || 'Failed to create project. Please try again.');
@@ -105,7 +104,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
       setIsSaving(false);
     }
   };
-
 
   const handleCancel = () => {
     if (name.trim() || description.trim()) {
@@ -122,14 +120,12 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
     }
   };
 
-
   const isFormValid = name.trim();
-
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* Header - ✅ FIXED: Added top safe area */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
@@ -141,7 +137,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
         </View>
         <View style={{ width: 40 }} />
       </View>
-
 
       {/* Content */}
       <ScrollView
@@ -163,7 +158,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
               All projects use the folder icon
             </Text>
           </View>
-
 
           {/* Basic Information */}
           <View style={styles.section}>
@@ -191,9 +185,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
                 />
               </View>
 
-
               <View style={styles.divider} />
-
 
               <View style={styles.inputGroup}>
                 <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
@@ -211,7 +203,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
               </View>
             </Card>
           </View>
-
 
           {/* Category Selection */}
           <View style={styles.section}>
@@ -233,7 +224,7 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
                     haptic="light"
                     style={[
                       styles.categoryChip,
-                      isSelected ? {  // ✅ Use ternary with empty object
+                      isSelected ? {
                         backgroundColor: config.color,
                         borderColor: config.color,
                       } : {},
@@ -261,7 +252,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
             </View>
           </View>
 
-
           {/* Info Cards */}
           <View style={styles.infoCardsContainer}>
             <Card elevation="sm" style={styles.infoCard}>
@@ -272,7 +262,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
                 </Text>
               </View>
             </Card>
-
 
             <Card elevation="sm" style={styles.benefitsCard}>
               <View style={styles.benefitsHeader}>
@@ -297,7 +286,6 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
           </View>
         </View>
       </ScrollView>
-
 
       {/* Footer - Fixed at bottom */}
       <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
@@ -331,21 +319,20 @@ export function CreateProjectScreen({ navigation, route }: CreateProjectScreenPr
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
   },
 
-
-  // Header styles
+  // Header styles - ✅ FIXED: Top padding now dynamic with safe area
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m, // ✅ Separate bottom padding
+    // paddingTop is dynamic (applied inline with insets.top)
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -364,22 +351,19 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
-
   // Scroll styles
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 140, // ✅ FIXED: Increased from 120 to match reference
+    paddingBottom: 140,
   },
-
 
   // Content padding
   content: {
     padding: Theme.spacing.m,
   },
-
 
   // Icon section
   iconSection: {
@@ -401,7 +385,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-
   // Section styles
   section: {
     marginBottom: Theme.spacing.l,
@@ -412,7 +395,6 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     marginBottom: Theme.spacing.m,
   },
-
 
   // Form card styles
   formCard: {
@@ -444,8 +426,7 @@ const styles = StyleSheet.create({
     marginVertical: Theme.spacing.m,
   },
 
-
-  // Category grid styles (matches reference)
+  // Category grid styles
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -463,7 +444,6 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
     minWidth: 100,
   },
-
 
   // Info cards styles
   infoCardsContainer: {
@@ -483,7 +463,6 @@ const styles = StyleSheet.create({
     flex: 1,
     lineHeight: 18,
   },
-
 
   // Benefits card styles
   benefitsCard: {
@@ -512,10 +491,9 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.semantic.success,
   },
 
-
-  // ✅ FIXED: Footer styles matching AIReviewModel reference
+  // Footer styles
   footerContainer: {
-    position: 'absolute', // ✅ Makes footer sticky
+    position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
@@ -532,6 +510,6 @@ const styles = StyleSheet.create({
     paddingBottom: Theme.spacing.m,
   },
   footerButton: {
-    flex: 1, // ✅ Equal width buttons (both flex: 1)
+    flex: 1,
   },
 });
