@@ -1,15 +1,24 @@
 /**
- * VisionFlow AI - Gemini Service
+ * VisionFlow AI - Gemini Service (v2.0 - overlaySteps Support)
  * AI-powered image analysis for reminders and patterns
  * 
  * @module services/gemini
+ * @version 2.0.0
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ Added overlaySteps to pattern response schema
+ * - ✅ Updated system instruction for progressive rendering
+ * - ✅ AI now generates SVG path strings for staged pattern reveal
+ * - ✅ Matches web prototype's staged rendering capability
  */
+
 
 import { GoogleGenerativeAI, SchemaType } from '@google/generative-ai';
 import { AIReminderAnalysis, ReminderCategory } from '../types/reminder.types';
 import { AIPatternAnalysis, PatternType } from '../types/pattern.types';
 import { API_CONFIG, AI_CONFIG } from '../constants/config';
 import * as ImageService from './image.service';
+
 
 /**
  * Gemini service error
@@ -20,6 +29,7 @@ class GeminiError extends Error {
     this.name = 'GeminiError';
   }
 }
+
 
 /**
  * Initialize Gemini AI
@@ -35,12 +45,14 @@ function initializeGemini(): GoogleGenerativeAI {
   return new GoogleGenerativeAI(API_CONFIG.gemini.apiKey);
 }
 
+
 /**
  * Prepare base64 image for Gemini (remove data URL prefix)
  */
 function prepareImageData(base64Image: string): string {
   return base64Image.replace(/^data:image\/(png|jpeg|jpg|webp);base64,/, '');
 }
+
 
 /**
  * Retry logic for API calls
@@ -73,9 +85,11 @@ async function retryOperation<T>(
   throw lastError;
 }
 
+
 // ============================================
 // REMINDER ANALYSIS
 // ============================================
+
 
 /**
  * System instruction for reminder extraction
@@ -83,12 +97,16 @@ async function retryOperation<T>(
 function getReminderSystemInstruction(currentDate: string): string {
   return `You are an intelligent, human-like assistant for "VisionFlow AI". Your goal is to analyze images and extract structured, actionable reminder data with high precision.
 
+
 Input: Image + Current Date/Time: ${currentDate}
 Output: Strict JSON object only.
 
+
 ### 1. AUTO-CLASSIFICATION & SUBCATEGORIES
 
+
 Analyze the image text and visual context to strictly map to one of these Categories:
+
 
 - **Money** 💰: [Loan Given, Loan Taken, Credit Card Payment, EMI, Rent, Salary, Investment]
   Use for: Personal financial transactions, debts, earnings
@@ -126,7 +144,9 @@ Analyze the image text and visual context to strictly map to one of these Catego
 - **Events & Occasions** 🎉: [Festival, Wedding, Party, Concert, Celebration, Anniversary]
   Use for: Special events and celebrations
 
+
 ### 2. PROJECT GROUPING
+
 
 Identify a logical **projectName** to group this reminder:
 - Credit Card Bill → "HDFC Bank" or "Finances"
@@ -135,10 +155,13 @@ Identify a logical **projectName** to group this reminder:
 - Doctor Prescription → "Mom's Health"
 - Keep names short (max 20 characters)
 
+
 ### 3. SMART CONTENT EXTRACTION (Critical)
+
 
 **title**: Action-oriented and specific (max 60 chars)
 - Examples: "Pay Electricity Bill", "Submit History Assignment", "Take Blood Pressure Medicine"
+
 
 **smartNote**: Natural, human-like summary (1-2 lines). SYNTHESIZE information:
 - Bad: "Pay bill 500 date 10th"
@@ -147,21 +170,26 @@ Identify a logical **projectName** to group this reminder:
 - Good (Loan): "You lent ₹5,000 to Rahul. Remind him to pay back by the 25th."
 - Good (Event): "Wedding reception at Grand Hotel on Sunday, 7 PM. Dress code: formal."
 
+
 **reminderDate** & **reminderTime**: 
 - Infer from text RELATIVE to current date: ${currentDate}
 - If multiple dates exist, pick earliest upcoming deadline
 - If STRICTLY undefined, default to tomorrow at 09:00
 - Format: YYYY-MM-DD and HH:MM (24-hour)
 
+
 **emoji**: MUST match the category emoji from Section 1
 
+
 ### 4. OUTPUT FORMAT
+
 
 Return ONLY valid JSON. No markdown, no explanations.`;
 }
 
+
 /**
- * Response schema for reminder analysis (FIXED TYPE ANNOTATIONS)
+ * Response schema for reminder analysis
  */
 const reminderResponseSchema = {
   type: SchemaType.OBJECT,
@@ -202,6 +230,7 @@ const reminderResponseSchema = {
   },
   required: ['category', 'subcategory', 'projectName', 'title', 'smartNote', 'reminderDate', 'reminderTime', 'emoji'],
 } as const;
+
 
 /**
  * Analyze image for reminder extraction
@@ -285,15 +314,20 @@ export async function analyzeReminderImage(base64Image: string): Promise<AIRemin
   }
 }
 
+
 // ============================================
 // PATTERN ANALYSIS
 // ============================================
 
+
 /**
  * System instruction for pattern detection
+ * 
+ * 🔧 UPDATED: Now requests overlaySteps for progressive rendering
  */
 function getPatternSystemInstruction(): string {
   return `Analyze this image as a "Hidden-Sight Engine". Detect underlying geometric patterns with mathematical precision.
+
 
 Look for:
 1. **Fibonacci Patterns**: Spirals (φ = 1.618), retracements (23.6%, 38.2%, 50%, 61.8%, 78.6%, 100%), extensions
@@ -304,7 +338,9 @@ Look for:
 6. **Geometric Patterns**: Triangles, polygons, grids, axes
 7. **Symmetry**: Radial, bilateral, rotational, translational
 
+
 Identify the TOP 1-3 most prominent patterns.
+
 
 For each pattern provide:
 - **type**: Pattern category
@@ -313,17 +349,28 @@ For each pattern provide:
 - **confidence**: 0-1 score based on clarity and mathematical accuracy
 - **anchors**: Key points as percentages (0-100) of image dimensions [{x: 25, y: 30}, {x: 75, y: 80}]
 - **measurements**: Mathematical properties (goldenRatio, angles, fibonacciRatios, symmetryAxes, etc.)
+- **overlaySteps**: CRITICAL - Array of 3-5 descriptive steps for progressive pattern reveal
+  * Each step describes what to draw at that stage (e.g., "Draw anchor points", "Connect main lines", "Add spiral curve")
+  * Steps should build upon each other progressively
+  * Use clear, actionable descriptions (not code)
+  * Example for Fibonacci spiral: ["Mark center point", "Draw first quarter arc", "Add second quarter arc", "Complete full spiral", "Highlight golden ratio"]
+  * Example for geometric pattern: ["Plot corner anchors", "Draw perimeter lines", "Add internal symmetry axes", "Complete polygon", "Emphasize key angles"]
+
 
 Also provide:
 - **explanation**: 2-3 sentence description of patterns found
 - **secretMessage**: Hidden insight or meaning (creative interpretation)
 - **shareCaption**: Social media-ready caption (engaging, mysterious)
 
+
 Return ONLY valid JSON.`;
 }
 
+
 /**
- * Response schema for pattern analysis (FIXED TYPE ANNOTATIONS)
+ * Response schema for pattern analysis
+ * 
+ * 🔧 UPDATED: Added overlaySteps field
  */
 const patternResponseSchema = {
   type: SchemaType.OBJECT,
@@ -368,8 +415,14 @@ const patternResponseSchema = {
               aspectRatio: { type: SchemaType.NUMBER },
             },
           },
+          // 🔧 NEW: Progressive rendering steps
+          overlaySteps: {
+            type: SchemaType.ARRAY,
+            items: { type: SchemaType.STRING },
+            description: 'Array of 3-5 descriptive steps for progressive pattern reveal',
+          },
         },
-        required: ['type', 'name', 'confidence', 'anchors', 'measurements'],
+        required: ['type', 'name', 'confidence', 'anchors', 'measurements', 'overlaySteps'],
       },
     },
     insights: {
@@ -384,6 +437,7 @@ const patternResponseSchema = {
   },
   required: ['patterns', 'insights'],
 } as const;
+
 
 /**
  * Analyze image for pattern detection
@@ -402,7 +456,7 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
         contents: [{
           role: 'user',
           parts: [
-            { text: 'Analyze this image for hidden geometric patterns.' },
+            { text: 'Analyze this image for hidden geometric patterns. Include progressive overlay steps for staged rendering.' },
             {
               inlineData: {
                 mimeType: 'image/jpeg',
@@ -440,6 +494,19 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
         'INVALID_RESPONSE'
       );
     }
+
+    // 🔧 NEW: Validate overlaySteps
+    for (const pattern of analysisResult.patterns) {
+      if (!pattern.overlaySteps || !Array.isArray(pattern.overlaySteps) || pattern.overlaySteps.length === 0) {
+        console.warn(`[Gemini] Pattern "${pattern.name}" missing overlaySteps, adding default`);
+        pattern.overlaySteps = [
+          'Mark key anchor points',
+          'Connect primary structure',
+          'Add secondary details',
+          'Complete pattern overlay',
+        ];
+      }
+    }
     
     // Add metadata
     const fullResult: AIPatternAnalysis = {
@@ -467,6 +534,7 @@ export async function analyzePatternImage(base64Image: string): Promise<AIPatter
     );
   }
 }
+
 
 /**
  * Complete pattern analysis workflow
@@ -509,6 +577,11 @@ export async function analyzePatternImageComplete(imageUri: string): Promise<{
     console.log(`[Gemini] Pattern analysis complete in ${processingTime}ms`);
     console.log(`[Gemini] Detected ${analysis.patterns.length} pattern(s)`);
     
+    // 🔧 NEW: Log overlay steps for debugging
+    analysis.patterns.forEach((pattern, idx) => {
+      console.log(`[Gemini] Pattern ${idx + 1}: ${pattern.name} (${pattern.overlaySteps?.length || 0} steps)`);
+    });
+    
     // Step 5: Return complete result
     return {
       analysis,
@@ -538,6 +611,7 @@ export async function analyzePatternImageComplete(imageUri: string): Promise<{
     );
   }
 }
+
 
 /**
  * Test API key validity

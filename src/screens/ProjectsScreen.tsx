@@ -150,7 +150,7 @@ export function ProjectsScreen({ navigation }: ProjectsScreenProps) {
   
   // Navigation handlers
   const handleCreateProject = () => {
-    navigation.navigate('CreateProject', {});
+    navigation.navigate('CreateProjectScreen', {});
   };
   
   const handleProjectPress = (project: Project) => {

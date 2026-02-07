@@ -1,16 +1,18 @@
 /**
- * VisionFlow AI - AI Review Modal (v4.1 - Safe Area Fix)
+ * VisionFlow AI - AI Review Modal (v5.0 - Edge Detection Fix)
+ * 
+ * CHANGELOG v5.0:
+ * - 🔧 CRITICAL FIX: Now calls analyzePatternImageComplete() for pattern analysis
+ * - 🔧 CRITICAL FIX: Uses backend edge detection (no longer bypassed)
+ * - 🔧 Removed manual processedImages construction
+ * - 🔧 Proper handling of complete analysis workflow
+ * - ✅ Edge-detected images now actually different from original
  * 
  * CHANGELOG v4.1:
  * - ✅ FIXED: Added top safe area padding to header
  * - ✅ Header now respects notches/dynamic islands
- * 
- * CHANGELOG v4.0:
- * - ✅ Removed KeyboardAvoidingView
- * - ✅ Raw TextInput with refs
- * - ✅ Proper keyboard persistence
- * - ✅ Safe area handling
  */
+
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -43,17 +45,22 @@ import { useReminders } from '../../hooks/useReminders';
 import { usePatterns } from '../../hooks/usePatterns';
 import { AIPatternAnalysis, PatternType } from '../../types/pattern.types';
 
+
 type AIReviewModalProps = NativeStackScreenProps<RootStackParamList, 'AIReviewModal'>;
 
+
 const DEBUG_MODE = false;
+
 
 enum ErrorType {
   NETWORK = 'network',
   IMAGE_QUALITY = 'image_quality',
   PARSING = 'parsing',
   API_LIMIT = 'api_limit',
+  EDGE_DETECTION = 'edge_detection',
   UNKNOWN = 'unknown',
 }
+
 
 interface SmartError {
   type: ErrorType;
@@ -64,9 +71,11 @@ interface SmartError {
   retryable: boolean;
 }
 
+
 function categorizeError(error: any): SmartError {
   const errorMessage = error?.message || error?.toString() || '';
   const errorString = errorMessage.toLowerCase();
+
 
   if (
     errorString.includes('network') ||
@@ -83,6 +92,7 @@ function categorizeError(error: any): SmartError {
       retryable: true,
     };
   }
+
 
   if (
     errorString.includes('blurry') ||
@@ -102,6 +112,7 @@ function categorizeError(error: any): SmartError {
     };
   }
 
+
   if (
     errorString.includes('json') ||
     errorString.includes('parse') ||
@@ -117,6 +128,7 @@ function categorizeError(error: any): SmartError {
       retryable: true,
     };
   }
+
 
   if (
     errorString.includes('rate limit') ||
@@ -134,6 +146,23 @@ function categorizeError(error: any): SmartError {
     };
   }
 
+  // 🔧 NEW: Edge detection specific error
+  if (
+    errorString.includes('edge') ||
+    errorString.includes('processing') ||
+    errorString.includes('image_processing')
+  ) {
+    return {
+      type: ErrorType.EDGE_DETECTION,
+      title: 'Image Processing Issue',
+      message: 'Edge detection encountered an error',
+      suggestion: 'The analysis will continue without edge enhancement. You can still save the pattern.',
+      icon: 'scan-outline',
+      retryable: true,
+    };
+  }
+
+
   return {
     type: ErrorType.UNKNOWN,
     title: 'Analysis Error',
@@ -144,20 +173,24 @@ function categorizeError(error: any): SmartError {
   };
 }
 
+
 export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const { imageUri, analysisType } = route.params;
   const { createReminder } = useReminders();
   const { createPattern } = usePatterns();
   const insets = useSafeAreaInsets();
 
+
   const titleInputRef = useRef<TextInput>(null);
   const noteInputRef = useRef<TextInput>(null);
   const dateInputRef = useRef<TextInput>(null);
   const timeInputRef = useRef<TextInput>(null);
 
+
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [analysisError, setAnalysisError] = useState<SmartError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
+
 
   const [patternAnalysisResult, setPatternAnalysisResult] = useState<AIPatternAnalysis | null>(null);
   const [processedImages, setProcessedImages] = useState<{
@@ -167,6 +200,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     height: number;
   } | null>(null);
 
+
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [category, setCategory] = useState<ReminderCategory>(ReminderCategory.PERSONAL);
@@ -175,7 +209,9 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const [reminderTime, setReminderTime] = useState('');
   const [emoji, setEmoji] = useState('📝');
 
+
   const [isSaving, setIsSaving] = useState(false);
+
 
   useEffect(() => {
     if (!DEBUG_MODE) {
@@ -185,24 +221,30 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   }, []);
 
+
+  // 🔧 KEPT: Still needed for reminder analysis (uses base64)
   const imageToBase64 = async (uri: string): Promise<string> => {
     try {
       if (!uri || typeof uri !== 'string') {
         throw new Error('Invalid image URI');
       }
 
+
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
         throw new Error('IMAGE_NOT_FOUND');
       }
 
+
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
+
       if (!base64 || base64.length < 1000) {
         throw new Error('IMAGE_QUALITY');
       }
+
 
       return base64;
     } catch (error) {
@@ -210,14 +252,16 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
+
   const analyzeImage = async () => {
     try {
       setIsAnalyzing(true);
       setAnalysisError(null);
 
-      const base64 = await imageToBase64(imageUri);
 
       if (analysisType === 'reminder') {
+        // Reminder analysis: Uses base64 directly
+        const base64 = await imageToBase64(imageUri);
         const result = await GeminiService.analyzeReminderImage(base64);
         
         if (!result.title && !result.smartNote) {
@@ -231,30 +275,36 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         setReminderDate(result.reminderDate || '');
         setReminderTime(result.reminderTime || '');
         setEmoji(result.emoji || '📝');
+
       } else {
-        const result = await GeminiService.analyzePatternImage(base64);
+        // 🔧 CRITICAL FIX: Pattern analysis now uses complete workflow
+        console.log('[AIReviewModal] Starting complete pattern analysis with edge detection...');
         
-        if (!result.patterns || result.patterns.length === 0) {
+        const result = await GeminiService.analyzePatternImageComplete(imageUri);
+        
+        if (!result.analysis.patterns || result.analysis.patterns.length === 0) {
           throw new Error('NO_PATTERNS');
         }
 
-        setPatternAnalysisResult(result);
+        console.log('[AIReviewModal] Pattern analysis successful');
+        console.log(`[AIReviewModal] Detected ${result.analysis.patterns.length} pattern(s)`);
+        console.log(`[AIReviewModal] Image dimensions: ${result.images.width}x${result.images.height}`);
+        console.log(`[AIReviewModal] Edge detection applied: ${result.analysis.metadata.edgeDetectionApplied}`);
+
+        // 🔧 FIXED: Use returned analysis and images from complete workflow
+        setPatternAnalysisResult(result.analysis);
+        setProcessedImages(result.images);  // Already contains original, edges, width, height
         
-        setProcessedImages({
-          original: `data:image/jpeg;base64,${base64}`,
-          edges: `data:image/jpeg;base64,${base64}`,
-          width: 1024,
-          height: 768,
-        });
-        
-        const firstPattern = result.patterns[0];
+        const firstPattern = result.analysis.patterns[0];
         setTitle(firstPattern?.name || 'Pattern');
-        setNote(result.insights?.explanation || '');
+        setNote(result.analysis.insights?.explanation || '');
       }
+
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
     } catch (error: any) {
+      console.error('[AIReviewModal] Analysis failed:', error);
       const smartError = categorizeError(error);
       setAnalysisError(smartError);
       
@@ -267,15 +317,18 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
+
   const handleSave = async () => {
     if (!title.trim()) {
       Alert.alert('Missing Title', 'Please enter a title for this item.');
       return;
     }
 
+
     try {
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
 
       if (analysisType === 'reminder') {
         await createReminder({
@@ -295,6 +348,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           updatedAt: Date.now(),
         } as any);
 
+
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
         navigation.navigate('MainApp', {
@@ -304,15 +358,20 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             params: {},
           },
         });
+
       } else {
+        // Pattern mode
         if (patternAnalysisResult && processedImages) {
+          // Navigate to full results screen with analysis
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
           navigation.replace('PatternResultsScreen', {
             analysisResult: patternAnalysisResult,
             processedImages: processedImages,
           });
+
         } else {
+          // Fallback: Create manual pattern (if analysis failed)
           await createPattern({
             id: `pattern_${Date.now()}`,
             name: title.trim(),
@@ -326,6 +385,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             userNotes: note.trim(),
           } as any);
 
+
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
           navigation.navigate('MainApp', {
@@ -337,13 +397,16 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           });
         }
       }
+
     } catch (error: any) {
+      console.error('[AIReviewModal] Save failed:', error);
       Alert.alert('Save Failed', error.message || 'Failed to save. Please try again.');
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
     } finally {
       setIsSaving(false);
     }
   };
+
 
   const handleDiscard = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -362,14 +425,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     );
   };
 
+
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     analyzeImage();
   };
 
+
   const handleRecapture = () => {
     navigation.goBack();
   };
+
 
   const categoryConfig = {
     [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
@@ -378,6 +444,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
   };
 
+
   const priorityConfig = {
     [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
     [ReminderPriority.MEDIUM]: { icon: 'remove', color: Theme.colors.semantic.info },
@@ -385,9 +452,10 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     [ReminderPriority.URGENT]: { icon: 'warning', color: Theme.colors.semantic.error },
   };
 
+
   return (
     <View style={styles.container}>
-      {/* Header - ✅ FIXED: Added top safe area */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <TouchableOpacity onPress={handleDiscard} style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
@@ -402,6 +470,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         </View>
         <View style={{ width: 40 }} />
       </View>
+
 
       {/* Content */}
       <ScrollView 
@@ -434,6 +503,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             </View>
           </Card>
 
+
           {isAnalyzing && (
             <Card elevation="sm" style={styles.analysisCard}>
               <View style={styles.analysisIconContainer}>
@@ -442,12 +512,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
               <View style={styles.analysisContent}>
                 <Text variant="bodyLarge" weight="600">Analyzing Image</Text>
                 <Text variant="caption" color="secondary">
-                  {retryCount > 0 ? `Retry attempt ${retryCount}...` : 'AI is extracting information...'}
+                  {retryCount > 0 
+                    ? `Retry attempt ${retryCount}...` 
+                    : analysisType === 'pattern'
+                      ? 'Detecting patterns and processing edges...'
+                      : 'AI is extracting information...'}
                 </Text>
               </View>
               <LoadingSpinner size="small" />
             </Card>
           )}
+
 
           {analysisError && (
             <Card elevation="sm" style={styles.errorCard}>
@@ -469,6 +544,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   {analysisError.suggestion}
                 </Text>
               </View>
+
 
               <View style={styles.errorActions}>
                 {analysisError.type === ErrorType.IMAGE_QUALITY ? (
@@ -494,6 +570,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             </Card>
           )}
 
+
           {!isAnalyzing && (
             <>
               <View style={styles.section}>
@@ -508,6 +585,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                     </View>
                   )}
                 </View>
+
 
                 <View style={styles.inputContainer}>
                   <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
@@ -530,6 +608,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   </View>
                 </View>
 
+
                 <View style={styles.inputContainer}>
                   <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
                     DESCRIPTION
@@ -551,6 +630,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   </View>
                 </View>
               </View>
+
 
               {analysisType === 'reminder' && (
                 <>
@@ -598,6 +678,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                     </View>
                   </View>
 
+
                   <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                       <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -641,6 +722,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                       })}
                     </View>
                   </View>
+
 
                   <View style={styles.section}>
                     <View style={styles.sectionHeader}>
@@ -693,7 +775,8 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         </Container>
       </ScrollView>
 
-      {/* Footer - ✅ Already correct with absolute positioning */}
+
+      {/* Footer */}
       {!isAnalyzing && (
         <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
           <View style={styles.footer}>
@@ -727,20 +810,19 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   );
 }
 
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
   },
   
-  // ✅ FIXED: Header with dynamic top padding
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
     paddingBottom: Theme.spacing.m,
-    // paddingTop is dynamic (applied inline with insets.top)
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -759,6 +841,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
+
   scrollView: {
     flex: 1,
   },
@@ -766,6 +849,7 @@ const styles = StyleSheet.create({
     flexGrow: 1,
     paddingBottom: 140,
   },
+
 
   inputContainer: {
     marginBottom: Theme.spacing.m,
@@ -801,6 +885,7 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
 
+
   imageCard: {
     padding: 0,
     overflow: 'hidden',
@@ -827,6 +912,7 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.full,
   },
 
+
   analysisCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -848,6 +934,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
+
 
   errorCard: {
     marginBottom: Theme.spacing.m,
@@ -886,6 +973,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.s,
   },
 
+
   section: {
     marginBottom: Theme.spacing.l,
   },
@@ -902,6 +990,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.secondary[500]}20`,
     borderRadius: Theme.borderRadius.s,
   },
+
 
   categoryGrid: {
     flexDirection: 'row',
@@ -921,6 +1010,7 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
+
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -939,12 +1029,13 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
+
   dateTimeRow: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
   },
 
-  // ✅ Footer already has correct absolute positioning
+
   footerContainer: {
     position: 'absolute',
     bottom: 0,

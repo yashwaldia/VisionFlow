@@ -1,20 +1,19 @@
 /**
- * VisionFlow AI - Pattern Detail Screen (v4.0 - Layout Consistency Fix)
+ * VisionFlow AI - Pattern Detail Screen (v4.1 - Added Overlay Components)
  * View and manage discovered AI patterns with full visual analysis
  * 
  * @module screens/PatternDetailScreen
  * 
- * CHANGELOG v4.0:
- * - ✅ CONSISTENCY FIX: Aligned header structure with Reminder/Project screens
- * - ✅ CONSISTENCY FIX: Removed manual safe area inset handling (Screen handles it)
- * - ✅ CONSISTENCY FIX: Standardized header button wrappers and actions
- * - ✅ CONSISTENCY FIX: Added consistent card borders and shadows
- * - ✅ CONSISTENCY FIX: Matched padding and spacing patterns
- * - ✅ Visual parity with Reminder and Project detail screens achieved
+ * CHANGELOG v4.1:
+ * - ✅ ADDED: HUDElements overlay on image
+ * - ✅ ADDED: PatternCanvas for interactive pattern display
+ * - ✅ ADDED: PatternOverlayControls section
+ * - ✅ KEPT: Original layout and styling intact
+ * - ✅ NO BREAKING CHANGES to existing UI
  */
 
 import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Alert, Image } from 'react-native';
+import { View, StyleSheet, ScrollView, Alert, Image, Dimensions } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { PatternStackParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
@@ -29,8 +28,14 @@ import {
 } from '../components';
 import { usePatterns } from '../hooks/usePatterns';
 import * as Haptics from 'expo-haptics';
-import { formatDate } from '../utils/dateUtils';
 import { PATTERN_COLORS, PatternType } from '../types/pattern.types';
+
+// 🆕 NEW: Import overlay components
+import { HUDElements } from '../components/patterns/HUDElements';
+import { PatternCanvas } from '../components/patterns/PatternCanvas';
+import { PatternOverlayControls } from '../components/patterns/PatternOverlayControls';
+
+const SCREEN_WIDTH = Dimensions.get('window').width;
 
 type PatternDetailScreenProps = NativeStackScreenProps<PatternStackParamList, 'PatternDetail'>;
 
@@ -45,12 +50,19 @@ const getPatternColor = (type: PatternType): string => {
   return typeof color === 'string' ? color : PATTERN_COLORS[PatternType.GEOMETRIC];
 };
 
+type BlendModeType = 'normal' | 'screen' | 'multiply' | 'overlay' | 'lighten';
+
 export function PatternDetailScreen({ navigation, route }: PatternDetailScreenProps) {
   const { patternId } = route.params || {};
   const { getPatternById, patterns, deletePattern } = usePatterns();
   
   const [pattern, setPattern] = useState(getPatternById(patternId));
   const [showEdges, setShowEdges] = useState(false);
+
+  // 🆕 NEW: Overlay controls state
+  const [overlayOpacity, setOverlayOpacity] = useState(0.8);
+  const [showLabels, setShowLabels] = useState(true);
+  const [blendMode, setBlendMode] = useState<BlendModeType>('screen');
 
   // Refresh pattern when patterns array updates
   useEffect(() => {
@@ -135,7 +147,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - UNCHANGED */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
@@ -153,16 +165,33 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Image Display */}
+          {/* 🆕 ENHANCED: Image Display with Interactive Overlays */}
           {displayImage && (
             <Card padding={0} style={styles.imageCard}>
+              {/* 🆕 NEW: HUD Elements overlay */}
+              <HUDElements 
+                patternCount={1}
+                showStatus={true}
+              />
+
               <Image
                 source={{ uri: displayImage }}
                 style={styles.patternImage}
                 resizeMode="cover"
               />
+
+              {/* 🆕 NEW: Pattern Canvas overlay (if not showing edges) */}
+              {!showEdges && pattern.anchors && pattern.anchors.length > 0 && (
+                <PatternCanvas
+                  patterns={[pattern]}
+                  selectedPatternId={null}
+                  opacity={overlayOpacity}
+                  showLabels={showLabels}
+                  blendMode={blendMode}
+                />
+              )}
               
-              {/* Image Controls Overlay */}
+              {/* Image Controls Overlay - UNCHANGED */}
               <View style={styles.imageOverlay}>
                 {pattern.edgeImageUri && (
                   <Pressable
@@ -186,7 +215,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
                       {showEdges ? 'Edges' : 'Original'}
                     </Text>
                   </Pressable>
-                )}    
+                )}
                 <View style={[styles.sourceBadge, { backgroundColor: patternColor }]}>
                   <Icon 
                     name={pattern.source === 'ai' ? 'sparkles' : 'create-outline'} 
@@ -201,7 +230,27 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* Title & Type */}
+          {/* 🆕 NEW: Pattern Overlay Controls (only if pattern has anchors) */}
+          {pattern.anchors && pattern.anchors.length > 0 && (
+            <Card style={styles.detailsCard}>
+              <View style={styles.cardHeader}>
+                <Icon name="layers-outline" size="md" color={Theme.colors.primary[500]} />
+                <Text variant="h4">Pattern Overlay</Text>
+              </View>
+              <PatternOverlayControls
+                opacity={overlayOpacity}
+                onOpacityChange={setOverlayOpacity}
+                blendMode={blendMode}
+                onBlendModeChange={setBlendMode}
+                showEdges={showEdges}
+                onToggleEdges={handleToggleEdges}
+                showLabels={showLabels}
+                onToggleLabels={() => setShowLabels(!showLabels)}
+              />
+            </Card>
+          )}
+
+          {/* Title & Type - UNCHANGED */}
           <View style={styles.titleSection}>
             <View style={[styles.iconCircle, { backgroundColor: `${patternColor}20` }]}>
               <Icon name="git-network-outline" size="lg" color={patternColor} />
@@ -215,7 +264,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </View>
           </View>
 
-          {/* Confidence Score Card */}
+          {/* Confidence Score Card - UNCHANGED */}
           {pattern.confidence !== undefined && (
             <Card style={styles.detailsCard}>
               <View style={styles.confidenceHeader}>
@@ -235,7 +284,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* AI Insights */}
+          {/* AI Insights - UNCHANGED */}
           {pattern.insights && (
             <>
               {/* Explanation */}
@@ -275,7 +324,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </>
           )}
 
-          {/* Measurements */}
+          {/* Measurements - UNCHANGED */}
           {hasMeasurements && (
             <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
@@ -327,7 +376,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* Anchor Points */}
+          {/* Anchor Points - UNCHANGED */}
           {pattern.anchors && pattern.anchors.length > 0 && (
             <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
@@ -347,7 +396,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* User Notes */}
+          {/* User Notes - UNCHANGED */}
           {pattern.userNotes && (
             <Card style={styles.detailsCard}>
               <View style={styles.cardHeader}>
@@ -358,7 +407,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
             </Card>
           )}
 
-          {/* Metadata */}
+          {/* Metadata - UNCHANGED */}
           <View style={styles.metadataSection}>
             <View style={styles.metadataRow}>
               <Icon name="calendar-outline" size="xs" color={Theme.colors.text.tertiary} />
@@ -397,6 +446,7 @@ export function PatternDetailScreen({ navigation, route }: PatternDetailScreenPr
   );
 }
 
+// Styles - UNCHANGED (exact same as original)
 const styles = StyleSheet.create({
   // Header styles
   header: {
