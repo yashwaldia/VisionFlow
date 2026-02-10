@@ -5,25 +5,33 @@
  * @module services/notification
  */
 
+
 import * as Notifications from 'expo-notifications';
 import { Platform } from 'react-native';
 import { Reminder, ReminderStatus } from '../types/reminder.types';
 import { PermissionStatus } from '../types/common.types';
 import { NOTIFICATION_CONFIG } from '../constants/config';
-import { getReminders } from './storage.service';
+import { getReminders, getUserPreferences } from './storage.service';
+
 
 /**
  * Configure notification behavior
  */
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowAlert: true,
-    shouldPlaySound: true,
-    shouldSetBadge: true,
-    shouldShowBanner: true,
-    shouldShowList: true,
-  }),
+  handleNotification: async () => {
+    // Check user sound preference
+    const userPrefs = await getUserPreferences();
+    
+    return {
+      shouldShowAlert: true,
+      shouldPlaySound: userPrefs.notifications.soundEnabled,
+      shouldSetBadge: true,
+      shouldShowBanner: true,
+      shouldShowList: true,
+    };
+  },
 });
+
 
 /**
  * Notification service error
@@ -34,6 +42,7 @@ class NotificationError extends Error {
     this.name = 'NotificationError';
   }
 }
+
 
 /**
  * Request notification permissions
@@ -66,6 +75,7 @@ export async function requestNotificationPermission(): Promise<PermissionStatus>
   }
 }
 
+
 /**
  * Get notification permission status
  */
@@ -86,6 +96,7 @@ export async function getNotificationPermissionStatus(): Promise<PermissionStatu
     return PermissionStatus.UNDETERMINED;
   }
 }
+
 
 /**
  * Create Android notification channels
@@ -123,6 +134,7 @@ export async function createNotificationChannels(): Promise<void> {
     console.error('[Notification] Channel creation failed:', error);
   }
 }
+
 
 /**
  * Schedule notification for a reminder
@@ -188,6 +200,7 @@ export async function scheduleReminderNotification(
   }
 }
 
+
 /**
  * Cancel scheduled notification
  */
@@ -201,6 +214,7 @@ export async function cancelNotification(notificationId: string): Promise<void> 
   }
 }
 
+
 /**
  * Cancel all scheduled notifications
  */
@@ -213,6 +227,7 @@ export async function cancelAllNotifications(): Promise<void> {
   }
 }
 
+
 /**
  * Get all scheduled notifications
  */
@@ -224,6 +239,7 @@ export async function getAllScheduledNotifications(): Promise<Notifications.Noti
     return [];
   }
 }
+
 
 /**
  * Send immediate notification (testing)
@@ -247,6 +263,7 @@ export async function sendImmediateNotification(
     console.error('[Notification] Immediate notification failed:', error);
   }
 }
+
 
 /**
  * Set up notification listeners
@@ -275,6 +292,7 @@ export function setupNotificationListeners(
     responseSubscription.remove();
   };
 }
+
 
 /**
  * Reschedule all upcoming reminders
@@ -308,6 +326,7 @@ export async function rescheduleAllReminders(advanceMinutes: number = 0): Promis
   }
 }
 
+
 /**
  * Get badge count (number of upcoming reminders)
  */
@@ -323,6 +342,7 @@ export async function updateBadgeCount(): Promise<void> {
     console.error('[Notification] Badge update failed:', error);
   }
 }
+
 
 /**
  * Clear badge count

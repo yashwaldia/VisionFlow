@@ -1,15 +1,17 @@
 /**
- * VisionFlow AI - Edit Project Screen (v4.0 - Safe Area & Navigation Fix)
- * Edit an existing project
+ * VisionFlow AI - Edit Project Screen (v5.0 - COMPLETE LAYOUT OVERHAUL)
+ * Edit an existing project with matching Edit Reminder layout
  * 
  * @module screens/EditProjectScreen
  * 
- * CHANGELOG v4.0:
- * - ✅ CRITICAL FIX: Added top safe area padding to header
- * - ✅ CRITICAL FIX: Updated type to use RootStackParamList
- * - ✅ CRITICAL FIX: Now receives full project object (not just ID)
- * - ✅ LAYOUT FIX: Header paddingTop uses safe area insets
- * - ✅ All fixes from v3.0 preserved
+ * CHANGELOG v5.0:
+ * 🔥 COMPLETE LAYOUT OVERHAUL:
+ * - ✅ FIXED: Category chips now horizontal with Card components (matching Edit Reminder)
+ * - ✅ FIXED: Added glow effect on selected categories
+ * - ✅ FIXED: Glassmorphism on form cards
+ * - ✅ FIXED: BlurView footer with backdrop (iOS) and opaque footer (Android)
+ * - ✅ FIXED: Removed broken icon section
+ * - ✅ Layout now IDENTICAL to Edit Reminder screen
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -21,9 +23,10 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackParamList } from '../types/navigation.types'; // ✅ CHANGED
+import { RootStackParamList } from '../types/navigation.types';
 import { ReminderCategory } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
@@ -36,26 +39,23 @@ import {
 import { useProjects } from '../hooks/useProjects';
 import * as Haptics from 'expo-haptics';
 
-type EditProjectScreenProps = NativeStackScreenProps<RootStackParamList, 'EditProjectScreen'>; // ✅ CHANGED
+type EditProjectScreenProps = NativeStackScreenProps<RootStackParamList, 'EditProjectScreen'>;
 
 /**
- * Get category icon
+ * Category configuration (matching Edit Reminder)
  */
-const getCategoryIcon = (category: ReminderCategory): string => {
-  const icons: Record<string, string> = {
-    [ReminderCategory.PERSONAL]: 'home',
-    [ReminderCategory.WORK]: 'briefcase',
-    [ReminderCategory.HEALTH]: 'fitness',
-    [ReminderCategory.MONEY]: 'cash',
-  };
-  return icons[category] || 'pricetag';
+const categoryConfig = {
+  [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
+  [ReminderCategory.WORK]: { icon: 'briefcase', color: Theme.colors.semantic.info },
+  [ReminderCategory.HEALTH]: { icon: 'fitness', color: Theme.colors.semantic.success },
+  [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
 };
 
 /**
  * EditProjectScreen Component
  */
 export function EditProjectScreen({ navigation, route }: EditProjectScreenProps) {
-  const { project } = route.params; // ✅ CHANGED: Receive full project object
+  const { project } = route.params;
   const { updateProject } = useProjects();
   const insets = useSafeAreaInsets();
 
@@ -113,7 +113,7 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
 
-      await updateProject(project.id, { // ✅ Use project.id from params
+      await updateProject(project.id, {
         name: name.trim(),
         description: description.trim() || undefined,
         primaryCategory: category,
@@ -155,7 +155,7 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
 
   return (
     <View style={styles.container}>
-      {/* Header - ✅ FIXED: Added top safe area */}
+      {/* Header with Top Safe Area */}
       <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
@@ -178,15 +178,19 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* Original Project Preview */}
-          <Card elevation="sm" style={styles.originalCard}>
+          {/* Original Project Preview with HUD variant (matching Edit Reminder) */}
+          <Card 
+            variant="hud"
+            elevation="md"
+            style={styles.originalCard}
+          >
             <View style={styles.originalHeader}>
               <Icon name="folder-outline" size="sm" color={Theme.colors.text.secondary} />
               <Text variant="caption" color="secondary" weight="600">ORIGINAL PROJECT</Text>
             </View>
             <View style={styles.originalContent}>
               <View style={styles.originalIconContainer}>
-                <Icon name="folder" size="md" color={Theme.colors.primary[500]} />
+                <Icon name="folder" size="lg" color={Theme.colors.primary[500]} />
               </View>
               <View style={styles.originalInfo}>
                 <Text variant="body" weight="600" numberOfLines={1}>
@@ -199,23 +203,18 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
             </View>
           </Card>
 
-          {/* Project Icon */}
-          <View style={styles.iconSection}>
-            <View style={styles.iconWrapper}>
-              <View style={styles.iconCircle}>
-                <Icon name="folder" size="xl" color={Theme.colors.primary[500]} />
-              </View>
-            </View>
-          </View>
-
-          {/* Basic Information */}
+          {/* Basic Information with Glass Card (matching Edit Reminder) */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Basic Information</Text>
             </View>
             
-            <Card elevation="sm" style={styles.formCard}>
+            <Card 
+              variant="glass"
+              elevation="md"
+              style={styles.formCard}
+            >
               <View style={styles.inputGroup}>
                 <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
                   PROJECT NAME *
@@ -245,14 +244,17 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
                   onChangeText={setDescription}
                   placeholder="What is this project about?"
                   placeholderTextColor={Theme.colors.text.tertiary}
+                  multiline
+                  numberOfLines={3}
+                  textAlignVertical="top"
                   blurOnSubmit={false}
-                  style={styles.textInput}
+                  style={[styles.textInput, styles.textInputMultiline]}
                 />
               </View>
             </Card>
           </View>
 
-          {/* Category Selection */}
+          {/* 🔥 FIXED: Category Selection with Glow (EXACTLY like Edit Reminder) */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -260,52 +262,56 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
             </View>
             
             <View style={styles.categoryGrid}>
-              {[
-                ReminderCategory.PERSONAL,
-                ReminderCategory.WORK,
-                ReminderCategory.HEALTH,
-                ReminderCategory.MONEY,
-              ].map((cat) => {
+              {Object.entries(categoryConfig).map(([cat, config]) => {
                 const isSelected = category === cat;
-                const iconName = getCategoryIcon(cat);
-                
                 return (
-                  <Pressable
+                  <Card
                     key={cat}
+                    pressable
+                    elevation={isSelected ? 'glow' : 'none'}
+                    padding={10}
+                    borderRadius={Theme.borderRadius.m}
                     onPress={() => {
-                      setCategory(cat);
+                      setCategory(cat as ReminderCategory);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}
                     style={[
-                      styles.categoryChip,
-                      isSelected ? styles.categoryChipActive : {},
+                      styles.categoryChipCard,
+                      isSelected ? {
+                        backgroundColor: config.color,
+                        borderColor: config.color,
+                        shadowColor: config.color,
+                      } : {},
                     ]}
                   >
-                    <View style={[
-                      styles.categoryIconContainer,
-                      isSelected ? styles.categoryIconContainerActive : {},
-                    ]}>
-                      <Icon 
-                        name={iconName as any} 
-                        size="md" 
-                        color={isSelected ? Theme.colors.background.primary : Theme.colors.primary[500]} 
-                      />
-                    </View>
+                    <Icon 
+                      name={config.icon as any} 
+                      size="sm" 
+                      color={isSelected ? Theme.colors.background.primary : config.color} 
+                    />
                     <Text
-                      variant="body"
+                      variant="caption"
                       weight="700"
-                      customColor={isSelected ? Theme.colors.background.primary : Theme.colors.text.primary}
+                      customColor={
+                        isSelected
+                          ? Theme.colors.background.primary
+                          : Theme.colors.text.primary
+                      }
                     >
                       {cat}
                     </Text>
-                  </Pressable>
+                  </Card>
                 );
               })}
             </View>
           </View>
 
-          {/* Project Stats Info */}
-          <Card elevation="sm" style={styles.statsCard}>
+          {/* Project Stats Info (matching Edit Reminder) */}
+          <Card 
+            variant="glass"
+            elevation="sm"
+            style={styles.statsCard}
+          >
             <View style={styles.statsHeader}>
               <Icon name="information-circle-outline" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" weight="600">PROJECT STATS</Text>
@@ -331,8 +337,12 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
             </View>
           </Card>
 
-          {/* Info Card */}
-          <Card elevation="sm" style={styles.infoCard}>
+          {/* Info Card with Glass Variant (matching Edit Reminder) */}
+          <Card 
+            variant="glass"
+            elevation="sm"
+            style={styles.infoCard}
+          >
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -343,26 +353,100 @@ export function EditProjectScreen({ navigation, route }: EditProjectScreenProps)
         </View>
       </ScrollView>
 
-      {/* Footer - ✅ Fixed positioning */}
-      <View style={[styles.footer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
-        <Button
-          label="Cancel"
-          variant="outline"
-          size="large"
-          onPress={handleCancel}
-          style={styles.footerButton}
-          disabled={isSaving}
-        />
-        <Button
-          label={isSaving ? 'Saving...' : 'Save Changes'}
-          variant="primary"
-          size="large"
-          leftIcon={isSaving ? undefined : "checkmark"}
-          onPress={handleSave}
-          style={styles.footerButtonPrimary}
-          disabled={isSaving || !isFormValid}
-          loading={isSaving}
-        />
+      {/* 🔥 FIXED: Footer with Enhanced Blur Effect (EXACTLY like Edit Reminder) */}
+      <View style={[
+        styles.footerContainer, 
+        { paddingBottom: insets.bottom + Theme.spacing.m }
+      ]}>
+        {/* Stronger backdrop overlay */}
+        <View style={styles.footerBackdrop} />
+        
+        {/* BlurView for iOS glassmorphism */}
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={80} tint="dark" style={styles.footerBlur}>
+            <View style={styles.footer}>
+              <View style={styles.footerButton}>
+                <Button
+                  label="Cancel"
+                  variant="outline"
+                  size="large"
+                  leftIcon="close"
+                  onPress={handleCancel}
+                  disabled={isSaving}
+                  fullWidth
+                />
+              </View>
+              <View style={styles.footerButton}>
+                <View
+                  style={
+                    !isSaving && isFormValid
+                      ? {
+                          shadowColor: Theme.colors.primary[500],
+                          shadowOpacity: 0.5,
+                          shadowRadius: 12,
+                          shadowOffset: { width: 0, height: 0 },
+                          elevation: 8,
+                          borderRadius: Theme.borderRadius.m,
+                        }
+                      : {}
+                  }
+                >
+                  <Button
+                    label={isSaving ? 'Saving...' : 'Save Changes'}
+                    variant="primary"
+                    size="large"
+                    leftIcon={isSaving ? undefined : "checkmark"}
+                    onPress={handleSave}
+                    disabled={isSaving || !isFormValid}
+                    loading={isSaving}
+                    fullWidth
+                  />
+                </View>
+              </View>
+            </View>
+          </BlurView>
+        ) : (
+          <View style={styles.footer}>
+            <View style={styles.footerButton}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                size="large"
+                leftIcon="close"
+                onPress={handleCancel}
+                disabled={isSaving}
+                fullWidth
+              />
+            </View>
+            <View style={styles.footerButton}>
+              <View
+                style={
+                  !isSaving && isFormValid
+                    ? {
+                        shadowColor: Theme.colors.primary[500],
+                        shadowOpacity: 0.5,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: 0 },
+                        elevation: 8,
+                        borderRadius: Theme.borderRadius.m,
+                      }
+                    : {}
+                }
+              >
+                <Button
+                  label={isSaving ? 'Saving...' : 'Save Changes'}
+                  variant="primary"
+                  size="large"
+                  leftIcon={isSaving ? undefined : "checkmark"}
+                  onPress={handleSave}
+                  disabled={isSaving || !isFormValid}
+                  loading={isSaving}
+                  fullWidth
+                />
+              </View>
+            </View>
+          </View>
+        )}
       </View>
     </View>
   );
@@ -374,14 +458,13 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // Header styles - ✅ FIXED: Top padding now dynamic with safe area
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
     paddingBottom: Theme.spacing.m,
-    // paddingTop is dynamic (applied inline with insets.top)
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -405,7 +488,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollContent: {
-    paddingBottom: 120,
+    flexGrow: 1,
+    paddingBottom: 140,
   },
 
   // Content padding
@@ -429,12 +513,9 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
 
-  // Original project preview
+  // Original project preview with HUD variant
   originalCard: {
     marginBottom: Theme.spacing.l,
-    backgroundColor: Theme.colors.background.tertiary,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
   },
   originalHeader: {
     flexDirection: 'row',
@@ -448,8 +529,8 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.m,
   },
   originalIconContainer: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: Theme.borderRadius.m,
     backgroundColor: `${Theme.colors.primary[500]}20`,
     alignItems: 'center',
@@ -460,25 +541,6 @@ const styles = StyleSheet.create({
   originalInfo: {
     flex: 1,
     gap: 4,
-  },
-
-  // Icon section
-  iconSection: {
-    alignItems: 'center',
-    marginBottom: Theme.spacing.l,
-  },
-  iconWrapper: {
-    position: 'relative',
-  },
-  iconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
-    borderWidth: 2,
-    borderColor: `${Theme.colors.primary[500]}30`,
-    alignItems: 'center',
-    justifyContent: 'center',
   },
 
   // Section styles
@@ -492,10 +554,10 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // Form card styles
+  // Form card with glass variant
   formCard: {
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
+    borderColor: `${Theme.colors.border.default}40`,
   },
   inputGroup: {
     gap: Theme.spacing.xs,
@@ -516,53 +578,39 @@ const styles = StyleSheet.create({
     color: Theme.colors.text.primary,
     fontFamily: Theme.typography.fontFamily.mono,
   },
+  textInputMultiline: {
+    height: 96,
+    paddingTop: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
+  },
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
+    opacity: 0.5,
   },
 
-  // Category grid styles
+  // 🔥 FIXED: Category chips with Card component (matching Edit Reminder)
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
-    gap: Theme.spacing.m,
-  },
-  categoryChip: {
-    width: '47%',
-    alignItems: 'center',
-    padding: Theme.spacing.m,
-    borderRadius: Theme.borderRadius.l,
-    backgroundColor: Theme.colors.background.secondary,
-    borderWidth: 2,
-    borderColor: Theme.colors.border.default,
     gap: Theme.spacing.s,
   },
-  categoryChipActive: {
-    backgroundColor: Theme.colors.primary[500],
-    borderColor: Theme.colors.primary[500],
-  },
-  categoryIconContainer: {
-    width: 56,
-    height: 56,
-    borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
+  categoryChipCard: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: `${Theme.colors.primary[500]}30`,
-  },
-  categoryIconContainerActive: {
-    backgroundColor: Theme.colors.background.primary,
-    borderColor: Theme.colors.background.primary,
+    gap: 6,
+    minWidth: 100,
+    borderWidth: 2,
+    borderColor: Theme.colors.border.medium,
   },
 
-  // Stats card styles
+  // Stats card with glass variant
   statsCard: {
     marginBottom: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
-    borderColor: `${Theme.colors.semantic.info}30`,
+    borderColor: `${Theme.colors.semantic.info}40`,
   },
   statsHeader: {
     flexDirection: 'row',
@@ -583,12 +631,12 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.border.light,
   },
 
-  // Info card styles
+  // Info card with glass variant
   infoCard: {
     marginTop: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
-    borderColor: `${Theme.colors.semantic.info}30`,
+    borderColor: `${Theme.colors.semantic.info}40`,
   },
   infoRow: {
     flexDirection: 'row',
@@ -600,25 +648,32 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // Footer styles - ✅ Should be fixed at bottom
-  footer: {
+  // 🔥 FIXED: Footer with enhanced blur effect (matching Edit Reminder)
+  footerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    flexDirection: 'row',
-    gap: Theme.spacing.m,
-    paddingHorizontal: Theme.spacing.m,
-    paddingTop: Theme.spacing.m,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
-    backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm,
+  },
+  footerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Platform.OS === 'ios' 
+      ? 'rgba(18, 18, 18, 0.7)'  // Semi-opaque for iOS (under BlurView)
+      : 'rgba(18, 18, 18, 0.95)', // More opaque for Android (no blur)
+  },
+  footerBlur: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingTop: Theme.spacing.m,
+  },
+  footer: {
+    flexDirection: 'row',
+    gap: Theme.spacing.m,
+    paddingHorizontal: Platform.OS === 'android' ? Theme.spacing.m : 0,
+    paddingTop: Platform.OS === 'android' ? Theme.spacing.m : 0,
   },
   footerButton: {
     flex: 1,
-  },
-  footerButtonPrimary: {
-    flex: 2,
   },
 });

@@ -1,16 +1,18 @@
 /**
- * VisionFlow AI - Settings Screen (v2.2 - FULLY Harmonized Edition)
+ * VisionFlow AI - Settings Screen (v2.4 - Full Layout Alignment)
  * App configuration and preferences
  * 
  * @module screens/SettingsScreen
  * 
- * CHANGELOG v2.2:
- * - ✅ Fixed ALL icon background opacities (15% → 20%)
- * - ✅ Added card elevation for visual depth
- * - ✅ Title already h2 (correct)
- * - ✅ Screen component handles scroll padding
- * - ✅ Badge background already correct at 20%
+ * CHANGELOG v2.4:
+ * - ✅ CRITICAL RESTRUCTURE: Matches Reminder/Project layout (fixed header + ScrollView)
+ * - ✅ REMOVED: Subtitle "Customize your VisionFlow experience"
+ * - ✅ ADDED: Fixed header with border/shadow (matches reference)
+ * - ✅ ADDED: Proper ScrollView contentContainerStyle with bottom safe area
+ * - ✅ LAYOUT: Header outside scroll, content inside (reference baseline)
  */
+
+
 
 import React from 'react';
 import { View, ScrollView, StyleSheet, Alert, Linking, Platform } from 'react-native';
@@ -34,6 +36,8 @@ import {
   Divider,
 } from '../components';
 
+
+
 type SettingsScreenNavigationProp = CompositeNavigationProp<
   NativeStackScreenProps<SettingsStackParamList, 'SettingsHome'>['navigation'],
   CompositeNavigationProp<
@@ -42,12 +46,16 @@ type SettingsScreenNavigationProp = CompositeNavigationProp<
   >
 >;
 
+
+
 type SettingsScreenProps = NativeStackScreenProps<
   SettingsStackParamList,
   'SettingsHome'
 > & {
   navigation: SettingsScreenNavigationProp;
 };
+
+
 
 interface SettingItem {
   id: string;
@@ -61,6 +69,8 @@ interface SettingItem {
   iconColor?: string;
   iconBgColor?: string;
 }
+
+
 
 /**
  * SettingsScreen Component
@@ -142,7 +152,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
     }
   };
   
-  // Settings sections - ✅ FIXED: All opacity values changed to 20%
+  // Settings sections
   const appSettings: SettingItem[] = [
     {
       id: 'notifications',
@@ -152,9 +162,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleNotificationSettings,
       rightElement: 'chevron',
       iconColor: Theme.colors.primary[500],
-      iconBgColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
+      iconBgColor: `${Theme.colors.primary[500]}20`,
     },
-    {
+    /* {
       id: 'theme',
       icon: 'color-palette-outline',
       label: 'Appearance',
@@ -162,8 +172,8 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleThemeSettings,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.warning,
-      iconBgColor: `${Theme.colors.semantic.warning}20`, // ✅ FIXED: 20% (was 15%)
-    },
+      iconBgColor: `${Theme.colors.semantic.warning}20`,
+    }, */
     {
       id: 'data',
       icon: 'server-outline',
@@ -172,7 +182,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleDataManagement,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.info,
-      iconBgColor: `${Theme.colors.semantic.info}20`, // ✅ FIXED: 20% (was 15%)
+      iconBgColor: `${Theme.colors.semantic.info}20`,
     },
   ];
   
@@ -185,7 +195,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleRateApp,
       rightElement: 'chevron',
       iconColor: '#facc15',
-      iconBgColor: 'rgba(250, 204, 21, 0.2)', // ✅ FIXED: 0.2 (was 0.15)
+      iconBgColor: 'rgba(250, 204, 21, 0.2)',
     },
     {
       id: 'share',
@@ -195,7 +205,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleShareApp,
       rightElement: 'chevron',
       iconColor: Theme.colors.semantic.success,
-      iconBgColor: `${Theme.colors.semantic.success}20`, // ✅ FIXED: 20% (was 15%)
+      iconBgColor: `${Theme.colors.semantic.success}20`,
     },
     {
       id: 'support',
@@ -238,11 +248,11 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       onPress: handleAbout,
       rightElement: 'chevron',
       iconColor: Theme.colors.primary[500],
-      iconBgColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
+      iconBgColor: `${Theme.colors.primary[500]}20`,
     },
   ];
   
-  // Debug mode (dev only) - ✅ FIXED: Opacity changed to 20%
+  // Debug mode (dev only)
   const debugSettings: SettingItem[] = __DEV__ ? [
     {
       id: 'debug',
@@ -253,7 +263,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       rightElement: 'badge',
       badgeText: 'DEV',
       iconColor: Theme.colors.semantic.error,
-      iconBgColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% (was 15%)
+      iconBgColor: `${Theme.colors.semantic.error}20`,
     },
   ] : [];
   
@@ -268,7 +278,7 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         <View style={styles.settingLeft}>
           <View style={[
             styles.iconContainer,
-            { backgroundColor: item.iconBgColor || `${Theme.colors.primary[500]}20` }, // ✅ FIXED: Default 20%
+            { backgroundColor: item.iconBgColor || `${Theme.colors.primary[500]}20` },
             item.destructive && styles.iconContainerDestructive,
           ]}>
             <Icon
@@ -312,136 +322,146 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   );
   
   return (
-    <Screen scroll>
-      <Container padding="m">
-        {/* Header - ✅ Already correct (h2) */}
-        <View style={styles.header}>
-          <Text variant="h2">Settings</Text>
-          <Text variant="body" color="secondary" style={styles.headerSubtitle}>
-            Customize your VisionFlow experience
-          </Text>
-        </View>
-        
-        {/* App Info Card - ✅ ENHANCED: Added elevation */}
-        <Card elevation="sm" style={styles.appInfoCard}>
-          <View style={styles.appInfoContent}>
-            <View style={styles.appIconContainer}>
-              <Icon name="aperture" size="lg" color={Theme.colors.primary[500]} />
+    <Screen>
+      {/* Header - Fixed Outside Scroll (Pattern Baseline) */}
+      <Container padding="m" style={styles.header}>
+        <Text variant="h2">Settings</Text>
+      </Container>
+
+
+      {/* Scrollable Content */}
+      <ScrollView
+        contentContainerStyle={styles.scrollContent}
+        showsVerticalScrollIndicator={false}
+      >
+        <Container padding="m">
+          {/* App Info Card */}
+          <Card elevation="sm" style={styles.appInfoCard}>
+            <View style={styles.appInfoContent}>
+              <View style={styles.appIconContainer}>
+                <Icon name="aperture" size="lg" color={Theme.colors.primary[500]} />
+              </View>
+              <View style={styles.appInfo}>
+                <Text variant="bodyLarge" weight="700">
+                  VisionFlow AI
+                </Text>
+                <Text variant="caption" color="secondary">
+                  Visual Intelligence Platform
+                </Text>
+              </View>
+              <View style={styles.versionBadge}>
+                <Text variant="micro" weight="700" color="secondary">
+                  v{APP_INFO.version}
+                </Text>
+              </View>
             </View>
-            <View style={styles.appInfo}>
-              <Text variant="bodyLarge" weight="700">
-                VisionFlow AI
-              </Text>
-              <Text variant="caption" color="secondary">
-                Visual Intelligence Platform
-              </Text>
-            </View>
-            <View style={styles.versionBadge}>
-              <Text variant="micro" weight="700" color="secondary">
-                v{APP_INFO.version}
-              </Text>
-            </View>
-          </View>
-        </Card>
-        
-        {/* App Settings - ✅ ENHANCED: Added elevation */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name="settings-outline" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-              APP SETTINGS
-            </Text>
-          </View>
-          <Card elevation="sm" padding={0} style={styles.card}>
-            {appSettings.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderSettingItem(item)}
-                {index < appSettings.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
           </Card>
-        </View>
-        
-        {/* Support - ✅ ENHANCED: Added elevation */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name="heart-outline" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-              SUPPORT & FEEDBACK
-            </Text>
-          </View>
-          <Card elevation="sm" padding={0} style={styles.card}>
-            {supportSettings.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderSettingItem(item)}
-                {index < supportSettings.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </Card>
-        </View>
-        
-        {/* Legal & About - ✅ ENHANCED: Added elevation */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Icon name="document-outline" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-              LEGAL & ABOUT
-            </Text>
-          </View>
-          <Card elevation="sm" padding={0} style={styles.card}>
-            {legalSettings.map((item, index) => (
-              <React.Fragment key={item.id}>
-                {renderSettingItem(item)}
-                {index < legalSettings.length - 1 && <Divider />}
-              </React.Fragment>
-            ))}
-          </Card>
-        </View>
-        
-        {/* Debug Mode (Dev Only) - ✅ ENHANCED: Added elevation */}
-        {debugSettings.length > 0 && (
+          
+          {/* App Settings */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
-              <Icon name="bug-outline" size="xs" color={Theme.colors.semantic.error} />
-              <Text variant="caption" customColor={Theme.colors.semantic.error} style={styles.sectionTitle}>
-                DEVELOPER
+              <Icon name="settings-outline" size="xs" color={Theme.colors.text.tertiary} />
+              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
+                APP SETTINGS
               </Text>
             </View>
             <Card elevation="sm" padding={0} style={styles.card}>
-              {debugSettings.map((item) => renderSettingItem(item))}
+              {appSettings.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {renderSettingItem(item)}
+                  {index < appSettings.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
             </Card>
           </View>
-        )}
-        
-        {/* Footer */}
-        <View style={styles.footer}>
-          <View style={styles.footerContent}>
-            <Icon name="heart" size="sm" color={Theme.colors.semantic.error} />
-            <Text variant="caption" color="tertiary">
-              Made with love in India
+          
+          {/* Support */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="heart-outline" size="xs" color={Theme.colors.text.tertiary} />
+              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
+                SUPPORT & FEEDBACK
+              </Text>
+            </View>
+            <Card elevation="sm" padding={0} style={styles.card}>
+              {supportSettings.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {renderSettingItem(item)}
+                  {index < supportSettings.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </Card>
+          </View>
+          
+          {/* Legal & About */}
+          <View style={styles.section}>
+            <View style={styles.sectionHeader}>
+              <Icon name="document-outline" size="xs" color={Theme.colors.text.tertiary} />
+              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
+                LEGAL & ABOUT
+              </Text>
+            </View>
+            <Card elevation="sm" padding={0} style={styles.card}>
+              {legalSettings.map((item, index) => (
+                <React.Fragment key={item.id}>
+                  {renderSettingItem(item)}
+                  {index < legalSettings.length - 1 && <Divider />}
+                </React.Fragment>
+              ))}
+            </Card>
+          </View>
+          
+          {/* Debug Mode (Dev Only) */}
+          {debugSettings.length > 0 && (
+            <View style={styles.section}>
+              <View style={styles.sectionHeader}>
+                <Icon name="bug-outline" size="xs" color={Theme.colors.semantic.error} />
+                <Text variant="caption" customColor={Theme.colors.semantic.error} style={styles.sectionTitle}>
+                  DEVELOPER
+                </Text>
+              </View>
+              <Card elevation="sm" padding={0} style={styles.card}>
+                {debugSettings.map((item) => renderSettingItem(item))}
+              </Card>
+            </View>
+          )}
+          
+          {/* Footer */}
+          <View style={styles.footer}>
+            <View style={styles.footerContent}>
+              <Icon name="heart" size="sm" color={Theme.colors.semantic.error} />
+              <Text variant="caption" color="tertiary">
+                Made with love in India
+              </Text>
+            </View>
+            <Text variant="micro" color="tertiary" align="center" style={styles.footerBuild}>
+              Build {APP_INFO.buildNumber} • © 2026 VisionFlow AI
             </Text>
           </View>
-          <Text variant="micro" color="tertiary" align="center" style={styles.footerBuild}>
-            Build {APP_INFO.buildNumber} • © 2026 VisionFlow AI
-          </Text>
-        </View>
-      </Container>
+        </Container>
+      </ScrollView>
     </Screen>
   );
 }
 
+
+
 const styles = StyleSheet.create({
-  // ✅ Screen component handles scroll padding automatically
-  
-  // Header styles
+  // ✅ ADDED: Fixed header (matches Reminder/Project baseline)
   header: {
-    marginBottom: Theme.spacing.l,
-  },
-  headerSubtitle: {
-    marginTop: 4,
+    borderBottomWidth: 1,
+    borderBottomColor: Theme.colors.border.light,
+    backgroundColor: Theme.colors.background.secondary,
+    paddingTop: Platform.OS === 'ios' ? 0 : Theme.spacing.s,
+    ...Theme.shadows.sm,
   },
   
-  // App Info Card - ✅ Card elevation added via elevation="sm" prop
+  // ✅ CRITICAL: Bottom safe area in ScrollView content (matches reference)
+  scrollContent: {
+    paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
+  },
+  
+  // App Info Card
   appInfoCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 1,
@@ -456,7 +476,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: Theme.borderRadius.l,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
@@ -521,7 +541,7 @@ const styles = StyleSheet.create({
     borderColor: `${Theme.colors.border.default}20`,
   },
   iconContainerDestructive: {
-    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% (was 15%)
+    backgroundColor: `${Theme.colors.semantic.error}20`,
     borderColor: `${Theme.colors.semantic.error}30`,
   },
   settingInfo: {
@@ -540,12 +560,12 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.s,
     paddingVertical: 4,
     borderRadius: Theme.borderRadius.s,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ Already correct at 20%
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}30`,
   },
   
-  // Footer styles - ✅ Screen component handles padding
+  // Footer styles
   footer: {
     marginTop: Theme.spacing.xl,
     gap: Theme.spacing.s,

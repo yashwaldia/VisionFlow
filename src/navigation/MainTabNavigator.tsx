@@ -153,13 +153,13 @@ export function MainTabNavigator() {
         })}
       />
       
-      <Tab.Screen 
+      {/* <Tab.Screen 
         name="ProjectsTab" 
         component={ProjectsStackNavigator}
         options={({ route }) => ({
           tabBarStyle: getTabBarStyle(route) as any,
         })}
-      />
+      /> */}
       
       <Tab.Screen 
         name="SettingsTab" 

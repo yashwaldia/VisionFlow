@@ -1,14 +1,14 @@
 /**
- * VisionFlow AI - Edit Reminder Screen (v3.3 - Type Fix)
- * Edit an existing reminder
+ * VisionFlow AI - Edit Reminder Screen (v4.1 - SAFE AREA + FOOTER FIX)
+ * Edit an existing reminder with visual depth
  * 
  * @module screens/EditReminderScreen
  * 
- * CHANGELOG v3.3:
- * - 🐛 FIXED: Updated to use RootStackParamList and EditReminderScreen type
- * - 🐛 FIXED: Category chips now match AIReviewModel reference
- * - 🐛 FIXED: Footer sticky and equal-width buttons
- * - 🐛 FIXED: ScrollView clearance
+ * CHANGELOG v4.1:
+ * 🐛 CRITICAL FIXES:
+ * - ✅ FIXED: Added top safe area padding to header
+ * - ✅ FIXED: Enhanced footer blur effect with stronger background
+ * - ✅ FIXED: Improved button visibility with semi-opaque backdrop
  */
 
 import React, { useState, useRef } from 'react';
@@ -20,9 +20,10 @@ import {
   Alert,
   TextInput,
 } from 'react-native';
+import { BlurView } from 'expo-blur';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackParamList } from '../types/navigation.types'; // ✅ CHANGED
+import { RootStackParamList } from '../types/navigation.types';
 import { ReminderCategory, ReminderPriority } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
@@ -35,10 +36,10 @@ import {
 import { useReminders } from '../hooks/useReminders';
 import * as Haptics from 'expo-haptics';
 
-type EditReminderScreenProps = NativeStackScreenProps<RootStackParamList, 'EditReminderScreen'>; // ✅ CHANGED
+type EditReminderScreenProps = NativeStackScreenProps<RootStackParamList, 'EditReminderScreen'>;
 
 /**
- * Category configuration (matching AIReviewModel reference)
+ * Category configuration
  */
 const categoryConfig = {
   [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
@@ -48,7 +49,7 @@ const categoryConfig = {
 };
 
 /**
- * Priority configuration (matching AIReviewModel reference)
+ * Priority configuration
  */
 const priorityConfig = {
   [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
@@ -145,8 +146,8 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
 
   return (
     <View style={styles.container}>
-      {/* Header */}
-      <View style={styles.header}>
+      {/* 🐛 FIXED: Header with Top Safe Area */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
@@ -168,8 +169,12 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* Original Reminder Preview */}
-          <Card elevation="sm" style={styles.originalCard}>
+          {/* Original Reminder Preview with HUD variant */}
+          <Card 
+            variant="hud"
+            elevation="md"
+            style={styles.originalCard}
+          >
             <View style={styles.originalHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
               <Text variant="caption" color="secondary" weight="600">ORIGINAL REMINDER</Text>
@@ -187,14 +192,18 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </View>
           </Card>
 
-          {/* Basic Information */}
+          {/* Basic Information with Glass Card */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Basic Information</Text>
             </View>
             
-            <Card elevation="sm" style={styles.formCard}>
+            <Card 
+              variant="glass"
+              elevation="md"
+              style={styles.formCard}
+            >
               <View style={styles.inputGroup}>
                 <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
                   TITLE *
@@ -233,14 +242,18 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </Card>
           </View>
 
-          {/* Date & Time */}
+          {/* Date & Time with Glassmorphism */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Schedule</Text>
             </View>
             
-            <Card elevation="sm" style={styles.formCard}>
+            <Card 
+              variant="glass"
+              elevation="md"
+              style={styles.formCard}
+            >
               <View style={styles.dateTimeRow}>
                 <View style={styles.dateInputContainer}>
                   <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
@@ -283,7 +296,7 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </Card>
           </View>
 
-          {/* Category Selection - FIXED TO MATCH REFERENCE */}
+          {/* Category Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -294,17 +307,22 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
               {Object.entries(categoryConfig).map(([cat, config]) => {
                 const isSelected = category === cat;
                 return (
-                  <Pressable
+                  <Card
                     key={cat}
+                    pressable
+                    elevation={isSelected ? 'glow' : 'none'}
+                    padding={10}
+                    borderRadius={Theme.borderRadius.m}
                     onPress={() => {
                       setCategory(cat as ReminderCategory);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}
                     style={[
-                      styles.categoryChip,
+                      styles.categoryChipCard,
                       isSelected ? {
                         backgroundColor: config.color,
                         borderColor: config.color,
+                        shadowColor: config.color,
                       } : {},
                     ]}
                   >
@@ -324,13 +342,13 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                     >
                       {cat}
                     </Text>
-                  </Pressable>
+                  </Card>
                 );
               })}
             </View>
           </View>
 
-          {/* Priority Selection - FIXED TO MATCH REFERENCE */}
+          {/* Priority Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -341,17 +359,22 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
               {Object.entries(priorityConfig).map(([prio, config]) => {
                 const isSelected = priority === prio;
                 return (
-                  <Pressable
+                  <Card
                     key={prio}
+                    pressable
+                    elevation={isSelected ? 'glow' : 'none'}
+                    padding={10}
+                    borderRadius={Theme.borderRadius.m}
                     onPress={() => {
                       setPriority(prio as ReminderPriority);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}
                     style={[
-                      styles.priorityChip,
+                      styles.priorityChipCard,
                       isSelected ? {
                         backgroundColor: config.color,
                         borderColor: config.color,
+                        shadowColor: config.color,
                       } : {},
                     ]}
                   >
@@ -371,14 +394,18 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                     >
                       {prio}
                     </Text>
-                  </Pressable>
+                  </Card>
                 );
               })}
             </View>
           </View>
 
-          {/* Info Card */}
-          <Card elevation="sm" style={styles.infoCard}>
+          {/* Info Card with Glass Variant */}
+          <Card 
+            variant="glass"
+            elevation="sm"
+            style={styles.infoCard}
+          >
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -389,33 +416,100 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
         </View>
       </ScrollView>
 
-      {/* Footer - Fixed at bottom */}
-      <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
-        <View style={styles.footer}>
-          <View style={styles.footerButton}>
-            <Button
-              label="Cancel"
-              variant="outline"
-              size="large"
-              leftIcon="close"
-              onPress={handleCancel}
-              disabled={isSaving}
-              fullWidth
-            />
+      {/* 🐛 FIXED: Footer with Enhanced Blur Effect */}
+      <View style={[
+        styles.footerContainer, 
+        { paddingBottom: insets.bottom + Theme.spacing.m }
+      ]}>
+        {/* Stronger backdrop overlay */}
+        <View style={styles.footerBackdrop} />
+        
+        {/* BlurView for iOS glassmorphism */}
+        {Platform.OS === 'ios' ? (
+          <BlurView intensity={80} tint="dark" style={styles.footerBlur}>
+            <View style={styles.footer}>
+              <View style={styles.footerButton}>
+                <Button
+                  label="Cancel"
+                  variant="outline"
+                  size="large"
+                  leftIcon="close"
+                  onPress={handleCancel}
+                  disabled={isSaving}
+                  fullWidth
+                />
+              </View>
+              <View style={styles.footerButton}>
+                <View
+                  style={
+                    !isSaving && isFormValid
+                      ? {
+                          shadowColor: Theme.colors.primary[500],
+                          shadowOpacity: 0.5,
+                          shadowRadius: 12,
+                          shadowOffset: { width: 0, height: 0 },
+                          elevation: 8,
+                          borderRadius: Theme.borderRadius.m,
+                        }
+                      : {}
+                  }
+                >
+                  <Button
+                    label={isSaving ? 'Saving...' : 'Save Changes'}
+                    variant="primary"
+                    size="large"
+                    leftIcon={isSaving ? undefined : "checkmark"}
+                    onPress={handleSave}
+                    disabled={isSaving || !isFormValid}
+                    loading={isSaving}
+                    fullWidth
+                  />
+                </View>
+              </View>
+            </View>
+          </BlurView>
+        ) : (
+          <View style={styles.footer}>
+            <View style={styles.footerButton}>
+              <Button
+                label="Cancel"
+                variant="outline"
+                size="large"
+                leftIcon="close"
+                onPress={handleCancel}
+                disabled={isSaving}
+                fullWidth
+              />
+            </View>
+            <View style={styles.footerButton}>
+              <View
+                style={
+                  !isSaving && isFormValid
+                    ? {
+                        shadowColor: Theme.colors.primary[500],
+                        shadowOpacity: 0.5,
+                        shadowRadius: 12,
+                        shadowOffset: { width: 0, height: 0 },
+                        elevation: 8,
+                        borderRadius: Theme.borderRadius.m,
+                      }
+                    : {}
+                }
+              >
+                <Button
+                  label={isSaving ? 'Saving...' : 'Save Changes'}
+                  variant="primary"
+                  size="large"
+                  leftIcon={isSaving ? undefined : "checkmark"}
+                  onPress={handleSave}
+                  disabled={isSaving || !isFormValid}
+                  loading={isSaving}
+                  fullWidth
+                />
+              </View>
+            </View>
           </View>
-          <View style={styles.footerButton}>
-            <Button
-              label={isSaving ? 'Saving...' : 'Save Changes'}
-              variant="primary"
-              size="large"
-              leftIcon={isSaving ? undefined : "checkmark"}
-              onPress={handleSave}
-              disabled={isSaving || !isFormValid}
-              loading={isSaving}
-              fullWidth
-            />
-          </View>
-        </View>
+        )}
       </View>
     </View>
   );
@@ -427,13 +521,13 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // Header styles
+  // 🐛 FIXED: Header with safe area support
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -466,12 +560,9 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.m,
   },
 
-  // Original reminder preview
+  // Original reminder preview with HUD variant
   originalCard: {
     marginBottom: Theme.spacing.l,
-    backgroundColor: Theme.colors.background.tertiary,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
   },
   originalHeader: {
     flexDirection: 'row',
@@ -500,10 +591,10 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // Form card styles
+  // Form card with glass variant
   formCard: {
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
+    borderColor: `${Theme.colors.border.default}40`,
   },
   inputGroup: {
     gap: Theme.spacing.xs,
@@ -528,6 +619,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
+    opacity: 0.5,
   },
 
   // Date & Time styles
@@ -561,50 +653,42 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.mono,
   },
 
-  // ✅ FIXED: Category grid matching AIReviewModel reference
+  // Category chips with Card component
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
   },
-  categoryChip: {
+  categoryChipCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Theme.spacing.m,
-    paddingVertical: 10,
-    borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
+    minWidth: 100,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    minWidth: 100,
   },
 
-  // ✅ FIXED: Priority grid matching AIReviewModel reference
+  // Priority chips with Card component
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
   },
-  priorityChip: {
+  priorityChipCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Theme.spacing.m,
-    paddingVertical: 10,
-    borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
+    minWidth: 100,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    minWidth: 100,
   },
 
-  // Info card styles
+  // Info card with glass variant
   infoCard: {
     marginTop: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
-    borderColor: `${Theme.colors.semantic.info}30`,
+    borderColor: `${Theme.colors.semantic.info}40`,
   },
   infoRow: {
     flexDirection: 'row',
@@ -616,23 +700,30 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // ✅ FIXED: Footer matching reference
+  // 🐛 FIXED: Footer with enhanced blur effect
   footerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Theme.colors.background.secondary,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
-    ...Theme.shadows.sm,
+  },
+  footerBackdrop: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: Platform.OS === 'ios' 
+      ? 'rgba(18, 18, 18, 0.7)'  // Semi-opaque for iOS (under BlurView)
+      : 'rgba(18, 18, 18, 0.95)', // More opaque for Android (no blur)
+  },
+  footerBlur: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingTop: Theme.spacing.m,
   },
   footer: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
-    paddingHorizontal: Theme.spacing.m,
-    paddingTop: Theme.spacing.m,
-    paddingBottom: Theme.spacing.m,
+    paddingHorizontal: Platform.OS === 'android' ? Theme.spacing.m : 0,
+    paddingTop: Platform.OS === 'android' ? Theme.spacing.m : 0,
   },
   footerButton: {
     flex: 1,

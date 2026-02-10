@@ -1,19 +1,25 @@
 /**
- * VisionFlow AI - Project Detail Screen (v3.0 - Navigation Alignment)
- * View and manage a single project
+ * VisionFlow AI - Project Detail Screen (v4.0 - CYBERPUNK ENHANCEMENT)
+ * View and manage a single project with visual depth
  * 
  * @module screens/ProjectDetailScreen
  * 
- * CHANGELOG v3.0:
- * - ✅ NAVIGATION FIX: Updated Edit navigation to match new architecture
- * - ✅ ALIGNED WITH REMINDER: Uses getParent().navigate() for modal screens
- * - ✅ ALIGNED WITH REMINDER: Passes full project object to EditProjectScreen
- * - ✅ All other fixes from v2.1 preserved
+ * CHANGELOG v4.0:
+ * 🔥 CYBERPUNK VISUAL OVERHAUL:
+ * - ✅ FIXED: Added top safe area padding to header
+ * - ✅ ENHANCED: Glassmorphism on all cards (HUD/Glass variants)
+ * - ✅ ENHANCED: Glow effects on stat cards
+ * - ✅ ENHANCED: Gradient icon container for project
+ * - ✅ ENHANCED: Enhanced shadows and depth
+ * - ✅ LAYOUT: Now matches Edit screen visual style
+ * - ✅ All v3.0 navigation fixes preserved
  */
 
 import React, { useState, useEffect } from 'react';
 import { View, StyleSheet, ScrollView, Alert, Dimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { ProjectStackParamList } from '../types/navigation.types';
 import { Theme } from '../constants/theme';
 import {
@@ -55,12 +61,37 @@ const formatDate = (timestamp: number): string => {
 };
 
 /**
+ * 🔥 FIXED: Get category gradient colors with proper type
+ */
+const getCategoryGradient = (category: string): [string, string, string] => {
+  const categoryKey = category.toLowerCase() as keyof typeof Theme.colors.category;
+  const categoryColors = Theme.colors.category[categoryKey];
+  
+  if (categoryColors && 'gradient' in categoryColors) {
+    const gradient = categoryColors.gradient;
+    // ✅ Ensure we return exactly 3 colors
+    if (Array.isArray(gradient) && gradient.length >= 3) {
+      return [gradient[0], gradient[1], gradient[2]] as [string, string, string];
+    }
+  }
+  
+  // Fallback with explicit tuple type
+  return [
+    Theme.colors.primary[400], 
+    Theme.colors.primary[500], 
+    Theme.colors.primary[600]
+  ] as [string, string, string];
+};
+
+
+/**
  * ProjectDetailScreen Component
  */
 export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenProps) {
   const { projectId } = route.params;
   const { getProjectById, updateProject, deleteProject } = useProjects();
   const { reminders } = useReminders();
+  const insets = useSafeAreaInsets();
   
   const [project, setProject] = useState(getProjectById(projectId));
 
@@ -80,6 +111,13 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
   if (!project) {
     return (
       <Screen>
+        <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
+          <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
+            <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
+          </Pressable>
+          <Text variant="h4" weight="600">Details</Text>
+          <View style={{ width: 40 }} />
+        </View>
         <Container padding="m">
           <View style={styles.notFoundContainer}>
             <Icon name="alert-circle-outline" size="xl" color={Theme.colors.text.tertiary} />
@@ -96,10 +134,8 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
     );
   }
 
-  // ✅ FIXED: Navigate to root stack modal (matches Reminder pattern)
   const handleEdit = () => {
     console.log('📝 Edit button pressed, navigating to EditProjectScreen');
-    // Navigate to root stack since EditProjectScreen is now there
     (navigation as any).getParent()?.navigate('EditProjectScreen', { project });
   };
 
@@ -147,10 +183,13 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
     navigation.navigate('ProjectAnalytics', { projectId });
   };
 
+  // 🔥 Get gradient for project icon
+  const categoryGradient = getCategoryGradient(project.primaryCategory);
+
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow */}
-      <View style={styles.header}>
+      {/* 🐛 FIXED: Header with Top Safe Area */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
@@ -172,12 +211,45 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Project Header */}
+          {/* 🔥 ENHANCED: Project Header with Gradient Icon */}
           <View style={styles.projectHeader}>
             <View style={styles.iconWrapper}>
-              <View style={styles.iconCircle}>
-                <Icon name="folder" size="xl" color={Theme.colors.primary[500]} />
-              </View>
+              {/* Outer glow layer */}
+              <View
+                style={[
+                  styles.iconOuterGlow,
+                  {
+                    backgroundColor: `${categoryGradient[2]}40`,
+                    shadowColor: categoryGradient[2],
+                    shadowOpacity: 0.6,
+                    shadowRadius: 20,
+                    shadowOffset: { width: 0, height: 0 },
+                  },
+                ]}
+              />
+              
+              {/* Gradient icon container */}
+              <LinearGradient
+                colors={categoryGradient}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 1 }}
+                style={styles.iconCircle}
+              >
+                <View style={styles.iconInnerGlow} />
+                <Icon name="folder" size="xl" color={Theme.colors.background.primary} />
+              </LinearGradient>
+              
+              {/* Neon border ring */}
+              <View
+                style={[
+                  styles.iconNeonBorder,
+                  {
+                    borderColor: categoryGradient[0],
+                    shadowColor: categoryGradient[0],
+                  },
+                ]}
+              />
+              
               {project.isArchived && (
                 <View style={styles.archivedBadge}>
                   <Icon name="archive" size="sm" color={Theme.colors.text.tertiary} />
@@ -208,9 +280,9 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </View>
 
-          {/* Description - ✅ ENHANCED: Added shadow */}
+          {/* 🔥 ENHANCED: Description with HUD variant */}
           {project.description && (
-            <Card style={styles.descriptionCard}>
+            <Card variant="hud" elevation="md" style={styles.descriptionCard}>
               <View style={styles.descriptionHeader}>
                 <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
                 <Text variant="bodyLarge" weight="600">Description</Text>
@@ -221,8 +293,8 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </Card>
           )}
 
-          {/* Stats Overview Card - ✅ ENHANCED: Added shadow */}
-          <Card style={styles.statsCard}>
+          {/* 🔥 ENHANCED: Stats Overview with Glass variant */}
+          <Card variant="glass" elevation="md" style={styles.statsCard}>
             <View style={styles.statsHeader}>
               <View style={styles.statsHeaderLeft}>
                 <Icon name="bar-chart-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -237,7 +309,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
               )}
             </View>
             
-            {/* Progress Bar */}
+            {/* Progress Bar with Glow */}
             {projectReminders.length > 0 && (
               <View style={styles.progressContainer}>
                 <View style={styles.progressBar}>
@@ -248,7 +320,13 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
                         width: `${completionRate}%`,
                         backgroundColor: completionRate === 100 
                           ? Theme.colors.semantic.success 
-                          : Theme.colors.primary[500]
+                          : Theme.colors.primary[500],
+                        shadowColor: completionRate === 100 
+                          ? Theme.colors.semantic.success 
+                          : Theme.colors.primary[500],
+                        shadowOpacity: 0.5,
+                        shadowRadius: 8,
+                        shadowOffset: { width: 0, height: 0 },
                       }
                     ]} 
                   />
@@ -257,7 +335,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             )}
 
             <View style={styles.statsGrid}>
-              <Card elevation="sm" style={styles.statItem}>
+              <Card variant="hud" elevation="sm" style={styles.statItem}>
                 <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.primary[500]}15` }]}>
                   <Icon name="list" size="sm" color={Theme.colors.primary[500]} />
                 </View>
@@ -265,7 +343,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
                 <Text variant="caption" color="secondary">Total</Text>
               </Card>
 
-              <Card elevation="sm" style={styles.statItem}>
+              <Card variant="hud" elevation="sm" style={styles.statItem}>
                 <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.info}15` }]}>
                   <Icon name="time" size="sm" color={Theme.colors.semantic.info} />
                 </View>
@@ -275,7 +353,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
                 <Text variant="caption" color="secondary">Upcoming</Text>
               </Card>
 
-              <Card elevation="sm" style={styles.statItem}>
+              <Card variant="hud" elevation="sm" style={styles.statItem}>
                 <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.success}15` }]}>
                   <Icon name="checkmark-circle" size="sm" color={Theme.colors.semantic.success} />
                 </View>
@@ -286,7 +364,7 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
               </Card>
 
               {overdueReminders > 0 && (
-                <Card elevation="sm" style={styles.statItem}>
+                <Card variant="hud" elevation="glow" style={styles.statItem}>
                   <View style={[styles.statIconContainer, { backgroundColor: `${Theme.colors.semantic.error}15` }]}>
                     <Icon name="alert-circle" size="sm" color={Theme.colors.semantic.error} />
                   </View>
@@ -299,8 +377,8 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </Card>
 
-          {/* Project Info Card - ✅ ENHANCED: Added shadow */}
-          <Card style={styles.infoCard}>
+          {/* 🔥 ENHANCED: Project Info with Glass variant */}
+          <Card variant="glass" elevation="md" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="information-circle-outline" size="sm" color={Theme.colors.text.secondary} />
               <Text variant="h4">Project Information</Text>
@@ -365,16 +443,18 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
             </View>
           </Card>
 
-          {/* Quick Actions - ✅ ENHANCED: Added shadows */}
+          {/* 🔥 ENHANCED: Quick Actions with HUD cards */}
           <View style={styles.actionsContainer}>
             <Text variant="caption" color="tertiary" style={styles.actionsTitle}>
               QUICK ACTIONS
             </Text>
             
             <View style={styles.actionsGrid}>
-              <Pressable 
+              <Card
+                variant="hud"
+                pressable
+                elevation="sm"
                 onPress={handleViewReminders}
-                haptic="light"
                 style={styles.actionCard}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: `${Theme.colors.primary[500]}15` }]}>
@@ -386,11 +466,13 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
                 <Text variant="caption" color="tertiary" align="center">
                   {projectReminders.length} items
                 </Text>
-              </Pressable>
+              </Card>
 
-              <Pressable 
+              <Card
+                variant="hud"
+                pressable
+                elevation="sm"
                 onPress={handleViewAnalytics}
-                haptic="light"
                 style={styles.actionCard}
               >
                 <View style={[styles.actionIconContainer, { backgroundColor: `${Theme.colors.semantic.info}15` }]}>
@@ -402,17 +484,31 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
                 <Text variant="caption" color="tertiary" align="center">
                   View insights
                 </Text>
-              </Pressable>
+              </Card>
             </View>
 
-            <Button
-              label={project.isArchived ? 'Unarchive Project' : 'Archive Project'}
-              variant="outline"
-              size="large"
-              leftIcon={project.isArchived ? "folder-open-outline" : "archive-outline"}
-              onPress={handleArchive}
-              style={styles.archiveButton}
-            />
+            <View
+              style={
+                project.isArchived
+                  ? {}
+                  : {
+                      shadowColor: Theme.colors.semantic.warning,
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      shadowOffset: { width: 0, height: 0 },
+                      borderRadius: Theme.borderRadius.m,
+                    }
+              }
+            >
+              <Button
+                label={project.isArchived ? 'Unarchive Project' : 'Archive Project'}
+                variant="outline"
+                size="large"
+                leftIcon={project.isArchived ? "folder-open-outline" : "archive-outline"}
+                onPress={handleArchive}
+                style={styles.archiveButton}
+              />
+            </View>
           </View>
         </Container>
       </ScrollView>
@@ -421,13 +517,13 @@ export function ProjectDetailScreen({ navigation, route }: ProjectDetailScreenPr
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: Theme.spacing.m,
-    paddingVertical: Theme.spacing.m,
+    paddingBottom: Theme.spacing.m,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
@@ -445,12 +541,10 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
   },
   
-  // Content styles - ✅ FIXED: Uses theme constant
   scrollContent: {
     paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
   
-  // Not found styles
   notFoundContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -465,24 +559,56 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // Project header styles - ✅ FIXED: Opacity standardized
+  // 🔥 ENHANCED: Project header with gradient icon
   projectHeader: {
     alignItems: 'center',
     marginBottom: Theme.spacing.l,
   },
   iconWrapper: {
     position: 'relative',
+    width: 104,
+    height: 104,
     marginBottom: Theme.spacing.m,
   },
+  iconOuterGlow: {
+    position: 'absolute',
+    top: -4,
+    left: -4,
+    right: -4,
+    bottom: -4,
+    borderRadius: 56,
+    elevation: 12,
+  },
   iconCircle: {
-    width: 96,
-    height: 96,
-    borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}20`,
-    borderWidth: 2,
-    borderColor: `${Theme.colors.primary[500]}30`,
+    width: 104,
+    height: 104,
+    borderRadius: 52,
     alignItems: 'center',
     justifyContent: 'center',
+    position: 'relative',
+    elevation: 8,
+  },
+  iconInnerGlow: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    borderRadius: 52,
+    backgroundColor: 'rgba(255, 255, 255, 0.1)',
+  },
+  iconNeonBorder: {
+    position: 'absolute',
+    top: -2,
+    left: -2,
+    right: -2,
+    bottom: -2,
+    borderRadius: 54,
+    borderWidth: 2,
+    shadowOpacity: 0.8,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 0 },
+    elevation: 10,
   },
   archivedBadge: {
     position: 'absolute',
@@ -496,6 +622,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.background.primary,
     alignItems: 'center',
     justifyContent: 'center',
+    elevation: 8,
   },
   title: {
     textAlign: 'center',
@@ -529,12 +656,9 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.semantic.warning}20`,
   },
   
-  // Description card styles - ✅ ENHANCED: Added shadow
+  // Description card
   descriptionCard: {
     marginBottom: Theme.spacing.m,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
   },
   descriptionHeader: {
     flexDirection: 'row',
@@ -546,12 +670,9 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   
-  // Stats card styles - ✅ ENHANCED: Added shadow
+  // Stats card
   statsCard: {
     marginBottom: Theme.spacing.m,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
   },
   statsHeader: {
     flexDirection: 'row',
@@ -582,6 +703,7 @@ const styles = StyleSheet.create({
   progressFill: {
     height: '100%',
     borderRadius: 4,
+    elevation: 4,
   },
   statsGrid: {
     flexDirection: 'row',
@@ -595,8 +717,6 @@ const styles = StyleSheet.create({
     paddingVertical: Theme.spacing.m,
     paddingHorizontal: Theme.spacing.s,
     gap: 6,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
   },
   statIconContainer: {
     width: 40,
@@ -607,12 +727,9 @@ const styles = StyleSheet.create({
     marginBottom: 4,
   },
   
-  // Info card styles - ✅ ENHANCED: Added shadow
+  // Info card
   infoCard: {
     marginBottom: Theme.spacing.l,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
   },
   infoHeader: {
     flexDirection: 'row',
@@ -643,9 +760,10 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
+    opacity: 0.5,
   },
   
-  // Actions styles - ✅ ENHANCED: Added shadows
+  // Actions
   actionsContainer: {
     gap: Theme.spacing.m,
   },
@@ -663,12 +781,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     padding: Theme.spacing.m,
-    backgroundColor: Theme.colors.background.secondary,
-    borderRadius: Theme.borderRadius.m,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
     gap: Theme.spacing.xs,
-    ...Theme.shadows.sm,
   },
   actionIconContainer: {
     width: 56,

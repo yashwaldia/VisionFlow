@@ -5,6 +5,7 @@
  * @module components/Pressable
  */
 
+
 import React, { useCallback } from 'react';
 import {
   Pressable as RNPressable,
@@ -20,11 +21,14 @@ import Animated, {
 } from 'react-native-reanimated';
 import * as Haptics from 'expo-haptics';
 import { Theme } from '../constants/theme';
+import * as StorageService from '../services/storage.service';
+
 
 /**
  * Haptic feedback type
  */
 export type HapticType = 'light' | 'medium' | 'heavy' | 'success' | 'warning' | 'error' | 'none';
+
 
 /**
  * Pressable component props
@@ -71,11 +75,23 @@ export interface PressableProps extends Omit<RNPressableProps, 'style'> {
   disabled?: boolean;
 }
 
+
 /**
  * Trigger haptic feedback
  */
-function triggerHaptic(type: HapticType) {
+async function triggerHaptic(type: HapticType) {
   if (type === 'none' || Platform.OS === 'web') return;
+  
+  // Check user preference
+  try {
+    const userPrefs = await StorageService.getUserPreferences();
+    if (!userPrefs.display.hapticFeedbackEnabled) {
+      return; // User has disabled haptics
+    }
+  } catch (error) {
+    console.error('[Pressable] Failed to check haptic preference:', error);
+    // Continue with haptic on error to maintain expected behavior
+  }
   
   switch (type) {
     case 'light':
@@ -98,6 +114,7 @@ function triggerHaptic(type: HapticType) {
       break;
   }
 }
+
 
 /**
  * Enhanced Pressable Component
@@ -143,9 +160,11 @@ export function Pressable({
         });
       }
       
-      // Trigger haptic
+      // Trigger haptic (async, fire and forget)
       if (haptic !== 'none') {
-        triggerHaptic(haptic);
+        triggerHaptic(haptic).catch(err => 
+          console.error('[Pressable] Haptic trigger failed:', err)
+        );
       }
       
       onPressIn?.(event);

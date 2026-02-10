@@ -1,13 +1,15 @@
 /**
- * VisionFlow AI - Camera Modal (v2.1 - Harmonized Edition)
- * Full-screen camera capture interface
+ * VisionFlow AI - Camera Modal (v3.0 - SafeArea Edition)
+ * Full-screen camera capture interface with universal SafeArea support
  * 
  * @module screens/modals/CameraModal
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed loading icon container opacity (15% → 20%)
- * - ✅ Fixed permission icon container opacity (15% → 20%)
- * - ✅ Camera UI overlays kept as rgba() values (intentional transparency)
+ * CHANGELOG v3.0:
+ * - ✅ Added comprehensive SafeArea support using react-native-safe-area-context
+ * - ✅ All UI elements respect safe area insets (top, bottom, left, right)
+ * - ✅ Works universally across all devices (notch, dynamic island, home indicator)
+ * - ✅ Maintains existing opacity fixes from v2.1
+ * - ✅ Added dynamic positioning for loading/permission states
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -21,6 +23,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { CameraView, useCameraPermissions } from 'expo-camera';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
 import * as Haptics from 'expo-haptics';
 import { RootStackParamList } from '../../types/navigation.types';
@@ -36,6 +39,9 @@ type CameraModalProps = NativeStackScreenProps<RootStackParamList, 'CameraModal'
 export function CameraModal({ navigation, route }: CameraModalProps) {
   const cameraRef = useRef<CameraView>(null);
   const { mode = 'reminder' } = route.params || {};
+  
+  // SafeArea insets - Universal solution for all devices
+  const insets = useSafeAreaInsets();
 
   // State
   const [permission, requestPermission] = useCameraPermissions();
@@ -171,10 +177,18 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     navigation.goBack();
   };
 
-  // Loading state
+  // Loading state with SafeArea
   if (!permission) {
     return (
-      <View style={styles.loadingContainer}>
+      <View style={[
+        styles.loadingContainer,
+        {
+          paddingTop: insets.top + Theme.spacing.xl,
+          paddingBottom: insets.bottom + Theme.spacing.xl,
+          paddingLeft: insets.left + Theme.spacing.xl,
+          paddingRight: insets.right + Theme.spacing.xl,
+        }
+      ]}>
         <View style={styles.loadingIconContainer}>
           <Icon name="camera" size="xl" color={Theme.colors.primary[500]} />
         </View>
@@ -189,12 +203,20 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     );
   }
 
-  // Permission denied
+  // Permission denied with SafeArea
   if (!permission.granted) {
     return (
-      <View style={styles.permissionContainer}>
+      <View style={[
+        styles.permissionContainer,
+        {
+          paddingTop: insets.top + Theme.spacing.xl,
+          paddingBottom: insets.bottom + Theme.spacing.xl,
+          paddingLeft: insets.left + Theme.spacing.xl,
+          paddingRight: insets.right + Theme.spacing.xl,
+        }
+      ]}>
         <View style={styles.permissionIconContainer}>
-        <Icon name="ban" size="xl" color={Theme.colors.semantic.error} />
+          <Icon name="ban" size="xl" color={Theme.colors.semantic.error} />
         </View>
         <Text variant="h2" style={styles.permissionTitle}>
           Camera Access Required
@@ -215,10 +237,18 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     );
   }
 
-  // Processing overlay
+  // Processing overlay with SafeArea
   if (isProcessing) {
     return (
-      <View style={styles.processingContainer}>
+      <View style={[
+        styles.processingContainer,
+        {
+          paddingTop: insets.top,
+          paddingBottom: insets.bottom,
+          paddingLeft: insets.left,
+          paddingRight: insets.right,
+        }
+      ]}>
         <View style={styles.processingContent}>
           <LoadingSpinner size="large" />
           <Text variant="h2" style={styles.processingTitle}>
@@ -245,8 +275,15 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
         facing={cameraFacing}
         flash={flashMode}
       >
-        {/* Top Bar */}
-        <View style={styles.topBar}>
+        {/* Top Bar with SafeArea */}
+        <View style={[
+          styles.topBar,
+          {
+            paddingTop: insets.top + Theme.spacing.m,
+            paddingLeft: Math.max(insets.left, Theme.spacing.m),
+            paddingRight: Math.max(insets.right, Theme.spacing.m),
+          }
+        ]}>
           {/* Close Button */}
           <Pressable onPress={handleClose} style={styles.topButton}>
             <View style={styles.buttonInner}>
@@ -306,8 +343,15 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           <View style={[styles.focusCorner, styles.focusCornerBR]} />
         </View>
 
-        {/* Bottom Controls */}
-        <View style={styles.bottomBar}>
+        {/* Bottom Controls with SafeArea */}
+        <View style={[
+          styles.bottomBar,
+          {
+            paddingBottom: Math.max(insets.bottom + Theme.spacing.m, Theme.spacing.xl),
+            paddingLeft: Math.max(insets.left, Theme.spacing.xl),
+            paddingRight: Math.max(insets.right, Theme.spacing.xl),
+          }
+        ]}>
           {/* Gallery Button */}
           <Pressable onPress={handlePickFromGallery} style={styles.sideButton}>
             <View style={styles.buttonInner}>
@@ -344,9 +388,14 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           </Pressable>
         </View>
 
-        {/* Capture Hint */}
+        {/* Capture Hint with SafeArea awareness */}
         {!isCapturing && (
-          <View style={styles.hintContainer}>
+          <View style={[
+            styles.hintContainer,
+            {
+              bottom: Math.max(insets.bottom + 180, 200),
+            }
+          ]}>
             <View style={styles.hintBubble}>
               <Icon 
                 name={mode === 'reminder' ? 'bulb' : 'scan'} 
@@ -375,20 +424,19 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  // Loading State - ✅ FIXED opacity
+  // Loading State - ✅ SafeArea handled via dynamic padding
   loadingContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.xl,
     gap: Theme.spacing.l,
   },
   loadingIconContainer: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ 20% opacity
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -401,20 +449,19 @@ const styles = StyleSheet.create({
     maxWidth: 280,
   },
 
-  // Permission State - ✅ FIXED opacity
+  // Permission State - ✅ SafeArea handled via dynamic padding
   permissionContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.xl,
     gap: Theme.spacing.l,
   },
   permissionIconContainer: {
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ 20% opacity
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -438,10 +485,10 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.m,
   },
 
-  // Processing State - ✅ rgba() intentionally kept for overlay transparency
+  // Processing State - ✅ SafeArea handled via dynamic padding
   processingContainer: {
     flex: 1,
-    backgroundColor: 'rgba(0, 0, 0, 0.95)', // ✅ Intentional rgba for dark overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.95)',
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -454,15 +501,13 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.m,
   },
 
-  // Top Bar - ✅ rgba() intentionally kept for camera UI transparency
+  // Top Bar - ✅ SafeArea handled via dynamic padding (removed hardcoded iOS padding)
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.m,
-    paddingTop: Platform.OS === 'ios' ? 60 : Theme.spacing.l,
     paddingBottom: Theme.spacing.m,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // ✅ Intentional rgba for semi-transparent overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   topButton: {
     width: 52,
@@ -472,14 +517,14 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)', // ✅ Intentional rgba for glass effect
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonInnerActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)', // ✅ Intentional rgba for active state
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     borderColor: Theme.colors.primary[500],
   },
   modeIndicator: {
@@ -489,9 +534,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 10,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)', // ✅ Intentional rgba for mode badge
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
+    borderColor: 'rgba(255, 255, 255, 0.2)',
   },
   modeIconContainer: {
     width: 28,
@@ -505,7 +550,7 @@ const styles = StyleSheet.create({
     letterSpacing: 1,
   },
 
-  // Grid Overlay - ✅ rgba() intentionally kept for subtle grid lines
+  // Grid Overlay
   gridOverlay: {
     position: 'absolute',
     top: 0,
@@ -520,7 +565,7 @@ const styles = StyleSheet.create({
   gridRowBorder: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)', // ✅ Intentional rgba for grid transparency
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   gridCell: {
     flex: 1,
@@ -528,10 +573,10 @@ const styles = StyleSheet.create({
   gridCellBorder: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)', // ✅ Intentional rgba for grid transparency
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
 
-  // Focus Frame - ✅ Uses theme color (no change needed)
+  // Focus Frame
   focusFrame: {
     position: 'absolute',
     top: '25%',
@@ -575,7 +620,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: Theme.borderRadius.m,
   },
 
-  // Bottom Bar - ✅ rgba() intentionally kept for camera UI transparency
+  // Bottom Bar - ✅ SafeArea handled via dynamic padding (removed hardcoded iOS padding)
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -584,22 +629,20 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     alignItems: 'center',
-    paddingHorizontal: Theme.spacing.xl,
-    paddingBottom: Platform.OS === 'ios' ? 48 : Theme.spacing.xl,
     paddingTop: Theme.spacing.xl,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)', // ✅ Intentional rgba for semi-transparent overlay
+    backgroundColor: 'rgba(0, 0, 0, 0.4)',
   },
   sideButton: {
     width: 60,
     height: 60,
   },
 
-  // Capture Button - ✅ rgba() intentionally kept for button styling
+  // Capture Button
   captureButton: {
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)', // ✅ Intentional rgba for outer ring
+    backgroundColor: 'rgba(255, 255, 255, 0.3)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
@@ -616,10 +659,9 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Hint - ✅ rgba() intentionally kept for hint bubble transparency
+  // Hint - ✅ SafeArea handled via dynamic bottom position
   hintContainer: {
     position: 'absolute',
-    bottom: 180,
     left: 0,
     right: 0,
     alignItems: 'center',
@@ -632,9 +674,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 12,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)', // ✅ Intentional rgba for dark bubble
+    backgroundColor: 'rgba(0, 0, 0, 0.8)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)', // ✅ Intentional rgba for border
+    borderColor: 'rgba(255, 255, 255, 0.2)',
     maxWidth: 320,
   },
   hintText: {

@@ -1,20 +1,16 @@
 /**
- * VisionFlow AI - Pattern Library Screen (v3.2 - Production)
+ * VisionFlow AI - Pattern Library Screen (v4.1 - Compact Card Layout)
  * Browse and manage all discovered patterns
  * 
  * @module screens/PatternLibraryScreen
+ * @version 4.1.0
  * 
- * CHANGELOG v3.2:
- * - ✅ Removed debug logging (production ready)
- * 
- * CHANGELOG v3.1:
- * - ✅ Fixed pattern navigation issue
- * 
- * CHANGELOG v3.0:
- * - ✅ Added Search Bar (matching Reminder screen UI)
- * - ✅ Unified Heading + Action Button styling
- * - ✅ Added icons to filter chips
- * - ✅ Enhanced visual consistency with Reminder screen
+ * CHANGELOG v4.1:
+ * - ✅ Compact card layout matching Reminder height
+ * - ✅ Removed "Favorite" text badge (icon only)
+ * - ✅ AI/Manual badge inline with pattern type
+ * - ✅ Days ago and confidence % in same meta row
+ * - ✅ Optimized vertical spacing
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -37,6 +33,108 @@ import { usePatterns } from '../hooks/usePatterns';
 import * as Haptics from 'expo-haptics';
 
 type PatternLibraryScreenProps = NativeStackScreenProps<PatternStackParamList, 'PatternLibrary'>;
+
+/**
+ * Format date relative to today
+ */
+const formatRelativeDate = (timestamp: number): string => {
+  const date = new Date(timestamp);
+  const today = new Date();
+  const diffMs = today.getTime() - date.getTime();
+  const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+
+  if (diffDays === 0) return 'Today';
+  if (diffDays === 1) return 'Yesterday';
+  if (diffDays < 7) return `${diffDays}d ago`;
+  if (diffDays < 30) return `${Math.floor(diffDays / 7)}w ago`;
+  
+  const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
+  return date.toLocaleDateString(undefined, options);
+};
+
+/**
+ * Get pattern type configuration (emoji, color, icon)
+ */
+const getPatternTypeConfig = (type: PatternType) => {
+  const configs: Record<string, { icon: string; color: string; bgColor: string; emoji: string }> = {
+    [PatternType.FIBONACCI]: {
+      icon: 'git-branch-outline',
+      color: '#FFD700',
+      bgColor: '#FFD70020',
+      emoji: '🌀',
+    },
+    [PatternType.ELLIOTT_WAVE]: {
+      icon: 'trending-up-outline',
+      color: '#00BCD4',
+      bgColor: '#00BCD420',
+      emoji: '📈',
+    },
+    [PatternType.SACRED_GEOMETRY]: {
+      icon: 'diamond-outline',
+      color: '#9C27B0',
+      bgColor: '#9C27B020',
+      emoji: '💎',
+    },
+    [PatternType.FRACTAL]: {
+      icon: 'infinite-outline',
+      color: '#FF6B35',
+      bgColor: '#FF6B3520',
+      emoji: '🌿',
+    },
+    [PatternType.SPIRAL]: {
+      icon: 'reload-circle-outline',
+      color: '#FFD700',
+      bgColor: '#FFD70020',
+      emoji: '🌀',
+    },
+    [PatternType.SYMMETRY]: {
+      icon: 'copy-outline',
+      color: '#4CAF50',
+      bgColor: '#4CAF5020',
+      emoji: '🦋',
+    },
+    [PatternType.CHANNEL]: {
+      icon: 'swap-horizontal-outline',
+      color: '#2196F3',
+      bgColor: '#2196F320',
+      emoji: '📊',
+    },
+    [PatternType.WAVE]: {
+      icon: 'water-outline',
+      color: '#00BCD4',
+      bgColor: '#00BCD420',
+      emoji: '🌊',
+    },
+    [PatternType.GEOMETRIC]: {
+      icon: 'shapes-outline',
+      color: '#9C27B0',
+      bgColor: '#9C27B020',
+      emoji: '🔷',
+    },
+    [PatternType.CUSTOM]: {
+      icon: 'create-outline',
+      color: Theme.colors.primary[500],
+      bgColor: `${Theme.colors.primary[500]}20`,
+      emoji: '✏️',
+    },
+  };
+  return configs[type] || {
+    icon: 'help-circle-outline',
+    color: Theme.colors.text.tertiary,
+    bgColor: `${Theme.colors.text.tertiary}20`,
+    emoji: '❓',
+  };
+};
+
+/**
+ * Get confidence badge configuration
+ */
+const getConfidenceBadge = (confidence?: number) => {
+  if (!confidence) return { label: 'N/A', color: Theme.colors.text.tertiary };
+  if (confidence >= 0.8) return { label: 'HIGH', color: Theme.colors.semantic.success };
+  if (confidence >= 0.6) return { label: 'MED', color: Theme.colors.semantic.warning };
+  return { label: 'LOW', color: Theme.colors.text.tertiary };
+};
 
 export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreenProps) {
   const { filterType } = route.params || {};
@@ -104,68 +202,131 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
     }
   };
 
-  const renderPattern = ({ item }: { item: any }) => (
-    <Card
-      key={item.id}
-      pressable
-      onPress={() => handlePatternTap(item.id)}
-      style={styles.patternCard}
-    >
-      <View style={styles.patternContent}>
-        <View style={styles.patternIconContainer}>
-          {item.imageUri ? (
-            <View style={styles.patternImagePlaceholder}>
-              <Icon name="image-outline" size="lg" color={Theme.colors.primary[500]} />
+  const renderPattern = ({ item }: { item: any }) => {
+    const typeConfig = getPatternTypeConfig(item.type);
+    const confidenceBadge = getConfidenceBadge(item.confidence);
+    const isAIGenerated = item.source === 'ai';
+    
+    return (
+      <Card
+        key={item.id}
+        pressable
+        onPress={() => handlePatternTap(item.id)}
+        elevation="sm"
+        style={styles.patternCard}
+      >
+        <View style={styles.patternContent}>
+          {/* Icon Wrapper with Status Indicator (SAME AS REMINDER) */}
+          <View style={styles.iconWrapper}>
+            <View style={[styles.patternIcon, { backgroundColor: typeConfig.bgColor }]}>
+              <Text variant="h3">{typeConfig.emoji}</Text>
             </View>
-          ) : (
-            <View style={styles.patternIconPlaceholder}>
-              <Icon name="grid-outline" size="lg" color={Theme.colors.primary[500]} />
-            </View>
-          )}
-        </View>
+            {/* Confidence dot (SAME AS REMINDER STATUS DOT) */}
+            {item.confidence !== undefined && (
+              <View style={[styles.statusDot, { backgroundColor: confidenceBadge.color }]} />
+            )}
+          </View>
 
-        <View style={styles.patternInfo}>
-          <Text variant="bodyLarge" weight="600">
-            {item.name}
-          </Text>
-          <Text variant="caption" color="secondary">
-            {item.type} • {item.source === 'ai' ? '🤖 AI' : '✏️ Manual'}
-          </Text>
-          {item.confidence !== undefined && (
-            <Text variant="caption" color="tertiary">
-              Confidence: {Math.round(item.confidence * 100)}%
+          {/* Content - COMPACT LAYOUT */}
+          <View style={styles.patternInfo}>
+            {/* Title */}
+            <Text
+              variant="bodyLarge"
+              weight="600"
+              numberOfLines={1}
+            >
+              {item.name}
             </Text>
-          )}
-        </View>
+            
+            {/* Pattern Type + AI/Manual Badge (INLINE) */}
+            <View style={styles.typeRow}>
+              <View style={[styles.typeBadge, { backgroundColor: typeConfig.bgColor }]}>
+                <Icon name={typeConfig.icon as any} size="xs" color={typeConfig.color} />
+                <Text variant="caption" customColor={typeConfig.color} weight="600">
+                  {item.type.replace(/_/g, ' ')}
+                </Text>
+              </View>
+              
+              <View style={styles.metaDivider} />
+              
+              <View style={[
+                styles.sourceBadge, 
+                { backgroundColor: isAIGenerated ? `${Theme.colors.semantic.info}15` : `${Theme.colors.text.secondary}15` }
+              ]}>
+                <Icon 
+                  name={isAIGenerated ? 'sparkles' : 'create-outline'} 
+                  size="xs" 
+                  color={isAIGenerated ? Theme.colors.semantic.info : Theme.colors.text.secondary} 
+                />
+                <Text 
+                  variant="caption" 
+                  customColor={isAIGenerated ? Theme.colors.semantic.info : Theme.colors.text.secondary}
+                  weight="600"
+                >
+                  {isAIGenerated ? 'AI' : 'Manual'}
+                </Text>
+              </View>
+            </View>
+            
+            {/* Meta Row: Days + Confidence % */}
+            <View style={styles.metaRow}>
+              <View style={styles.metaItem}>
+                <Icon name="time-outline" size="xs" color={Theme.colors.text.tertiary} />
+                <Text variant="caption" color="tertiary">
+                  {formatRelativeDate(item.createdAt)}
+                </Text>
+              </View>
+              
+              {item.confidence !== undefined && (
+                <>
+                  <View style={styles.metaDivider} />
+                  <View style={styles.metaItem}>
+                    <Icon name="analytics-outline" size="xs" color={confidenceBadge.color} />
+                    <Text variant="caption" customColor={confidenceBadge.color}>
+                      {(item.confidence * 100).toFixed(0)}%
+                    </Text>
+                  </View>
+                </>
+              )}
+            </View>
+          </View>
 
-        <Pressable
-          onPress={(e) => {
-            e.stopPropagation();
-            handleToggleFavorite(item.id);
-          }}
-          style={styles.favoriteButton}
-          hitSlop={8}
-        >
-          <Icon
-            name={item.isFavorite ? 'heart' : 'heart-outline'}
-            size="md"
-            color={item.isFavorite ? Theme.colors.semantic.error : Theme.colors.text.secondary}
-          />
-        </Pressable>
-      </View>
-    </Card>
-  );
+          {/* Actions - ICON ONLY */}
+          <View style={styles.actionContainer}>
+            <Pressable
+              onPress={(e) => {
+                e.stopPropagation();
+                handleToggleFavorite(item.id);
+              }}
+              style={styles.actionButton}
+              hitSlop={8}
+            >
+              <Icon
+                name={item.isFavorite ? 'heart' : 'heart-outline'}
+                size="md"
+                color={item.isFavorite ? Theme.colors.semantic.error : Theme.colors.text.tertiary}
+              />
+            </Pressable>
+            
+            <Icon name="chevron-forward-outline" size="sm" color={Theme.colors.text.tertiary} />
+          </View>
+        </View>
+      </Card>
+    );
+  };
 
   return (
     <Screen>
-      {/* Header */}
+      {/* Header - Fixed Outside FlatList (SAME AS REMINDER) */}
       <Container padding="m" style={styles.header}>
+        {/* Header Top */}
         <View style={styles.headerTop}>
           <View>
             <Text variant="h2">Pattern Library</Text>
           </View>
           <Pressable 
             onPress={() => navigation.navigate('CameraModal' as any, { mode: 'pattern' })}
+            haptic="medium"
             style={styles.discoverButton}
           >
             <Icon name="sparkles" size="sm" color={Theme.colors.background.primary} />
@@ -175,7 +336,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           </Pressable>
         </View>
 
-        {/* Search Bar */}
+        {/* Search Bar (SAME AS REMINDER) */}
         <View style={styles.searchContainer}>
           <Icon name="search-outline" size="sm" color={Theme.colors.text.tertiary} />
           <TextInput
@@ -197,7 +358,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           )}
         </View>
 
-        {/* Stats Row */}
+        {/* Stats Row (SAME AS REMINDER) */}
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
             <Text variant="h4" customColor={Theme.colors.primary[500]}>
@@ -205,21 +366,23 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             </Text>
             <Text variant="caption" color="secondary">Total</Text>
           </View>
+          
           <View style={styles.statItem}>
             <Text variant="h4" customColor={Theme.colors.semantic.info}>
               {stats.aiGenerated}
             </Text>
             <Text variant="caption" color="secondary">AI</Text>
           </View>
+          
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.semantic.success}>
+            <Text variant="h4" customColor={Theme.colors.semantic.error}>
               {stats.favorites}
             </Text>
             <Text variant="caption" color="secondary">Favorites</Text>
           </View>
         </View>
 
-        {/* Filter Chips */}
+        {/* Type Filter (SAME AS CATEGORY FILTER IN REMINDER) */}
         <View style={styles.typeFilter}>
           <Pressable
             onPress={() => handleTypeFilter('all')}
@@ -249,7 +412,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           {[
             { key: PatternType.FIBONACCI, icon: 'git-branch-outline', label: 'Fibonacci' },
             { key: PatternType.GEOMETRIC, icon: 'shapes-outline', label: 'Geometric' },
-            { key: PatternType.SYMMETRY, icon: 'contract-outline', label: 'Symmetry' },
+            { key: PatternType.SYMMETRY, icon: 'copy-outline', label: 'Symmetry' },
             { key: PatternType.CUSTOM, icon: 'create-outline', label: 'Custom' },
           ].map((type) => (
             <Pressable
@@ -329,7 +492,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 }
 
 const styles = StyleSheet.create({
-  // Header styles
+  // Header styles (SAME AS REMINDER)
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
@@ -354,7 +517,7 @@ const styles = StyleSheet.create({
     ...Theme.shadows.glow,
   },
 
-  // Search bar styles
+  // Search bar styles (SAME AS REMINDER)
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -377,8 +540,8 @@ const styles = StyleSheet.create({
   clearButton: {
     padding: 4,
   },
-
-  // Stats styles
+  
+  // Stats styles (SAME AS REMINDER)
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
@@ -390,8 +553,8 @@ const styles = StyleSheet.create({
   statItem: {
     alignItems: 'center',
   },
-
-  // Filter chips
+  
+  // Type filter styles (SAME AS CATEGORY FILTER)
   typeFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -413,61 +576,116 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
   },
-
+  
+  // List styles (SAME AS REMINDER)
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
   },
-
-  // Empty search state
-  emptySearch: {
-    padding: Theme.spacing.xxl,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-
-  // List styles
   listContent: {
     padding: Theme.spacing.m,
     gap: Theme.spacing.s,
     paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },
-
-  // Card styles
+  emptySearch: {
+    padding: Theme.spacing.xxl,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  
+  // COMPACT Card styles - MATCHING REMINDER HEIGHT
   patternCard: {
     marginBottom: Theme.spacing.s,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}30`,
     ...Theme.shadows.sm,
   },
   patternContent: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: Theme.spacing.m,
   },
-  patternIconContainer: {
+  iconWrapper: {
+    position: 'relative',
+  },
+  patternIcon: {
     width: 56,
     height: 56,
     borderRadius: Theme.borderRadius.m,
-    overflow: 'hidden',
-  },
-  patternImagePlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: `${Theme.colors.primary[500]}20`,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}20`,
   },
-  patternIconPlaceholder: {
-    width: '100%',
-    height: '100%',
-    backgroundColor: `${Theme.colors.primary[500]}10`,
-    alignItems: 'center',
-    justifyContent: 'center',
+  statusDot: {
+    position: 'absolute',
+    top: -2,
+    right: -2,
+    width: 14,
+    height: 14,
+    borderRadius: 7,
+    borderWidth: 2,
+    borderColor: Theme.colors.background.secondary,
   },
+  
+  // COMPACT Info Layout
   patternInfo: {
     flex: 1,
+    gap: 4, // Reduced from 6 to make more compact
   },
-  favoriteButton: {
-    padding: Theme.spacing.s,
+  
+  // Type + Source badges in one row
+  typeRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    flexWrap: 'wrap',
+  },
+  typeBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Theme.borderRadius.s,
+  },
+  sourceBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 3,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Theme.borderRadius.s,
+  },
+  
+  // Meta row: Days + Confidence
+  metaRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+    flexWrap: 'wrap',
+  },
+  metaItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  metaDivider: {
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
+    backgroundColor: Theme.colors.text.tertiary,
+    opacity: 0.5,
+  },
+  
+  // Actions - Icon only
+  actionContainer: {
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+  },
+  actionButton: {
+    padding: Theme.spacing.xs,
+    borderRadius: Theme.borderRadius.full,
   },
 });

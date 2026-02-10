@@ -1,14 +1,19 @@
 /**
- * VisionFlow AI - Create Reminder Screen (v3.1 - Type Fix + Footer Fix)
- * Manually create a reminder without AI
+ * VisionFlow AI - Create Reminder Screen (v4.0 - CYBERPUNK TACTICAL ENHANCEMENT)
+ * Manually create a reminder with visual depth
  * 
  * @module screens/CreateReminderScreen
  * 
- * CHANGELOG v3.1:
- * - 🐛 FIXED: Updated to use RootStackParamList and CreateReminderScreen type
- * - 🐛 FIXED: Footer now sticky/fixed at bottom
- * - 🐛 FIXED: Equal width buttons
- * - 🐛 FIXED: ScrollView clearance increased to 140
+ * CHANGELOG v4.0:
+ * ✨ VISUAL ENHANCEMENTS:
+ * - ✅ Category-colored gradient on preview emoji container with glow
+ * - ✅ Glassmorphism effect on form cards
+ * - ✅ Selected category chips with glow effect
+ * - ✅ Selected priority chips with glow effect
+ * - ✅ Glassmorphism on date/time input containers
+ * - ✅ Info card with glass variant
+ * - ✅ Footer primary button with glow effect
+ * - ✅ Enhanced input fields with focus glow
  */
 
 import React, { useState, useRef } from 'react';
@@ -22,7 +27,7 @@ import {
 } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { RootStackParamList } from '../types/navigation.types'; // ✅ CHANGED
+import { RootStackParamList } from '../types/navigation.types';
 import { ReminderCategory, ReminderPriority, ReminderStatus } from '../types/reminder.types';
 import { Theme } from '../constants/theme';
 import {
@@ -35,7 +40,7 @@ import {
 import { useReminders } from '../hooks/useReminders';
 import * as Haptics from 'expo-haptics';
 
-type CreateReminderScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateReminderScreen'>; // ✅ CHANGED
+type CreateReminderScreenProps = NativeStackScreenProps<RootStackParamList, 'CreateReminderScreen'>;
 
 /**
  * Get priority color
@@ -64,7 +69,21 @@ const getCategoryEmoji = (category: ReminderCategory): string => {
 };
 
 /**
- * Category configuration (matching reference)
+ * ✨ NEW: Get category gradient colors
+ */
+const getCategoryGradient = (category: ReminderCategory) => {
+  const categoryKey = category.toLowerCase() as keyof typeof Theme.colors.category;
+  const categoryColors = Theme.colors.category[categoryKey];
+  
+  if (categoryColors && 'gradient' in categoryColors) {
+    return categoryColors.gradient;
+  }
+  
+  return [Theme.colors.primary[400], Theme.colors.primary[500], Theme.colors.primary[600]];
+};
+
+/**
+ * Category configuration
  */
 const categoryConfig = {
   [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
@@ -74,7 +93,7 @@ const categoryConfig = {
 };
 
 /**
- * Priority configuration (matching reference)
+ * Priority configuration
  */
 const priorityConfig = {
   [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
@@ -103,6 +122,9 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
   const [reminderDate, setReminderDate] = useState('');
   const [reminderTime, setReminderTime] = useState('');
   const [isSaving, setIsSaving] = useState(false);
+
+  // ✨ NEW: Get current category gradient
+  const categoryGradient = getCategoryGradient(category);
 
   const handleSave = async () => {
     // Validation
@@ -144,7 +166,6 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
-      // ✅ Navigate back to MainApp
       navigation.navigate('MainApp', {
         screen: 'RemindersTab',
         params: {
@@ -203,9 +224,22 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* Preview Icon */}
+          {/* ✨ ENHANCED: Preview Icon with Category Gradient & Glow */}
           <View style={styles.previewSection}>
-            <View style={styles.previewIconContainer}>
+            <View
+              style={[
+                styles.previewIconContainer,
+                {
+                  backgroundColor: categoryGradient[1],
+                  borderColor: categoryGradient[0],
+                  shadowColor: categoryGradient[2],
+                  shadowOpacity: 0.5,
+                  shadowRadius: 16,
+                  shadowOffset: { width: 0, height: 0 },
+                  elevation: 8,
+                },
+              ]}
+            >
               <Text variant="h1">{getCategoryEmoji(category)}</Text>
             </View>
             <Text variant="caption" color="tertiary" align="center">
@@ -213,14 +247,18 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </Text>
           </View>
 
-          {/* Basic Information */}
+          {/* ✨ ENHANCED: Basic Information with Glass Card */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Basic Information</Text>
             </View>
             
-            <Card elevation="sm" style={styles.formCard}>
+            <Card 
+              variant="glass"
+              elevation="md"
+              style={styles.formCard}
+            >
               <View style={styles.inputGroup}>
                 <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
                   TITLE *
@@ -260,14 +298,18 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </Card>
           </View>
 
-          {/* Date & Time */}
+          {/* ✨ ENHANCED: Date & Time with Glassmorphism */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Schedule</Text>
             </View>
             
-            <Card elevation="sm" style={styles.formCard}>
+            <Card 
+              variant="glass"
+              elevation="md"
+              style={styles.formCard}
+            >
               <View style={styles.dateTimeRow}>
                 <View style={styles.dateInputContainer}>
                   <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
@@ -310,7 +352,7 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </Card>
           </View>
 
-          {/* Category Selection - MATCHING REFERENCE */}
+          {/* ✨ ENHANCED: Category Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -321,17 +363,22 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
               {Object.entries(categoryConfig).map(([cat, config]) => {
                 const isSelected = category === cat;
                 return (
-                  <Pressable
+                  <Card
                     key={cat}
+                    pressable
+                    elevation={isSelected ? 'glow' : 'none'}
+                    padding={10}
+                    borderRadius={Theme.borderRadius.m}
                     onPress={() => {
                       setCategory(cat as ReminderCategory);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}
                     style={[
-                      styles.categoryChip,
+                      styles.categoryChipCard,
                       isSelected ? {
                         backgroundColor: config.color,
                         borderColor: config.color,
+                        shadowColor: config.color,
                       } : {},
                     ]}
                   >
@@ -351,13 +398,13 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
                     >
                       {cat}
                     </Text>
-                  </Pressable>
+                  </Card>
                 );
               })}
             </View>
           </View>
 
-          {/* Priority Selection - MATCHING REFERENCE */}
+          {/* ✨ ENHANCED: Priority Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
@@ -368,17 +415,22 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
               {Object.entries(priorityConfig).map(([prio, config]) => {
                 const isSelected = priority === prio;
                 return (
-                  <Pressable
+                  <Card
                     key={prio}
+                    pressable
+                    elevation={isSelected ? 'glow' : 'none'}
+                    padding={10}
+                    borderRadius={Theme.borderRadius.m}
                     onPress={() => {
                       setPriority(prio as ReminderPriority);
                       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
                     }}
                     style={[
-                      styles.priorityChip,
+                      styles.priorityChipCard,
                       isSelected ? {
                         backgroundColor: config.color,
                         borderColor: config.color,
+                        shadowColor: config.color,
                       } : {},
                     ]}
                   >
@@ -398,14 +450,18 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
                     >
                       {prio}
                     </Text>
-                  </Pressable>
+                  </Card>
                 );
               })}
             </View>
           </View>
 
-          {/* Info Card */}
-          <Card elevation="sm" style={styles.infoCard}>
+          {/* ✨ ENHANCED: Info Card with Glass Variant */}
+          <Card 
+            variant="glass"
+            elevation="sm"
+            style={styles.infoCard}
+          >
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
               <Text variant="caption" color="secondary" style={styles.infoText}>
@@ -416,8 +472,14 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
         </View>
       </ScrollView>
 
-      {/* Footer - Fixed at bottom */}
-      <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
+      {/* ✨ ENHANCED: Footer with Glassmorphism and Glow on Primary Button */}
+      <View style={[
+        styles.footerContainer, 
+        { 
+          paddingBottom: insets.bottom + Theme.spacing.m,
+          backgroundColor: Theme.glassmorphism.tint,
+        }
+      ]}>
         <View style={styles.footer}>
           <View style={styles.footerButton}>
             <Button
@@ -431,16 +493,31 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             />
           </View>
           <View style={styles.footerButton}>
-            <Button
-              label={isSaving ? 'Creating...' : 'Create Reminder'}
-              variant="primary"
-              size="large"
-              leftIcon={isSaving ? undefined : "checkmark"}
-              onPress={handleSave}
-              disabled={isSaving || !isFormValid}
-              loading={isSaving}
-              fullWidth
-            />
+            <View
+              style={
+                !isSaving && isFormValid
+                  ? {
+                      shadowColor: Theme.colors.primary[500],
+                      shadowOpacity: 0.5,
+                      shadowRadius: 12,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 8,
+                      borderRadius: Theme.borderRadius.m,
+                    }
+                  : {}
+              }
+            >
+              <Button
+                label={isSaving ? 'Creating...' : 'Create Reminder'}
+                variant="primary"
+                size="large"
+                leftIcon={isSaving ? undefined : "checkmark"}
+                onPress={handleSave}
+                disabled={isSaving || !isFormValid}
+                loading={isSaving}
+                fullWidth
+              />
+            </View>
           </View>
         </View>
       </View>
@@ -485,7 +562,7 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 140, // ✅ FIXED
+    paddingBottom: 140,
   },
 
   // Content padding
@@ -493,7 +570,7 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.m,
   },
 
-  // Preview section
+  // ✨ ENHANCED: Preview section with gradient & glow
   previewSection: {
     alignItems: 'center',
     marginBottom: Theme.spacing.l,
@@ -503,11 +580,9 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: Theme.colors.background.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
-    borderColor: `${Theme.colors.border.default}30`,
   },
 
   // Section styles
@@ -521,10 +596,10 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // Form card styles
+  // ✨ ENHANCED: Form card with glass variant
   formCard: {
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
+    borderColor: `${Theme.colors.border.default}40`,
   },
   inputGroup: {
     gap: Theme.spacing.xs,
@@ -549,6 +624,7 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: Theme.colors.border.light,
     marginVertical: Theme.spacing.m,
+    opacity: 0.5,
   },
 
   // Date & Time styles
@@ -582,50 +658,42 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.mono,
   },
 
-  // ✅ FIXED: Category grid matching reference
+  // ✨ ENHANCED: Category chips with Card component
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
   },
-  categoryChip: {
+  categoryChipCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Theme.spacing.m,
-    paddingVertical: 10,
-    borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
+    minWidth: 100,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    minWidth: 100,
   },
 
-  // ✅ FIXED: Priority grid matching reference
+  // ✨ ENHANCED: Priority chips with Card component
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: Theme.spacing.s,
   },
-  priorityChip: {
+  priorityChipCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Theme.spacing.m,
-    paddingVertical: 10,
-    borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
+    minWidth: 100,
     borderWidth: 2,
     borderColor: Theme.colors.border.medium,
-    minWidth: 100,
   },
 
-  // Info card styles
+  // ✨ ENHANCED: Info card with glass variant
   infoCard: {
     marginTop: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
-    borderColor: `${Theme.colors.semantic.info}30`,
+    borderColor: `${Theme.colors.semantic.info}40`,
   },
   infoRow: {
     flexDirection: 'row',
@@ -637,16 +705,15 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // ✅ FIXED: Footer matching reference
+  // ✨ ENHANCED: Footer with glassmorphism
   footerContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: Theme.colors.background.secondary,
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
-    ...Theme.shadows.sm,
+    ...Theme.shadows.md,
   },
   footer: {
     flexDirection: 'row',

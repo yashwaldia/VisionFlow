@@ -11,6 +11,7 @@
  * - ✅ Scroll padding already adequate for tab bar (120px)
  */
 
+
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Switch, Alert, Linking, AppState, ScrollView } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
@@ -30,7 +31,9 @@ import {
 import * as NotificationService from '../../services/notification.service';
 import * as StorageService from '../../services/storage.service';
 
+
 type NotificationSettingsScreenProps = NativeStackScreenProps<SettingsStackParamList, 'NotificationSettings'>;
+
 
 export function NotificationSettingsScreen({ navigation }: NotificationSettingsScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -43,6 +46,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
 
+
   // Check permissions on mount and app foreground
   const checkPermissions = useCallback(async () => {
     try {
@@ -52,6 +56,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       console.error('[NotificationSettings] Failed to check permissions:', error);
     }
   }, []);
+
 
   // Load saved preferences
   const loadPreferences = useCallback(async () => {
@@ -75,8 +80,10 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     }
   }, [checkPermissions]);
 
+
   useEffect(() => {
     loadPreferences();
+
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
@@ -84,10 +91,12 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       }
     });
 
+
     return () => {
       subscription.remove();
     };
   }, [loadPreferences, checkPermissions]);
+
 
   /**
    * Save preference helper
@@ -101,6 +110,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       const currentPrefs = await StorageService.getUserPreferences();
       
       let updates: Partial<UserPreferences> = {};
+
 
       if (section === 'notifications') {
         updates = {
@@ -118,6 +128,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
         };
       }
 
+
       await StorageService.updateUserPreferences(updates);
       
     } catch (error) {
@@ -126,9 +137,11 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     }
   };
 
+
   const openSystemSettings = () => {
     Linking.openSettings();
   };
+
 
   if (isLoading) {
     return (
@@ -140,7 +153,9 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     );
   }
 
+
   const isPermissionGranted = permissionStatus === PermissionStatus.GRANTED;
+
 
   return (
     <Screen>
@@ -155,6 +170,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
         </View>
         <View style={{ width: 40 }} />
       </View>
+
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
@@ -201,6 +217,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             )}
           </Card>
 
+
           {/* Alert Types Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -236,17 +253,26 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
 
+
               <View style={styles.divider} />
+
 
               {/* Patterns Toggle */}
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
-                  <View style={styles.optionIconContainer}>
-                    <Icon name="analytics" size="sm" color={Theme.colors.semantic.info} />
+                  <View style={[styles.optionIconContainer, styles.disabledOption]}>
+                    <Icon name="analytics" size="sm" color={Theme.colors.text.tertiary} />
                   </View>
                   <View style={styles.optionInfo}>
-                    <Text variant="body" weight="600">Pattern Insights</Text>
-                    <Text variant="caption" color="secondary">Weekly pattern discoveries</Text>
+                    <View style={styles.optionTitleRow}>
+                      <Text variant="body" weight="600" color="secondary">Pattern Insights</Text>
+                      <View style={styles.comingSoonBadge}>
+                        <Text variant="caption" weight="700" customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
+                          COMING SOON
+                        </Text>
+                      </View>
+                    </View>
+                    <Text variant="caption" color="tertiary">Weekly pattern discoveries</Text>
                   </View>
                 </View>
                 <Switch
@@ -261,21 +287,30 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                   }}
                   thumbColor={patternsEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
                   ios_backgroundColor={Theme.colors.background.tertiary}
-                  disabled={!isPermissionGranted}
+                  disabled={true}
                 />
               </View>
 
+
               <View style={styles.divider} />
+
 
               {/* Updates Toggle */}
               <View style={styles.optionRow}>
                 <View style={styles.optionLeft}>
-                  <View style={styles.optionIconContainer}>
-                    <Icon name="gift" size="sm" color={Theme.colors.semantic.warning} />
+                  <View style={[styles.optionIconContainer, styles.disabledOption]}>
+                    <Icon name="gift" size="sm" color={Theme.colors.text.tertiary} />
                   </View>
                   <View style={styles.optionInfo}>
-                    <Text variant="body" weight="600">Product Updates</Text>
-                    <Text variant="caption" color="secondary">News about new features</Text>
+                    <View style={styles.optionTitleRow}>
+                      <Text variant="body" weight="600" color="secondary">Product Updates</Text>
+                      <View style={styles.comingSoonBadge}>
+                        <Text variant="caption" weight="700" customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
+                          COMING SOON
+                        </Text>
+                      </View>
+                    </View>
+                    <Text variant="caption" color="tertiary">News about new features</Text>
                   </View>
                 </View>
                 <Switch
@@ -290,11 +325,12 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                   }}
                   thumbColor={updatesEnabled ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
                   ios_backgroundColor={Theme.colors.background.tertiary}
-                  disabled={!isPermissionGranted}
+                  disabled={true}
                 />
               </View>
             </Card>
           </View>
+
 
           {/* Preferences Section */}
           <View style={styles.section}>
@@ -302,6 +338,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
               <Icon name="options-outline" size="sm" color={Theme.colors.primary[500]} />
               <Text variant="h4">Experience</Text>
             </View>
+
 
             <Card elevation="sm" style={styles.optionsCard}>
               {/* Sound Toggle */}
@@ -330,7 +367,9 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
 
+
               <View style={styles.divider} />
+
 
               {/* Haptics Toggle */}
               <View style={styles.optionRow}>
@@ -360,6 +399,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             </Card>
           </View>
 
+
           {/* Info Card - ✅ ENHANCED: Added elevation */}
           <Card elevation="sm" style={styles.infoCard}>
             <View style={styles.infoRow}>
@@ -370,11 +410,13 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             </View>
           </Card>
 
+
         </Container>
       </ScrollView>
     </Screen>
   );
 }
+
 
 const styles = StyleSheet.create({
   // Header styles - ✅ ENHANCED: Added shadow
@@ -493,9 +535,29 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}20`,
   },
+  disabledOption: {
+    opacity: 0.5,
+  },
   optionInfo: {
     flex: 1,
     gap: 2,
+  },
+  optionTitleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Theme.spacing.xs,
+  },
+  comingSoonBadge: {
+    backgroundColor: `${Theme.colors.semantic.info}20`,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: Theme.borderRadius.s,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.semantic.info}40`,
+  },
+  comingSoonText: {
+    fontSize: 9,
+    letterSpacing: 0.5,
   },
   divider: {
     height: 1,

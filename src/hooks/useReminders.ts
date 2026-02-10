@@ -5,6 +5,7 @@
  * @module hooks/useReminders
  */
 
+
 import { useState, useEffect, useCallback } from 'react';
 import {
   Reminder,
@@ -16,6 +17,7 @@ import {
 } from '../types/reminder.types';
 import * as StorageService from '../services/storage.service';
 import * as NotificationService from '../services/notification.service';
+
 
 /**
  * Hook return type
@@ -52,6 +54,7 @@ interface UseRemindersResult {
   getReminderById: (id: string) => Reminder | undefined;
 }
 
+
 /**
  * Default filters
  */
@@ -62,6 +65,7 @@ const DEFAULT_FILTERS: ReminderFilters = {
   dateRange: undefined,
   searchQuery: undefined,
 };
+
 
 /**
  * useReminders Hook
@@ -177,6 +181,7 @@ export function useReminders(): UseRemindersResult {
     setFilteredReminders(result);
     }, [reminders, filters, sortBy, sortOrder]);
 
+
   
   /**
    * Calculate statistics
@@ -197,12 +202,26 @@ export function useReminders(): UseRemindersResult {
    */
   const createReminder = useCallback(async (reminder: Reminder) => {
     try {
+      // Save reminder first
       const updated = await StorageService.saveReminder(reminder);
       setReminders(updated);
       
-      // Schedule notification
+      // Schedule notification only if upcoming and user has enabled alerts
       if (reminder.status === ReminderStatus.UPCOMING) {
-        await NotificationService.scheduleReminderNotification(reminder);
+        const userPrefs = await StorageService.getUserPreferences();
+        
+        if (userPrefs.notifications.reminderAlerts) {
+          try {
+            const notificationId = await NotificationService.scheduleReminderNotification(reminder);
+            
+            // Store notification ID with reminder
+            const updatedWithNotif = await StorageService.updateReminder(reminder.id, { notificationId });
+            setReminders(updatedWithNotif);
+          } catch (notifErr) {
+            console.error('[useReminders] Failed to schedule notification:', notifErr);
+            // Don't throw - reminder was saved successfully
+          }
+        }
       }
     } catch (err: any) {
       console.error('[useReminders] Create failed:', err);
@@ -215,38 +234,88 @@ export function useReminders(): UseRemindersResult {
    */
   const updateReminder = useCallback(async (id: string, updates: Partial<Reminder>) => {
     try {
+      // Get current reminder before updating
+      const currentReminder = reminders.find(r => r.id === id);
+      
+      // Update reminder in storage
       const updated = await StorageService.updateReminder(id, updates);
       setReminders(updated);
       
-      // Reschedule notification if date/time changed
+      // Handle notification rescheduling
       const updatedReminder = updated.find(r => r.id === id);
       if (updatedReminder && updatedReminder.status === ReminderStatus.UPCOMING) {
-        await NotificationService.scheduleReminderNotification(updatedReminder);
+        const userPrefs = await StorageService.getUserPreferences();
+        
+        if (userPrefs.notifications.reminderAlerts) {
+          try {
+            // Cancel old notification if exists
+            if (currentReminder?.notificationId) {
+              await NotificationService.cancelNotification(currentReminder.notificationId);
+            }
+            
+            // Schedule new notification
+            const newNotificationId = await NotificationService.scheduleReminderNotification(updatedReminder);
+            
+            // Store new notification ID
+            const finalUpdated = await StorageService.updateReminder(id, { notificationId: newNotificationId });
+            setReminders(finalUpdated);
+          } catch (notifErr) {
+            console.error('[useReminders] Failed to reschedule notification:', notifErr);
+          }
+        }
       }
     } catch (err: any) {
       console.error('[useReminders] Update failed:', err);
       throw err;
     }
-  }, []);
+  }, [reminders]);
   
   /**
    * Delete reminder
    */
   const deleteReminder = useCallback(async (id: string) => {
     try {
+      // Get reminder to access notification ID
+      const reminder = reminders.find(r => r.id === id);
+      
+      // Cancel notification if exists
+      if (reminder?.notificationId) {
+        try {
+          await NotificationService.cancelNotification(reminder.notificationId);
+        } catch (notifErr) {
+          console.error('[useReminders] Failed to cancel notification:', notifErr);
+          // Continue with deletion
+        }
+      }
+      
+      // Delete from storage
       const updated = await StorageService.deleteReminder(id);
       setReminders(updated);
     } catch (err: any) {
       console.error('[useReminders] Delete failed:', err);
       throw err;
     }
-  }, []);
+  }, [reminders]);
   
   /**
    * Mark as done
    */
   const markAsDone = useCallback(async (id: string) => {
     try {
+      // Get reminder to access notification ID
+      const reminder = reminders.find(r => r.id === id);
+      
+      // Cancel notification if exists
+      if (reminder?.notificationId) {
+        try {
+          await NotificationService.cancelNotification(reminder.notificationId);
+        } catch (notifErr) {
+          console.error('[useReminders] Failed to cancel notification:', notifErr);
+          // Continue with status update
+        }
+      }
+      
+      // Update status
       const updated = await StorageService.updateReminderStatus(id, ReminderStatus.DONE);
       setReminders(updated);
       await NotificationService.updateBadgeCount();
@@ -254,20 +323,35 @@ export function useReminders(): UseRemindersResult {
       console.error('[useReminders] Mark as done failed:', err);
       throw err;
     }
-  }, []);
+  }, [reminders]);
   
   /**
    * Bulk delete
    */
   const bulkDelete = useCallback(async (ids: string[]) => {
     try {
+      // Cancel notifications for all reminders being deleted
+      const remindersToDelete = reminders.filter(r => ids.includes(r.id));
+      
+      for (const reminder of remindersToDelete) {
+        if (reminder.notificationId) {
+          try {
+            await NotificationService.cancelNotification(reminder.notificationId);
+          } catch (notifErr) {
+            console.error(`[useReminders] Failed to cancel notification for ${reminder.id}:`, notifErr);
+            // Continue with other cancellations
+          }
+        }
+      }
+      
+      // Delete from storage
       const updated = await StorageService.bulkDeleteReminders(ids);
       setReminders(updated);
     } catch (err: any) {
       console.error('[useReminders] Bulk delete failed:', err);
       throw err;
     }
-  }, []);
+  }, [reminders]);
   
   /**
    * Set sorting

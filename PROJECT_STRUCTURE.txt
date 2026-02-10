@@ -1,27 +1,4 @@
 .
-├── android
-│   ├── app
-│   │   ├── build.gradle
-│   │   ├── debug.keystore
-│   │   ├── proguard-rules.pro
-│   │   └── src
-│   │       ├── debug
-│   │       │   └── AndroidManifest.xml
-│   │       ├── debugOptimized
-│   │       │   └── AndroidManifest.xml
-│   │       └── main
-│   │           ├── AndroidManifest.xml
-│   │           ├── java
-│   │           └── res
-│   ├── build.gradle
-│   ├── gradle
-│   │   └── wrapper
-│   │       ├── gradle-wrapper.jar
-│   │       └── gradle-wrapper.properties
-│   ├── gradle.properties
-│   ├── gradlew
-│   ├── gradlew.bat
-│   └── settings.gradle
 ├── app.json
 ├── App.tsx
 ├── assets
@@ -30,9 +7,7 @@
 │   ├── icon.png
 │   └── splash-icon.png
 ├── index.ts
-├── package-lock.json
 ├── package.json
-├── PROJECT_STRUCTURE.txt
 ├── src
 │   ├── assets
 │   │   ├── animations
@@ -51,6 +26,12 @@
 │   │   ├── index.ts
 │   │   ├── Input.tsx
 │   │   ├── LoadingSpinner.tsx
+│   │   ├── patterns
+│   │   │   ├── HUDElements.tsx
+│   │   │   ├── InsightsSection.tsx
+│   │   │   ├── PatternCanvas.tsx
+│   │   │   ├── PatternOverlayControls.tsx
+│   │   │   └── TelemetryPanel.tsx
 │   │   ├── Pressable.tsx
 │   │   ├── Screen.tsx
 │   │   ├── SearchBar.tsx
@@ -61,6 +42,7 @@
 │   │   └── theme.ts
 │   ├── hooks
 │   │   ├── useCamera.ts
+│   │   ├── usePatternRendering.ts
 │   │   ├── usePatterns.ts
 │   │   ├── useProjects.ts
 │   │   └── useReminders.ts
@@ -119,4 +101,4 @@
 │       └── validators.ts
 └── tsconfig.json
 
-27 directories, 93 files
+18 directories, 84 files

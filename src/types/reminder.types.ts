@@ -6,6 +6,7 @@
  * @see Product Requirements: Section 3.1.1 - Core Features
  */
 
+
 /**
  * 12 comprehensive reminder categories with visual gradients
  * Each category has specific subcategories for precise classification
@@ -25,6 +26,7 @@ export enum ReminderCategory {
   EVENTS_OCCASIONS = 'Events & Occasions',
 }
 
+
 /**
  * Reminder lifecycle status
  */
@@ -35,6 +37,7 @@ export enum ReminderStatus {
   SNOOZED = 'snoozed',
 }
 
+
 /**
  * Priority levels for reminders (Phase 2 feature)
  */
@@ -44,6 +47,7 @@ export enum ReminderPriority {
   HIGH = 'High',
   URGENT = 'Urgent',
 }
+
 
 /**
  * Subcategory definitions per category
@@ -146,6 +150,7 @@ export const CATEGORY_SUBCATEGORIES: Record<ReminderCategory, string[]> = {
   ],
 };
 
+
 /**
  * Category emoji mapping for visual identification
  */
@@ -164,6 +169,7 @@ export const CATEGORY_EMOJIS: Record<ReminderCategory, string> = {
   [ReminderCategory.EVENTS_OCCASIONS]: '🎉',
 };
 
+
 /**
  * Core Reminder interface
  * Represents a single actionable reminder extracted from an image
@@ -172,52 +178,72 @@ export interface Reminder {
   /** Unique identifier (UUID v4) */
   id: string;
 
+
   /** Category classification */
   category: ReminderCategory;
 
+
   /** Specific subcategory (e.g., "Loan Given", "Meeting") */
   subcategory: string;
+
 
   /** Optional project association */
   projectId?: string;
   projectName?: string;
 
+
   /** Action-oriented title (max 60 chars) */
   title: string;
+
 
   /** Natural language summary (1-2 lines) */
   smartNote: string;
 
+
   /** Reminder date (ISO 8601: YYYY-MM-DD) */
   reminderDate: string;
+
 
   /** Reminder time (HH:MM 24-hour format) */
   reminderTime: string;
 
+
   /** Category-specific emoji */
   emoji: string;
+
 
   /** Current status */
   status: ReminderStatus;
 
+
   /** Priority level (Phase 2) */
   priority?: ReminderPriority;
+
 
   /** Creation timestamp (Unix milliseconds) */
   createdAt: number;
 
+
   /** Last updated timestamp */
   updatedAt: number;
+
 
   /** Optional reference to captured image (Base64 or URI) */
   imageUri?: string;
 
+
+  /** Notification ID from scheduled notification (for cancellation) */
+  notificationId?: string;
+
+
   /** Optional recurring reminder configuration (Phase 2) */
   recurrence?: RecurrenceConfig;
+
 
   /** Flag for notification sent */
   notificationSent?: boolean;
 }
+
 
 /**
  * Recurrence configuration (Phase 2 feature)
@@ -229,6 +255,7 @@ export interface RecurrenceConfig {
   daysOfWeek?: number[]; // For weekly: [0=Sun, 1=Mon, ...]
   dayOfMonth?: number; // For monthly
 }
+
 
 /**
  * AI analysis result from Gemini
@@ -246,6 +273,7 @@ export interface AIReminderAnalysis {
   confidence?: number; // AI confidence score (0-1)
 }
 
+
 /**
  * Reminder filter options
  */
@@ -260,11 +288,13 @@ export interface ReminderFilters {
   searchQuery?: string;
 }
 
+
 /**
  * Reminder sort options
  */
 export type ReminderSortBy = 'date' | 'created' | 'updated' | 'priority' | 'category';
 export type ReminderSortOrder = 'asc' | 'desc';
+
 
 export interface ReminderSortConfig {
   by: ReminderSortBy;

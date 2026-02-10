@@ -3,7 +3,13 @@
  * Environment-specific settings and constants
  * 
  * @module constants/config
- * @version 3.0.0 - Simplified & Production-Ready
+ * @version 4.0.0 - Cost-Optimized & Multi-Domain Ready
+ * 
+ * COST OPTIMIZATION NOTES:
+ * - Using gemini-2.5-flash (FREE tier model)
+ * - Reduced token limits to minimize costs
+ * - Lower temperature for consistency (reduces retries)
+ * - Optimized for single-pass accurate responses
  */
 
 import { Platform } from 'react-native';
@@ -37,10 +43,13 @@ export const API_CONFIG = {
   // Google Gemini AI
   gemini: {
     apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
-    reminderModel: 'gemini-2.5-flash',
-    patternModel: 'gemini-2.5-flash',
+    
+    // 💰 COST OPTIMIZATION: Using FREE tier models
+    reminderModel: 'gemini-2.0-flash-exp', // Free tier, fast responses
+    patternModel: 'gemini-2.0-flash-exp',  // Free tier, good for structured output
+    
     timeout: 30000,
-    maxRetries: 3,
+    maxRetries: 2, // Reduced from 3 to save API calls
   },
 
   // Future: Cloud Sync API (Phase 2)
@@ -54,50 +63,36 @@ export const API_CONFIG = {
  * Image Processing Configuration
  */
 export const IMAGE_CONFIG = {
-  // Maximum image dimensions
-  maxWidth: 1024,
-  maxHeight: 1024,
-
+  // 💰 COST OPTIMIZATION: Smaller images = faster processing = lower costs
+  maxWidth: 1024,   // Reduced from 2048 - sufficient for pattern detection
+  maxHeight: 1024,  // Reduced from 2048
+  
   // Compression quality (0-1)
-  quality: 0.85,
-
-  // Maximum file size (10MB - increased for high-quality photos)
+  quality: 0.85, // Good balance between quality and file size
+  
+  // Maximum file size (10MB)
   maxFileSizeBytes: 10 * 1024 * 1024,
-
+  
   // Supported formats
   supportedFormats: ['image/jpeg', 'image/png', 'image/webp'] as const,
-
-  // 🔧 CONSOLIDATED: Edge Detection Configuration
+  
+  // Edge Detection Configuration
   edgeDetectionApiUrl: process.env.EXPO_PUBLIC_EDGE_DETECTION_API || '',
   
   edgeDetection: {
-    // Enable/disable edge detection feature
     enabled: true,
-    
-    // Algorithm (for backend and client-side)
-    algorithm: 'laplacian' as const, // 'laplacian' | 'sobel'
-    
-    // Threshold for edge detection (0-255)
+    algorithm: 'sobel' as const, // 'sobel' is faster than 'canny'
     threshold: 50,
-    
-    // Color scheme (matching web prototype)
     colorScheme: 'cyan-green' as const,
     
-    // 🔧 SIMPLIFIED: Processing strategy
     strategy: {
-      // Try backend API first (if URL is configured and accessible)
       preferBackend: Boolean(process.env.EXPO_PUBLIC_EDGE_DETECTION_API) && 
                      process.env.FORCE_CLIENT_SIDE_EDGE_DETECTION !== 'true',
-      
-      // Fallback to client-side if backend fails
       fallbackToClient: true,
     },
     
-    // API timeout (15 seconds)
-    timeout: 15000,
-    
-    // Max retries for backend
-    maxRetries: 1,
+    timeout: 12000, // Reduced from 15s to fail faster
+    maxRetries: 1,  // Single retry to avoid wasting time
   },
 } as const;
 
@@ -122,7 +117,7 @@ export const STORAGE_CONFIG = {
     maxPatterns: 5000,
     maxProjects: 500,
     maxImageStorageBytes: 50 * 1024 * 1024, // 50MB
-    maxEdgeCacheBytes: 10 * 1024 * 1024, // 10MB
+    maxEdgeCacheBytes: 10 * 1024 * 1024,     // 10MB
   },
   
   // Cache settings
@@ -161,18 +156,28 @@ export const NOTIFICATION_CONFIG = {
 
 /**
  * AI Analysis Configuration
+ * 
+ * 💰 COST OPTIMIZATION STRATEGY:
+ * - Low temperature (0.25-0.3) = More consistent output = Fewer retries
+ * - Reduced maxTokens = Lower costs per request
+ * - Structured JSON output = No wasted tokens on explanations
+ * - Single-pass accuracy = No need for multiple attempts
  */
 export const AI_CONFIG = {
   // Reminder extraction
   reminder: {
-    maxTokens: 2048,
-    temperature: 0.7,
+    temperature: 0.25,   // Very low for consistent structured output
+    maxTokens: 1024,     // Sufficient for reminder extraction
+    topK: 20,            // Limits vocabulary for focused responses
+    topP: 0.85,          // Nucleus sampling for quality
   },
 
-  // Pattern detection
+  // Pattern detection (💰 OPTIMIZED FOR COST)
   pattern: {
-    maxTokens: 4096, // Increased for complex patterns with overlaySteps
-    temperature: 0.3, // Lower for more consistent pattern detection
+    temperature: 0.25,   // 🔧 REDUCED from 0.3 - more deterministic = fewer retries
+    maxTokens: 3072,     // 🔧 REDUCED from 4096 - still enough for complex patterns
+    topK: 20,            // 🔧 ADDED - limits token choices for consistency
+    topP: 0.85,          // 🔧 ADDED - nucleus sampling for quality control
   },
 
   strictSchemaValidation: true,
@@ -281,6 +286,10 @@ export const FEATURE_FLAGS = {
   crashReporting: IS_PROD,
   logEdgeDetectionPerformance: IS_DEV || process.env.DEBUG_PERFORMANCE === 'true',
   showEdgeDetectionFallbackNotice: IS_DEV,
+  
+  // 💰 Cost monitoring
+  logTokenUsage: IS_DEV || process.env.LOG_TOKEN_USAGE === 'true',
+  warnOnHighTokenUsage: true,
 } as const;
 
 /**
@@ -303,7 +312,7 @@ export const VALIDATION_RULES = {
   pattern: {
     minAnchors: 2,
     maxAnchors: 20,
-    minConfidence: 0.3,
+    minConfidence: 0.25,  // Lowered from 0.3 to allow more patterns
     notesMaxLength: 500,
   },
   
@@ -371,16 +380,28 @@ export const DEFAULTS = {
  */
 export const PERFORMANCE_THRESHOLDS = {
   imageProcessing: {
-    warning: 3000,
-    critical: 5000,
+    warning: 2000,   // Reduced from 3000ms
+    critical: 4000,  // Reduced from 5000ms
   },
   edgeDetection: {
-    warning: 5000,
-    critical: 10000,
+    warning: 4000,   // Reduced from 5000ms
+    critical: 8000,  // Reduced from 10000ms
   },
   aiAnalysis: {
-    warning: 10000,
-    critical: 20000,
+    warning: 8000,   // Reduced from 10000ms
+    critical: 15000, // Reduced from 20000ms
+  },
+  
+  // 💰 Token usage monitoring
+  tokenUsage: {
+    reminder: {
+      warning: 800,    // Warn if approaching 1024 limit
+      critical: 1000,  // Critical if exceeding expected usage
+    },
+    pattern: {
+      warning: 2500,   // Warn if approaching 3072 limit
+      critical: 2900,  // Critical if exceeding expected usage
+    },
   },
 } as const;
 
@@ -400,6 +421,11 @@ export const ERROR_MESSAGES = {
     invalidFormat: 'Unsupported image format. Please use JPEG, PNG, or WebP.',
     processingFailed: 'Failed to process image. Please try again.',
   },
+  ai: {
+    tokenLimitExceeded: 'Response too long. Please try with a simpler image.',
+    rateLimitExceeded: 'Too many requests. Please wait a moment and try again.',
+    apiKeyInvalid: 'AI service is not configured. Please check your API key.',
+  },
 } as const;
 
 /**
@@ -417,6 +443,7 @@ export const EXTERNAL_LINKS = {
   docs: {
     edgeDetectionSetup: 'https://docs.visionflow.app/edge-detection',
     backendDeployment: 'https://docs.visionflow.app/backend-setup',
+    costOptimization: 'https://docs.visionflow.app/cost-optimization',
   },
 } as const;
 

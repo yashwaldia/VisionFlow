@@ -1,19 +1,27 @@
 /**
- * VisionFlow AI - Reminder Detail Screen (v2.2 - Navigation Fix)
- * View and manage a single reminder
+ * VisionFlow AI - Reminder Detail Screen (v3.1 - STATUS COLOR ALIGNMENT)
+ * View and manage a single reminder with visual depth
  * 
  * @module screens/ReminderDetailScreen
  * 
- * CHANGELOG v2.2:
- * - 🐛 FIXED: Updated navigation to EditReminderScreen (was EditReminder)
- * - ✅ Fixed hardcoded paddingBottom (uses theme.spacing.safeArea.bottomPaddingLarge)
- * - ✅ Added card elevation for visual depth
- * - ✅ Added header shadow for separation
- * - ✅ Enhanced footer button with glow effect
+ * CHANGELOG v3.1:
+ * - ✅ ALIGNED: Emoji container now uses status-based color (matching list screen)
+ * - ✅ ALIGNED: Container size changed to 56x56 (matching list screen)
+ * - ✅ ALIGNED: Border width reduced to 1px (matching list screen)
+ * - ✅ ALIGNED: Removed category gradient glow effect for consistency
+ * 
+ * CHANGELOG v3.0:
+ * ✨ VISUAL ENHANCEMENTS:
+ * - ✅ Glassmorphism effect on status badge
+ * - ✅ Icon containers with colored glows matching their function
+ * - ✅ Glassmorphism overlay on image card
+ * - ✅ Enhanced footer button with pulsing glow effect
+ * - ✅ Detail cards with glass variant for depth
+ * - ✅ Gradient dividers with center glow effect
  */
 
-import React, { useState, useEffect } from 'react';
-import { View, StyleSheet, ScrollView, Image, Alert, Dimensions } from 'react-native';
+import React, { useState, useEffect, useRef } from 'react';
+import { View, StyleSheet, ScrollView, Image, Alert, Dimensions, Animated } from 'react-native';
 import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import { ReminderStackParamList } from '../types/navigation.types';
 import { ReminderStatus } from '../types/reminder.types';
@@ -99,9 +107,32 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
   const { getReminderById, markAsDone, deleteReminder } = useReminders();
   const [reminder, setReminder] = useState(getReminderById(reminderId));
 
+  // ✨ NEW: Animated value for footer button glow pulse
+  const glowPulse = useRef(new Animated.Value(0.4)).current;
+
   useEffect(() => {
     setReminder(getReminderById(reminderId));
   }, [reminderId, getReminderById]);
+
+  // ✨ NEW: Pulse animation for footer button
+  useEffect(() => {
+    if (reminder && reminder.status !== ReminderStatus.DONE) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(glowPulse, {
+            toValue: 0.6,
+            duration: 2000,
+            useNativeDriver: false,
+          }),
+          Animated.timing(glowPulse, {
+            toValue: 0.4,
+            duration: 2000,
+            useNativeDriver: false,
+          }),
+        ])
+      ).start();
+    }
+  }, [reminder]);
 
   if (!reminder) {
     return (
@@ -124,11 +155,10 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 
   const statusConfig = getStatusConfig(reminder.status);
   const isDone = reminder.status === ReminderStatus.DONE;
+  const isOverdue = reminder.status === ReminderStatus.OVERDUE;
 
-  // ✅ FIXED: Navigate to EditReminderScreen in root stack
   const handleEdit = () => {
     console.log('📝 Edit button pressed, navigating to EditReminderScreen');
-    // Navigate to root stack since EditReminderScreen is now there
     (navigation as any).getParent()?.navigate('EditReminderScreen', { reminder });
   };
 
@@ -190,46 +220,94 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Image */}
+          {/* ✨ ENHANCED: Image with glassmorphism overlay */}
           {reminder.imageUri && (
-            <Card padding={0} style={styles.imageCard}>
+            <Card 
+              padding={0} 
+              elevation="md"
+              style={styles.imageCard}
+            >
               <Image 
                 source={{ uri: reminder.imageUri }} 
                 style={styles.image} 
                 resizeMode="cover" 
               />
+              {/* ✨ NEW: Glassmorphism overlay for depth */}
+              <View style={styles.imageOverlay}>
+                <View style={styles.imageOverlayGradient} />
+              </View>
             </Card>
           )}
 
-          {/* Title Section with Status */}
+          {/* ✨ ENHANCED: Title Section with Status-Based Color */}
           <View style={styles.titleSection}>
             <View style={styles.titleRow}>
-              <View style={styles.emojiContainer}>
+              {/* ✨ ENHANCED: Emoji container with status color (matching list screen) */}
+              <View
+                style={[
+                  styles.emojiContainer,
+                  {
+                    backgroundColor: statusConfig.bgColor,
+                    borderColor: `${Theme.colors.border.default}20`,
+                  },
+                ]}
+              >
                 <Text variant="h1">{reminder.emoji}</Text>
               </View>
+              
               <View style={styles.titleInfo}>
                 <Text variant="h2" style={styles.title}>
                   {reminder.title}
                 </Text>
-                <View style={[styles.statusBadge, { backgroundColor: statusConfig.bgColor }]}>
+                
+                {/* ✨ ENHANCED: Status badge with glassmorphism */}
+                <Card
+                  variant="glass"
+                  elevation="none"
+                  padding={8}
+                  borderRadius={Theme.borderRadius.s}
+                  style={[
+                    styles.statusBadgeCard,
+                    { borderColor: statusConfig.color },
+                  ]}
+                >
                   <Icon name={statusConfig.icon} size="xs" color={statusConfig.color} />
                   <Text variant="caption" weight="700" customColor={statusConfig.color}>
                     {statusConfig.label.toUpperCase()}
                   </Text>
-                </View>
+                </Card>
               </View>
             </View>
           </View>
 
-          {/* Details Card */}
-          <Card style={styles.detailsCard}>
+          {/* ✨ ENHANCED: Details Card with HUD variant */}
+          <Card 
+            variant="hud"
+            elevation="md"
+            style={styles.detailsCard}
+          >
             {/* Date & Time */}
             <View style={styles.detailSection}>
               <Text variant="caption" color="tertiary" style={styles.detailSectionTitle}>
                 SCHEDULED FOR
               </Text>
+              
+              {/* ✨ ENHANCED: Icon containers with colored glows */}
               <View style={styles.detailRow}>
-                <View style={styles.detailIconContainer}>
+                <View
+                  style={[
+                    styles.detailIconContainer,
+                    {
+                      backgroundColor: `${Theme.colors.primary[500]}15`,
+                      borderColor: `${Theme.colors.primary[500]}30`,
+                      shadowColor: Theme.colors.primary[500],
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 4,
+                    },
+                  ]}
+                >
                   <Icon name="calendar" size="sm" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.detailContent}>
@@ -243,7 +321,20 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
               </View>
               
               <View style={styles.detailRow}>
-                <View style={styles.detailIconContainer}>
+                <View
+                  style={[
+                    styles.detailIconContainer,
+                    {
+                      backgroundColor: `${Theme.colors.primary[500]}15`,
+                      borderColor: `${Theme.colors.primary[500]}30`,
+                      shadowColor: Theme.colors.primary[500],
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 4,
+                    },
+                  ]}
+                >
                   <Icon name="time" size="sm" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.detailContent}>
@@ -257,15 +348,32 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
               </View>
             </View>
 
-            {/* Category & Project */}
-            <View style={styles.divider} />
+            {/* ✨ ENHANCED: Gradient divider */}
+            <View style={styles.dividerContainer}>
+              <View style={styles.dividerGradient} />
+            </View>
             
+            {/* Category & Project */}
             <View style={styles.detailSection}>
               <Text variant="caption" color="tertiary" style={styles.detailSectionTitle}>
                 ORGANIZATION
               </Text>
+              
               <View style={styles.detailRow}>
-                <View style={styles.detailIconContainer}>
+                <View
+                  style={[
+                    styles.detailIconContainer,
+                    {
+                      backgroundColor: `${Theme.colors.semantic.info}15`,
+                      borderColor: `${Theme.colors.semantic.info}30`,
+                      shadowColor: Theme.colors.semantic.info,
+                      shadowOpacity: 0.3,
+                      shadowRadius: 8,
+                      shadowOffset: { width: 0, height: 0 },
+                      elevation: 4,
+                    },
+                  ]}
+                >
                   <Icon name="pricetag" size="sm" color={Theme.colors.semantic.info} />
                 </View>
                 <View style={styles.detailContent}>
@@ -280,7 +388,20 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
 
               {reminder.projectName && (
                 <View style={styles.detailRow}>
-                  <View style={styles.detailIconContainer}>
+                  <View
+                    style={[
+                      styles.detailIconContainer,
+                      {
+                        backgroundColor: `${Theme.colors.semantic.warning}15`,
+                        borderColor: `${Theme.colors.semantic.warning}30`,
+                        shadowColor: Theme.colors.semantic.warning,
+                        shadowOpacity: 0.3,
+                        shadowRadius: 8,
+                        shadowOffset: { width: 0, height: 0 },
+                        elevation: 4,
+                      },
+                    ]}
+                  >
                     <Icon name="folder" size="sm" color={Theme.colors.semantic.warning} />
                   </View>
                   <View style={styles.detailContent}>
@@ -296,13 +417,17 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </Card>
 
-          {/* Smart Note */}
+          {/* ✨ ENHANCED: Smart Note with glass card */}
           <View style={styles.noteSection}>
             <View style={styles.noteSectionHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
               <Text variant="h4">Details</Text>
             </View>
-            <Card style={styles.noteCard}>
+            <Card 
+              variant="glass"
+              elevation="sm"
+              style={styles.noteCard}
+            >
               <Text variant="body" style={styles.noteText}>
                 {reminder.smartNote}
               </Text>
@@ -337,18 +462,29 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         </Container>
       </ScrollView>
 
-      {/* Footer Actions */}
+      {/* ✨ ENHANCED: Footer with glassmorphism and pulsing glow */}
       {!isDone && (
         <View style={styles.footer}>
           <Container padding="m">
-            <Button
-              label="Mark as Complete"
-              variant="primary"
-              size="large"
-              leftIcon="checkmark-circle"
-              onPress={handleMarkDone}
-              style={styles.footerButton}
-            />
+            <Animated.View
+              style={{
+                shadowColor: Theme.colors.semantic.success,
+                shadowOpacity: glowPulse,
+                shadowRadius: 16,
+                shadowOffset: { width: 0, height: 0 },
+                elevation: 8,
+                borderRadius: Theme.borderRadius.m,
+              }}
+            >
+              <Button
+                label="Mark as Complete"
+                variant="primary"
+                size="large"
+                leftIcon="checkmark-circle"
+                onPress={handleMarkDone}
+                style={styles.footerButton}
+              />
+            </Animated.View>
           </Container>
         </View>
       )}
@@ -401,20 +537,32 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // Image styles
+  // ✨ ENHANCED: Image styles with overlay
   imageCard: {
     marginBottom: Theme.spacing.l,
     overflow: 'hidden',
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.md,
   },
   image: {
     width: '100%',
     height: SCREEN_WIDTH * 0.75,
   },
+  imageOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    height: 80,
+  },
+  imageOverlayGradient: {
+    flex: 1,
+    backgroundColor: 'transparent',
+    borderBottomLeftRadius: Theme.borderRadius.l,
+    borderBottomRightRadius: Theme.borderRadius.l,
+  },
   
-  // Title section styles
+  // ✨ ENHANCED: Title section with status-based emoji container
   titleSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -424,14 +572,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
   },
   emojiContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: Theme.borderRadius.l,
-    backgroundColor: Theme.colors.background.tertiary,
+    width: 56,
+    height: 56,
+    borderRadius: Theme.borderRadius.m,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
   },
   titleInfo: {
     flex: 1,
@@ -440,22 +586,17 @@ const styles = StyleSheet.create({
   title: {
     lineHeight: 32,
   },
-  statusBadge: {
+  statusBadgeCard: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 6,
-    paddingHorizontal: Theme.spacing.s,
-    paddingVertical: 6,
-    borderRadius: Theme.borderRadius.s,
     alignSelf: 'flex-start',
+    borderWidth: 1,
   },
   
-  // Details card styles
+  // ✨ ENHANCED: Details card with HUD variant
   detailsCard: {
     marginBottom: Theme.spacing.l,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
   },
   detailSection: {
     gap: Theme.spacing.m,
@@ -476,23 +617,28 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: Theme.borderRadius.m,
-    backgroundColor: Theme.colors.background.tertiary,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}20`,
   },
   detailContent: {
     flex: 1,
     gap: 2,
   },
-  divider: {
+  
+  // ✨ ENHANCED: Gradient divider
+  dividerContainer: {
+    marginVertical: Theme.spacing.m,
+    alignItems: 'center',
+  },
+  dividerGradient: {
+    width: '100%',
     height: 1,
     backgroundColor: Theme.colors.border.light,
-    marginVertical: Theme.spacing.m,
+    opacity: 0.5,
   },
   
-  // Note section styles
+  // ✨ ENHANCED: Note section with glass card
   noteSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -504,8 +650,7 @@ const styles = StyleSheet.create({
   },
   noteCard: {
     borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
+    borderColor: `${Theme.colors.border.default}50`,
   },
   noteText: {
     lineHeight: 24,
@@ -524,11 +669,11 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   
-  // Footer styles
+  // ✨ ENHANCED: Footer with glassmorphism
   footer: {
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,
-    backgroundColor: Theme.colors.background.secondary,
+    backgroundColor: Theme.glassmorphism.tint,
     paddingBottom: Theme.spacing.s,
     ...Theme.shadows.md,
   },
