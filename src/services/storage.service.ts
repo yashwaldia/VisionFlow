@@ -1,8 +1,12 @@
 /**
- * VisionFlow AI - Storage Service
+ * VisionFlow AI - Storage Service (v4.1 - Bulk Reminder Updates)
  * Type-safe AsyncStorage wrapper with error handling and migrations
  * 
  * @module services/storage
+ * 
+ * CHANGELOG v4.1:
+ * - ✅ Added saveReminders() for bulk reminder updates
+ * - ✅ Supports dynamic status recalculation on app load
  */
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
@@ -116,6 +120,26 @@ export async function saveReminder(reminder: Reminder): Promise<Reminder[]> {
   const updated = [reminder, ...reminders];
   await setItem(STORAGE_CONFIG.keys.reminders, updated);
   return updated;
+}
+
+/**
+ * Save entire reminders array (bulk update)
+ * Used for batch status updates (NEW v4.1)
+ * 
+ * @param reminders - Complete array of reminders to save
+ * @returns Saved reminders array
+ */
+export async function saveReminders(reminders: Reminder[]): Promise<Reminder[]> {
+  // Check storage limit
+  if (reminders.length > STORAGE_CONFIG.limits.maxReminders) {
+    throw new StorageError(
+      `Reminder count (${reminders.length}) exceeds maximum limit (${STORAGE_CONFIG.limits.maxReminders})`,
+      'STORAGE_LIMIT_EXCEEDED'
+    );
+  }
+  
+  await setItem(STORAGE_CONFIG.keys.reminders, reminders);
+  return reminders;
 }
 
 /**

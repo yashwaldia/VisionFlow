@@ -1,10 +1,14 @@
 /**
- * VisionFlow AI - Reminders Hook
+ * VisionFlow AI - Reminders Hook (v4.1 - Dynamic Status Calculation)
  * Complete state management for reminders
  * 
  * @module hooks/useReminders
+ * 
+ * CHANGELOG v4.1:
+ * - ✅ Dynamic status calculation based on current date/time
+ * - ✅ Auto-update overdue reminders on load
+ * - ✅ Fixed upcoming/overdue count mismatch
  */
-
 
 import { useState, useEffect, useCallback } from 'react';
 import {
@@ -17,7 +21,7 @@ import {
 } from '../types/reminder.types';
 import * as StorageService from '../services/storage.service';
 import * as NotificationService from '../services/notification.service';
-
+import { combineDateAndTime } from '../utils/dateUtils';
 
 /**
  * Hook return type
@@ -54,7 +58,6 @@ interface UseRemindersResult {
   getReminderById: (id: string) => Reminder | undefined;
 }
 
-
 /**
  * Default filters
  */
@@ -66,6 +69,70 @@ const DEFAULT_FILTERS: ReminderFilters = {
   searchQuery: undefined,
 };
 
+// ============================================
+// DYNAMIC STATUS CALCULATION (NEW v4.1)
+// ============================================
+
+/**
+ * Calculate the actual current status of a reminder
+ * 
+ * @param reminder - Reminder to check
+ * @returns Current status (overdue if past date/time, done if completed, upcoming otherwise)
+ */
+function calculateReminderStatus(reminder: Reminder): ReminderStatus {
+  // If marked as done, always return done
+  if (reminder.status === ReminderStatus.DONE) {
+    return ReminderStatus.DONE;
+  }
+  
+  // If snoozed, keep snoozed (Phase 2 feature)
+  if (reminder.status === ReminderStatus.SNOOZED) {
+    return ReminderStatus.SNOOZED;
+  }
+  
+  // Calculate based on date/time
+  const reminderDateTime = combineDateAndTime(
+    reminder.reminderDate,
+    reminder.reminderTime
+  );
+  
+  if (!reminderDateTime) {
+    console.warn(`[useReminders] Invalid date/time for reminder ${reminder.id}`);
+    return ReminderStatus.UPCOMING; // Fallback
+  }
+  
+  const now = new Date();
+  
+  // If date/time has passed, it's overdue
+  if (reminderDateTime < now) {
+    return ReminderStatus.OVERDUE;
+  }
+  
+  // Otherwise, it's upcoming
+  return ReminderStatus.UPCOMING;
+}
+
+/**
+ * Update all reminders with calculated status
+ * This ensures stored status matches reality
+ */
+function updateRemindersWithCalculatedStatus(reminders: Reminder[]): Reminder[] {
+  return reminders.map(reminder => {
+    const calculatedStatus = calculateReminderStatus(reminder);
+    
+    // If status changed, log it
+    if (reminder.status !== calculatedStatus) {
+      console.log(
+        `[useReminders] Status updated: "${reminder.title}" from ${reminder.status} → ${calculatedStatus}`
+      );
+    }
+    
+    return {
+      ...reminder,
+      status: calculatedStatus,
+    };
+  });
+}
 
 /**
  * useReminders Hook
@@ -82,14 +149,30 @@ export function useReminders(): UseRemindersResult {
   const [sortOrder, setSortOrder] = useState<ReminderSortOrder>('asc');
   
   /**
-   * Load reminders from storage
+   * Load reminders from storage (v4.1 - with status update)
    */
   const loadReminders = useCallback(async () => {
     try {
       setIsLoading(true);
       setError(null);
+      
+      // Load from storage
       const data = await StorageService.getReminders();
-      setReminders(data);
+      
+      // Update statuses based on current date/time
+      const updatedData = updateRemindersWithCalculatedStatus(data);
+      
+      // Save back to storage if any status changed
+      const hasChanges = data.some((original, index) => 
+        original.status !== updatedData[index].status
+      );
+      
+      if (hasChanges) {
+        console.log('[useReminders] Auto-updating overdue reminders in storage...');
+        await StorageService.saveReminders(updatedData);
+      }
+      
+      setReminders(updatedData);
     } catch (err: any) {
       console.error('[useReminders] Load failed:', err);
       setError(err.message || 'Failed to load reminders');
@@ -106,95 +189,89 @@ export function useReminders(): UseRemindersResult {
   }, [loadReminders]);
   
   /**
-   * Apply filters and sorting
+   * Apply filters and sorting (v4.1 - uses calculated status)
    */
-    useEffect(() => {
+  useEffect(() => {
     let result = [...reminders];
     
-    // Filter by status
+    // Filter by status (now uses calculated status)
     if (filters.status !== 'all') {
-        result = result.filter(r => r.status === filters.status);
+      result = result.filter(r => r.status === filters.status);
     }
     
     // Filter by category
     if (filters.category !== 'all') {
-        result = result.filter(r => r.category === filters.category);
+      result = result.filter(r => r.category === filters.category);
     }
     
     // Filter by project
     if (filters.projectId) {
-        result = result.filter(r => r.projectId === filters.projectId);
+      result = result.filter(r => r.projectId === filters.projectId);
     }
     
     // Filter by date range
     if (filters.dateRange) {
-        result = result.filter(r => {
+      result = result.filter(r => {
         const reminderDate = new Date(r.reminderDate);
         const start = new Date(filters.dateRange!.start);
         const end = new Date(filters.dateRange!.end);
         return reminderDate >= start && reminderDate <= end;
-        });
+      });
     }
     
     // Search query
     if (filters.searchQuery) {
-        const query = filters.searchQuery.toLowerCase();
-        result = result.filter(r =>
+      const query = filters.searchQuery.toLowerCase();
+      result = result.filter(r =>
         r.title.toLowerCase().includes(query) ||
         r.smartNote.toLowerCase().includes(query) ||
         r.subcategory.toLowerCase().includes(query) ||
         r.projectName?.toLowerCase().includes(query)
-        );
+      );
     }
     
     // Sort
     result.sort((a, b) => {
-        let comparison = 0;
-        
-        switch (sortBy) {
+      let comparison = 0;
+      
+      switch (sortBy) {
         case 'date':
-            const dateA = new Date(`${a.reminderDate}T${a.reminderTime}`);
-            const dateB = new Date(`${b.reminderDate}T${b.reminderTime}`);
-            comparison = dateA.getTime() - dateB.getTime();
-            break;
+          const dateA = new Date(`${a.reminderDate}T${a.reminderTime}`);
+          const dateB = new Date(`${b.reminderDate}T${b.reminderTime}`);
+          comparison = dateA.getTime() - dateB.getTime();
+          break;
         case 'created':
-            comparison = a.createdAt - b.createdAt;
-            break;
+          comparison = a.createdAt - b.createdAt;
+          break;
         case 'updated':
-            comparison = a.updatedAt - b.updatedAt;
-            break;
+          comparison = a.updatedAt - b.updatedAt;
+          break;
         case 'priority':
-            // Priority sorting (if defined)
-            const priorityOrder = { urgent: 4, high: 3, medium: 2, low: 1 };
-            const prioA = a.priority ? priorityOrder[a.priority] : 0;
-            const prioB = b.priority ? priorityOrder[b.priority] : 0;
-            comparison = prioA - prioB;
-            break;
+          // Priority sorting (if defined)
+          const priorityOrder = { Urgent: 4, High: 3, Medium: 2, Low: 1 };
+          const prioA = a.priority ? priorityOrder[a.priority] : 0;
+          const prioB = b.priority ? priorityOrder[b.priority] : 0;
+          comparison = prioA - prioB;
+          break;
         case 'category':
-            comparison = a.category.localeCompare(b.category);
-            break;
-        }
-        
-        return sortOrder === 'asc' ? comparison : -comparison;
+          comparison = a.category.localeCompare(b.category);
+          break;
+      }
+      
+      return sortOrder === 'asc' ? comparison : -comparison;
     });
     
     setFilteredReminders(result);
-    }, [reminders, filters, sortBy, sortOrder]);
-
-
+  }, [reminders, filters, sortBy, sortOrder]);
   
   /**
-   * Calculate statistics
+   * Calculate statistics (v4.1 - FIXED: uses calculated status)
    */
   const stats = {
     total: reminders.length,
     upcoming: reminders.filter(r => r.status === ReminderStatus.UPCOMING).length,
     done: reminders.filter(r => r.status === ReminderStatus.DONE).length,
-    overdue: reminders.filter(r => {
-      if (r.status !== ReminderStatus.UPCOMING) return false;
-      const reminderDate = new Date(`${r.reminderDate}T${r.reminderTime}`);
-      return reminderDate < new Date();
-    }).length,
+    overdue: reminders.filter(r => r.status === ReminderStatus.OVERDUE).length,
   };
   
   /**
@@ -202,21 +279,27 @@ export function useReminders(): UseRemindersResult {
    */
   const createReminder = useCallback(async (reminder: Reminder) => {
     try {
+      // Calculate initial status
+      const reminderWithStatus = {
+        ...reminder,
+        status: calculateReminderStatus(reminder),
+      };
+      
       // Save reminder first
-      const updated = await StorageService.saveReminder(reminder);
-      setReminders(updated);
+      const updated = await StorageService.saveReminder(reminderWithStatus);
+      setReminders(updateRemindersWithCalculatedStatus(updated));
       
       // Schedule notification only if upcoming and user has enabled alerts
-      if (reminder.status === ReminderStatus.UPCOMING) {
+      if (reminderWithStatus.status === ReminderStatus.UPCOMING) {
         const userPrefs = await StorageService.getUserPreferences();
         
         if (userPrefs.notifications.reminderAlerts) {
           try {
-            const notificationId = await NotificationService.scheduleReminderNotification(reminder);
+            const notificationId = await NotificationService.scheduleReminderNotification(reminderWithStatus);
             
             // Store notification ID with reminder
             const updatedWithNotif = await StorageService.updateReminder(reminder.id, { notificationId });
-            setReminders(updatedWithNotif);
+            setReminders(updateRemindersWithCalculatedStatus(updatedWithNotif));
           } catch (notifErr) {
             console.error('[useReminders] Failed to schedule notification:', notifErr);
             // Don't throw - reminder was saved successfully
@@ -238,7 +321,10 @@ export function useReminders(): UseRemindersResult {
       const currentReminder = reminders.find(r => r.id === id);
       
       // Update reminder in storage
-      const updated = await StorageService.updateReminder(id, updates);
+      let updated = await StorageService.updateReminder(id, updates);
+      
+      // Recalculate status after update
+      updated = updateRemindersWithCalculatedStatus(updated);
       setReminders(updated);
       
       // Handle notification rescheduling
@@ -258,7 +344,7 @@ export function useReminders(): UseRemindersResult {
             
             // Store new notification ID
             const finalUpdated = await StorageService.updateReminder(id, { notificationId: newNotificationId });
-            setReminders(finalUpdated);
+            setReminders(updateRemindersWithCalculatedStatus(finalUpdated));
           } catch (notifErr) {
             console.error('[useReminders] Failed to reschedule notification:', notifErr);
           }
@@ -290,7 +376,7 @@ export function useReminders(): UseRemindersResult {
       
       // Delete from storage
       const updated = await StorageService.deleteReminder(id);
-      setReminders(updated);
+      setReminders(updateRemindersWithCalculatedStatus(updated));
     } catch (err: any) {
       console.error('[useReminders] Delete failed:', err);
       throw err;
@@ -317,7 +403,7 @@ export function useReminders(): UseRemindersResult {
       
       // Update status
       const updated = await StorageService.updateReminderStatus(id, ReminderStatus.DONE);
-      setReminders(updated);
+      setReminders(updateRemindersWithCalculatedStatus(updated));
       await NotificationService.updateBadgeCount();
     } catch (err: any) {
       console.error('[useReminders] Mark as done failed:', err);
@@ -346,7 +432,7 @@ export function useReminders(): UseRemindersResult {
       
       // Delete from storage
       const updated = await StorageService.bulkDeleteReminders(ids);
-      setReminders(updated);
+      setReminders(updateRemindersWithCalculatedStatus(updated));
     } catch (err: any) {
       console.error('[useReminders] Bulk delete failed:', err);
       throw err;

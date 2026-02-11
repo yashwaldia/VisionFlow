@@ -310,13 +310,13 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                   <Text variant="caption" color="tertiary">Patterns</Text>
                 </View>
 
-                <View style={styles.statCard}>
+                {/* <View style={styles.statCard}>
                   <View style={styles.statIconContainer}>
                     <Icon name="folder" size="sm" color={Theme.colors.semantic.warning} />
                   </View>
                   <Text variant="h3" weight="700">{stats.projectsCount}</Text>
                   <Text variant="caption" color="tertiary">Projects</Text>
-                </View>
+                </View> */}
               </View>
             </Card>
           </View>
