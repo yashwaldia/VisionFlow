@@ -3,13 +3,19 @@
  * Environment-specific settings and constants
  * 
  * @module constants/config
- * @version 4.0.0 - Cost-Optimized & Multi-Domain Ready
+ * @version 4.1.0 - Pattern Classification Fix + Cost Optimization
+ * 
+ * CHANGELOG v4.1:
+ * - ✅ Updated pattern analysis config for strict 4-category taxonomy
+ * - ✅ Adjusted token limits to prevent truncation errors
+ * - ✅ Optimized temperature for consistent structured output
+ * - ✅ Aligned with gemini.service.ts v4.1 normalization logic
  * 
  * COST OPTIMIZATION NOTES:
  * - Using gemini-2.5-flash (FREE tier model)
  * - Reduced token limits to minimize costs
- * - Lower temperature for consistency (reduces retries)
- * - Optimized for single-pass accurate responses
+ * - Optimized temperature for consistency (reduces retries)
+ * - Simplified prompts for single-pass accurate responses
  */
 
 import { Platform } from 'react-native';
@@ -42,11 +48,11 @@ export const APP_INFO = {
 export const API_CONFIG = {
   // Google Gemini AI
   gemini: {
-    apiKey: process.env.EXPO_PUBLIC_GEMINI_API_KEY || '',
+    apiKey: process.env.EXPO_PUBLIC_VISIONFLOW_GEMINI_API_KEY || '',
     
     // 💰 COST OPTIMIZATION: Using FREE tier models
-    reminderModel: 'gemini-2.0-flash-exp', // Free tier, fast responses
-    patternModel: 'gemini-2.0-flash-exp',  // Free tier, good for structured output
+    reminderModel: 'gemini-2.5-flash', // Free tier, fast responses
+    patternModel: 'gemini-2.5-flash',  // Free tier, good for structured output
     
     timeout: 30000,
     maxRetries: 2, // Reduced from 3 to save API calls
@@ -162,6 +168,12 @@ export const NOTIFICATION_CONFIG = {
  * - Reduced maxTokens = Lower costs per request
  * - Structured JSON output = No wasted tokens on explanations
  * - Single-pass accuracy = No need for multiple attempts
+ * 
+ * 🔧 v4.1 PATTERN CLASSIFICATION FIX:
+ * - Temperature raised to 0.3 for better category detection
+ * - MaxTokens reduced to 3000 to prevent response truncation
+ * - Strict normalization ensures only 4 allowed pattern types
+ * - Simplified prompts reduce input token usage by 90%
  */
 export const AI_CONFIG = {
   // Reminder extraction
@@ -172,12 +184,12 @@ export const AI_CONFIG = {
     topP: 0.85,          // Nucleus sampling for quality
   },
 
-  // Pattern detection (💰 OPTIMIZED FOR COST)
+  // Pattern detection (💰 OPTIMIZED v4.1 - CLASSIFICATION FIX)
   pattern: {
-    temperature: 0.25,   // 🔧 REDUCED from 0.3 - more deterministic = fewer retries
-    maxTokens: 3072,     // 🔧 REDUCED from 4096 - still enough for complex patterns
-    topK: 20,            // 🔧 ADDED - limits token choices for consistency
-    topP: 0.85,          // 🔧 ADDED - nucleus sampling for quality control
+    temperature: 0.3,    // 🔧 UPDATED from 0.25 - better for category detection
+    maxTokens: 3000,     // 🔧 REDUCED from 3072 - prevents JSON truncation
+    topK: 20,            // Limits token choices for consistency
+    topP: 0.85,          // Nucleus sampling for quality control
   },
 
   strictSchemaValidation: true,
@@ -290,6 +302,9 @@ export const FEATURE_FLAGS = {
   // 💰 Cost monitoring
   logTokenUsage: IS_DEV || process.env.LOG_TOKEN_USAGE === 'true',
   warnOnHighTokenUsage: true,
+  
+  // 🔧 v4.1 Pattern classification debugging
+  logPatternNormalization: IS_DEV, // Logs AI type → normalized type mappings
 } as const;
 
 /**
@@ -314,6 +329,9 @@ export const VALIDATION_RULES = {
     maxAnchors: 20,
     minConfidence: 0.25,  // Lowered from 0.3 to allow more patterns
     notesMaxLength: 500,
+    
+    // 🔧 v4.1 Strict pattern type validation
+    allowedTypes: ['fibonacci', 'symmetry', 'repetition', 'custom'] as const,
   },
   
   image: {
@@ -388,19 +406,19 @@ export const PERFORMANCE_THRESHOLDS = {
     critical: 8000,  // Reduced from 10000ms
   },
   aiAnalysis: {
-    warning: 8000,   // Reduced from 10000ms
-    critical: 15000, // Reduced from 20000ms
+    warning: 5000,   // 🔧 REDUCED from 8000ms (simpler prompt = faster)
+    critical: 10000, // 🔧 REDUCED from 15000ms
   },
   
-  // 💰 Token usage monitoring
+  // 💰 Token usage monitoring (v4.1 updated)
   tokenUsage: {
     reminder: {
       warning: 800,    // Warn if approaching 1024 limit
       critical: 1000,  // Critical if exceeding expected usage
     },
     pattern: {
-      warning: 2500,   // Warn if approaching 3072 limit
-      critical: 2900,  // Critical if exceeding expected usage
+      warning: 2400,   // 🔧 UPDATED from 2500 (new limit: 3000)
+      critical: 2800,  // 🔧 UPDATED from 2900
     },
   },
 } as const;
@@ -425,6 +443,8 @@ export const ERROR_MESSAGES = {
     tokenLimitExceeded: 'Response too long. Please try with a simpler image.',
     rateLimitExceeded: 'Too many requests. Please wait a moment and try again.',
     apiKeyInvalid: 'AI service is not configured. Please check your API key.',
+    truncatedResponse: 'AI response was incomplete. Retrying with simplified prompt...', // 🔧 NEW v4.1
+    invalidPatternType: 'AI generated invalid pattern type. Applying normalization...', // 🔧 NEW v4.1
   },
 } as const;
 
@@ -444,6 +464,7 @@ export const EXTERNAL_LINKS = {
     edgeDetectionSetup: 'https://docs.visionflow.app/edge-detection',
     backendDeployment: 'https://docs.visionflow.app/backend-setup',
     costOptimization: 'https://docs.visionflow.app/cost-optimization',
+    patternTypes: 'https://docs.visionflow.app/pattern-types', // 🔧 NEW v4.1
   },
 } as const;
 

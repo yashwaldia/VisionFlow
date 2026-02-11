@@ -1,9 +1,14 @@
 /**
- * VisionFlow AI - Pattern Results Screen (v4.0 - Consistent UI)
+ * VisionFlow AI - Pattern Results Screen (v4.1 - Safe Area Fixed)
  * Matches EditReminder/EditProject layout consistency
  * 
  * @module screens/PatternResultsScreen
- * @version 4.0.0
+ * @version 4.1.0
+ * 
+ * CHANGELOG v4.1:
+ * - ✅ FIXED: Added top safe area inset to header (universal solution)
+ * - ✅ Header no longer goes behind status bar/notch
+ * - ✅ Consistent with other detail screens
  * 
  * CHANGELOG v4.0:
  * - ✅ Consistent header layout (close button + title + subtitle)
@@ -157,8 +162,8 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
 
   return (
     <View style={styles.container}>
-      {/* ✅ CONSISTENT: Header with close + title + subtitle */}
-      <View style={styles.header}>
+      {/* ✅ FIXED: Header with safe area top inset */}
+      <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleDiscard} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
@@ -291,7 +296,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // ✅ CONSISTENT: Header styles matching EditReminder/EditProject
+  // ✅ FIXED: Header now receives dynamic top padding via inline style
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -302,6 +307,7 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     ...Theme.shadows.sm,
+    // Note: paddingTop is applied inline as { paddingTop: insets.top + Theme.spacing.m }
   },
   headerButton: {
     width: 40,

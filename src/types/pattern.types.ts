@@ -1,122 +1,79 @@
 /**
- * VisionFlow AI - Pattern Detection Type Definitions (v4.0 - Advanced Multi-Domain)
- * Core types for AI-powered geometric pattern discovery across all domains
+ * VisionFlow AI - Pattern Detection Type Definitions (v4.1 - Strict Classification)
+ * Core types for AI-powered geometric pattern discovery
  * 
  * @module types/pattern
- * @version 4.0.0
+ * @version 4.1.0
  * 
- * CHANGELOG v4.0:
- * - ✅ Extended pattern types: Stock market, natural, artistic patterns (15+ new types)
- * - ✅ Added ContentArea interface for ROI (Region of Interest) detection
- * - ✅ Enhanced patterns with domain, scale, orientation metadata
- * - ✅ New measurement fields: waveCount, retracement, volume, harmonicRatio
- * - ✅ Enhanced insights: primaryDomain, patternComplexity, suggestedActions
- * - ✅ Added analysisQuality to metadata for quality assessment
- * - ✅ Support for Google Images screenshot detection and artifact filtering
+ * CHANGELOG v4.1:
+ * - 🔧 CRITICAL: Reduced to 4 strict pattern types (fibonacci, geometric, symmetry, custom)
+ * - 🔧 Removed extended types to prevent UI classification errors
+ * - 🔧 AI normalization maps all detections to these 4 categories
+ * - ✅ Aligned with gemini.service.ts v4.1 normalization logic
+ * - ✅ Maintains ContentArea (ROI), measurements, and multi-domain metadata
+ * - ✅ "Geometric Repetition" now correctly maps to GEOMETRIC
  * 
  * @see Product Requirements: Section 3.1.1 - Hidden Insight Integration
  */
 
-
-
 // ============================================
-// PATTERN TYPE ENUMS
+// PATTERN TYPE ENUMS (v4.1 - STRICT 4 CATEGORIES)
 // ============================================
 
 /**
- * Comprehensive pattern types detected by AI
- * Now supports multi-domain analysis: finance, nature, art, geometry
+ * STRICT 4-Category Pattern Classification
+ * 
+ * ⚠️ CRITICAL: These are the ONLY allowed pattern types in the system.
+ * Matches the UI categories shown in Pattern Library screen.
  */
 export enum PatternType {
-  // ─── MATHEMATICAL & GEOMETRIC PATTERNS ───
+  /**
+   * FIBONACCI: Golden ratio, spirals, sequences
+   * 
+   * Maps from AI detections:
+   * - fibonacci, golden_ratio, spiral, elliott_wave
+   * - logarithmic_spiral, golden_angle, phyllotaxis
+   * - Any pattern with φ (phi) or 1.618 relationships
+   */
   FIBONACCI = 'fibonacci',
-  SACRED_GEOMETRY = 'sacred_geometry',
-  CHANNEL = 'channel',
-  PITCHFORK = 'pitchfork',
-  WAVE = 'wave',
+  
+  /**
+   * GEOMETRIC: All geometric patterns including repetition, grids, shapes
+   * 
+   * Maps from AI detections:
+   * - geometric, geometric_repetition, repetition, grid, tile
+   * - tessellation, pattern, fractal, shape, polygon
+   * - triangles, squares, circles, structured layouts
+   * - sacred_geometry, channel, pitchfork, wave
+   * - head_shoulders, triangle, wedge, flag_pennant
+   * - double_top_bottom, cup_handle, voronoi
+   */
   GEOMETRIC = 'geometric',
+  
+  /**
+   * SYMMETRY: Bilateral, radial, mirror, rotational
+   * 
+   * Maps from AI detections:
+   * - symmetry, bilateral, radial, mirror, reflection
+   * - rotational, symmetric, axis, balanced
+   * - Any pattern with symmetry axes or mirror properties
+   */
   SYMMETRY = 'symmetry',
   
-  // ─── STOCK MARKET / FINANCIAL PATTERNS ───
-  ELLIOTT_WAVE = 'elliott_wave',
-  HEAD_SHOULDERS = 'head_shoulders',
-  TRIANGLE = 'triangle',
-  WEDGE = 'wedge',
-  FLAG_PENNANT = 'flag_pennant',
-  DOUBLE_TOP_BOTTOM = 'double_top_bottom',
-  CUP_HANDLE = 'cup_handle',
-  
-  // ─── NATURAL PATTERNS ───
-  FRACTAL = 'fractal',
-  SPIRAL = 'spiral',
-  TESSELLATION = 'tessellation',
-  BRANCHING = 'branching',
-  VORONOI = 'voronoi',
-  
-  // ─── ARTISTIC & COMPOSITION PATTERNS ───
-  PERSPECTIVE = 'perspective',
-  COMPOSITION = 'composition',
-  COLOR_HARMONY = 'color_harmony',
-  TEXTURE = 'texture',
-  
-  // ─── ABSTRACT / OTHER ───
-  REPETITION = 'repetition',
-  GRADIENT = 'gradient',
-  RADIAL = 'radial',
-  UNKNOWN = 'unknown',
-  CUSTOM = 'custom', // User-created patterns
-}
-
-/**
- * Fibonacci pattern subtypes
- */
-export enum FibonacciSubtype {
-  SPIRAL = 'spiral',
-  RETRACEMENT = 'retracement',
-  EXTENSION = 'extension',
-  SEQUENCE = 'sequence',
-  GOLDEN_ANGLE = 'golden_angle',
-  PHYLLOTAXIS = 'phyllotaxis', // Natural leaf/petal arrangement
-}
-
-/**
- * Sacred geometry subtypes
- */
-export enum SacredGeometrySubtype {
-  FLOWER_OF_LIFE = 'flower_of_life',
-  METATRONS_CUBE = 'metatrons_cube',
-  VESICA_PISCIS = 'vesica_piscis',
-  SEED_OF_LIFE = 'seed_of_life',
-  PLATONIC_SOLID = 'platonic_solid',
-  GOLDEN_RATIO = 'golden_ratio',
-  SRI_YANTRA = 'sri_yantra',
-}
-
-/**
- * Symmetry types
- */
-export enum SymmetryType {
-  RADIAL = 'radial',
-  BILATERAL = 'bilateral',
-  ROTATIONAL = 'rotational',
-  TRANSLATIONAL = 'translational',
-  GLIDE_REFLECTION = 'glide_reflection',
-}
-
-/**
- * Elliott Wave subtypes (for financial analysis)
- */
-export enum ElliottWaveSubtype {
-  IMPULSE = 'impulse',           // 5-wave uptrend
-  CORRECTIVE = 'corrective',     // 3-wave pullback
-  DIAGONAL = 'diagonal',         // Leading/ending diagonal
-  ZIGZAG = 'zigzag',
-  FLAT = 'flat',
-  TRIANGLE = 'triangle',
+  /**
+   * CUSTOM: User-created, unknown, or ambiguous patterns
+   * 
+   * Maps from AI detections:
+   * - unknown, unidentified, ambiguous, unclear
+   * - custom (user-manually-created patterns)
+   * - Fallback for anything that doesn't fit above 3 categories
+   */
+  CUSTOM = 'custom',
 }
 
 /**
  * Domain classification for patterns
+ * (Used for insights and context, not primary classification)
  */
 export enum PatternDomain {
   FINANCE = 'finance',
@@ -155,8 +112,6 @@ export enum PatternComplexity {
   COMPLEX = 'complex',
   HIGHLY_COMPLEX = 'highly_complex',
 }
-
-
 
 // ============================================
 // COORDINATE & GEOMETRY TYPES
@@ -204,8 +159,6 @@ export interface ContentArea {
   detectedArtifacts: string[]; // e.g., ['google_border', 'watermark', 'toolbar']
 }
 
-
-
 // ============================================
 // MEASUREMENT TYPES
 // ============================================
@@ -237,7 +190,7 @@ export interface PatternMeasurements {
   /** Distance measurements (relative to image size) */
   distances?: number[];
   
-  // ─── FINANCIAL PATTERN MEASUREMENTS (NEW) ───
+  // ─── FINANCIAL PATTERN MEASUREMENTS ───
   /** Elliott Wave count (1-5 for impulse, 1-3 for corrective) */
   waveCount?: number;
   
@@ -253,7 +206,7 @@ export interface PatternMeasurements {
   /** Price range or amplitude */
   priceRange?: number;
   
-  // ─── NATURAL PATTERN MEASUREMENTS (NEW) ───
+  // ─── NATURAL PATTERN MEASUREMENTS ───
   /** Fractal dimension (for self-similarity) */
   fractalDimension?: number;
   
@@ -263,7 +216,7 @@ export interface PatternMeasurements {
   /** Petal/leaf count (for phyllotaxis) */
   petalCount?: number;
   
-  // ─── ARTISTIC PATTERN MEASUREMENTS (NEW) ───
+  // ─── ARTISTIC PATTERN MEASUREMENTS ───
   /** Harmonic ratio for color relationships */
   harmonicRatio?: number;
   
@@ -277,8 +230,6 @@ export interface PatternMeasurements {
   [key: string]: number | number[] | undefined;
 }
 
-
-
 // ============================================
 // PATTERN INTERFACES
 // ============================================
@@ -291,11 +242,22 @@ export interface Pattern {
   /** Unique identifier (UUID v4) */
   id: string;
 
-  /** Pattern type classification */
+  /** Pattern type classification (STRICT: only 4 allowed types) */
   type: PatternType;
 
-  /** Subtype for specific pattern categories */
-  subtype?: FibonacciSubtype | SacredGeometrySubtype | SymmetryType | ElliottWaveSubtype | string;
+  /** 
+   * Subtype for additional context (freeform string)
+   * 
+   * Stores the original AI detection for reference/insights.
+   * NOT used for primary classification.
+   * 
+   * Examples:
+   * - type: FIBONACCI, subtype: "logarithmic_spiral"
+   * - type: GEOMETRIC, subtype: "geometric_repetition"
+   * - type: SYMMETRY, subtype: "bilateral"
+   * - type: CUSTOM, subtype: "unknown"
+   */
+  subtype?: string;
 
   /** Human-readable pattern name */
   name: string;
@@ -338,7 +300,7 @@ export interface Pattern {
   /** Optional processed edge-detected image URI */
   edgeImageUri?: string;
   
-  // ─── ENHANCED METADATA (NEW) ───
+  // ─── ENHANCED METADATA ───
   /** Pattern domain classification */
   domain?: PatternDomain;
   
@@ -383,7 +345,7 @@ export interface PatternInsights {
   /** Cultural or historical context */
   culturalContext?: string;
   
-  // ─── ENHANCED INSIGHTS (NEW) ───
+  // ─── ENHANCED INSIGHTS ───
   /** Primary domain of detected patterns */
   primaryDomain: PatternDomain;
   
@@ -394,8 +356,6 @@ export interface PatternInsights {
   suggestedActions?: string[]; // e.g., ["Buy signal detected", "Wait for confirmation"]
 }
 
-
-
 // ============================================
 // AI ANALYSIS TYPES
 // ============================================
@@ -404,11 +364,11 @@ export interface PatternInsights {
  * Enhanced AI analysis result from Gemini
  * Returned by geminiService.analyzePatternImage()
  * 
- * Version 4.0 adds ROI detection and multi-domain support
+ * Version 4.1 - All pattern types pre-normalized to 4 allowed categories
  */
 export interface AIPatternAnalysis {
   /** 
-   * Content area detection (NEW in v4.0)
+   * Content area detection
    * 
    * Identifies actual image content, excluding:
    * - Google Images borders/UI
@@ -430,7 +390,7 @@ export interface AIPatternAnalysis {
     measurements: PatternMeasurements;
     overlaySteps: string[]; // Now required (fallback added if missing)
     
-    // ─── NEW FIELDS (v4.0) ───
+    // ─── METADATA ───
     /** Domain classification */
     domain: PatternDomain;
     
@@ -450,12 +410,10 @@ export interface AIPatternAnalysis {
     modelVersion: string;
     edgeDetectionApplied: boolean;
     
-    /** Analysis quality assessment (NEW in v4.0) */
+    /** Analysis quality assessment */
     analysisQuality: AnalysisQuality;
   };
 }
-
-
 
 // ============================================
 // RENDERING CONFIGURATION
@@ -506,54 +464,30 @@ export interface PatternRenderConfig {
   stepTransitionDuration?: number;
 }
 
-
-
 // ============================================
-// COLOR MAPPINGS
+// COLOR MAPPINGS (v4.1 - CORRECTED TO 4 TYPES)
 // ============================================
 
 /**
- * Enhanced pattern type color mapping for visual distinction
- * Now includes all new pattern types
+ * Pattern type color mapping
+ * 
+ * ⚠️ CRITICAL: Only 4 entries, matching PatternType enum
  */
 export const PATTERN_COLORS: Record<PatternType, string> = {
-  // Mathematical & Geometric
-  [PatternType.FIBONACCI]: '#FACC15',        // Yellow
-  [PatternType.SACRED_GEOMETRY]: '#F472B6',  // Pink
-  [PatternType.CHANNEL]: '#3B82F6',          // Blue
-  [PatternType.PITCHFORK]: '#10B981',        // Green
-  [PatternType.WAVE]: '#06B6D4',             // Cyan
-  [PatternType.GEOMETRIC]: '#A855F7',        // Purple
-  [PatternType.SYMMETRY]: '#6366F1',         // Indigo
-  
-  // Stock Market / Financial
-  [PatternType.ELLIOTT_WAVE]: '#14B8A6',     // Teal
-  [PatternType.HEAD_SHOULDERS]: '#F59E0B',   // Amber
-  [PatternType.TRIANGLE]: '#8B5CF6',         // Violet
-  [PatternType.WEDGE]: '#EC4899',            // Pink
-  [PatternType.FLAG_PENNANT]: '#10B981',     // Emerald
-  [PatternType.DOUBLE_TOP_BOTTOM]: '#F97316', // Orange
-  [PatternType.CUP_HANDLE]: '#06B6D4',       // Cyan
-  
-  // Natural Patterns
-  [PatternType.FRACTAL]: '#84CC16',          // Lime
-  [PatternType.SPIRAL]: '#FBBF24',           // Yellow
-  [PatternType.TESSELLATION]: '#A78BFA',     // Purple
-  [PatternType.BRANCHING]: '#34D399',        // Green
-  [PatternType.VORONOI]: '#60A5FA',          // Blue
-  
-  // Artistic & Composition
-  [PatternType.PERSPECTIVE]: '#818CF8',      // Indigo
-  [PatternType.COMPOSITION]: '#F472B6',      // Pink
-  [PatternType.COLOR_HARMONY]: '#FB923C',    // Orange
-  [PatternType.TEXTURE]: '#A3E635',          // Lime
-  
-  // Abstract / Other
-  [PatternType.REPETITION]: '#C084FC',       // Purple
-  [PatternType.GRADIENT]: '#22D3EE',         // Cyan
-  [PatternType.RADIAL]: '#FB7185',           // Rose
-  [PatternType.UNKNOWN]: '#9CA3AF',          // Gray
-  [PatternType.CUSTOM]: '#EF4444',           // Red
+  [PatternType.FIBONACCI]: '#FACC15',    // Yellow
+  [PatternType.GEOMETRIC]: '#A855F7',    // Purple
+  [PatternType.SYMMETRY]: '#6366F1',     // Indigo
+  [PatternType.CUSTOM]: '#EF4444',       // Red
+};
+
+/**
+ * Pattern type icon mapping
+ */
+export const PATTERN_ICONS: Record<PatternType, string> = {
+  [PatternType.FIBONACCI]: '🌀',      // Spiral
+  [PatternType.GEOMETRIC]: '🔷',      // Diamond/geometric shape
+  [PatternType.SYMMETRY]: '🦋',       // Butterfly
+  [PatternType.CUSTOM]: '✨',         // Custom
 };
 
 /**
@@ -567,8 +501,6 @@ export const DOMAIN_COLORS: Record<PatternDomain, string> = {
   [PatternDomain.ARCHITECTURE]: '#6366F1',  // Indigo (structural)
   [PatternDomain.OTHER]: '#9CA3AF',         // Gray (neutral)
 };
-
-
 
 // ============================================
 // FILTER & SORT TYPES
@@ -611,8 +543,6 @@ export interface PatternSortConfig {
   order: PatternSortOrder;
 }
 
-
-
 // ============================================
 // EDITOR STATE
 // ============================================
@@ -628,11 +558,9 @@ export interface PatternEditorState {
   previewAnchors: AnchorPoint[];
   renderConfig: PatternRenderConfig;
   
-  /** Content area for coordinate transformation (NEW) */
+  /** Content area for coordinate transformation */
   contentArea?: ContentArea;
 }
-
-
 
 // ============================================
 // UTILITY TYPES
@@ -665,4 +593,53 @@ export interface PatternShareConfig {
   includeMeasurements: boolean;
   watermark?: string;
   format: PatternExportFormat;
+}
+
+// ============================================
+// TYPE GUARDS & VALIDATORS (NEW v4.1)
+// ============================================
+
+/**
+ * Type guard: Check if value is valid PatternType
+ */
+export function isValidPatternType(value: string): value is PatternType {
+  return Object.values(PatternType).includes(value as PatternType);
+}
+
+/**
+ * Validate pattern type at runtime
+ * Throws error if invalid (should never happen with v4.1 normalization)
+ */
+export function validatePatternType(type: string): PatternType {
+  if (!isValidPatternType(type)) {
+    console.error(`[Pattern] ❌ Invalid pattern type: "${type}". Falling back to CUSTOM.`);
+    return PatternType.CUSTOM;
+  }
+  return type as PatternType;
+}
+
+/**
+ * Get user-friendly pattern type label
+ */
+export function getPatternTypeLabel(type: PatternType): string {
+  const labels: Record<PatternType, string> = {
+    [PatternType.FIBONACCI]: 'Fibonacci',
+    [PatternType.GEOMETRIC]: 'Geometric',
+    [PatternType.SYMMETRY]: 'Symmetry',
+    [PatternType.CUSTOM]: 'Custom',
+  };
+  return labels[type] || 'Unknown';
+}
+
+/**
+ * Get pattern type description
+ */
+export function getPatternTypeDescription(type: PatternType): string {
+  const descriptions: Record<PatternType, string> = {
+    [PatternType.FIBONACCI]: 'Golden ratio, spirals, and Fibonacci sequences found in nature and mathematics',
+    [PatternType.GEOMETRIC]: 'Geometric shapes, grids, repetition, and structured patterns',
+    [PatternType.SYMMETRY]: 'Bilateral, radial, or mirror symmetry creating balance and harmony',
+    [PatternType.CUSTOM]: 'User-defined or unclassified patterns',
+  };
+  return descriptions[type] || 'Unknown pattern type';
 }
