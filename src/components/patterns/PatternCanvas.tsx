@@ -1,6 +1,10 @@
 /**
- * VisionFlow AI - Pattern Canvas Component (v1.1 - Blend Mode Fix)
- * SVG rendering with blend mode support via wrapper View
+ * VisionFlow AI - Pattern Canvas Component (v2.0 - Hidden Inside UI Edition)
+ * Enhanced SVG rendering with monospace labels
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ UI ENHANCEMENT: Monospace pattern labels (P1, P2, etc.)
+ * - ✅ All v1.1 blend mode support preserved
  */
 
 import React, { useEffect } from 'react';
@@ -37,7 +41,7 @@ interface PatternCanvasProps {
   selectedPatternId: string | null;
   opacity: number;
   showLabels: boolean;
-  blendMode?: string; // 🔧 NEW: Accept blend mode prop
+  blendMode?: string;
   onPatternTap?: (patternId: string) => void;
 }
 
@@ -46,7 +50,7 @@ export function PatternCanvas({
   selectedPatternId,
   opacity,
   showLabels,
-  blendMode = 'screen', // 🔧 NEW: Default blend mode
+  blendMode = 'screen',
   onPatternTap,
 }: PatternCanvasProps) {
   const sonarProgress = useSharedValue(0);
@@ -59,12 +63,12 @@ export function PatternCanvas({
     );
   }, []);
 
-  // 🔧 FIXED: Apply both opacity AND blend mode to wrapper
+  // Apply both opacity AND blend mode to wrapper
   const overlayAnimatedStyle = useAnimatedStyle(() => ({
     opacity: opacity,
   }));
 
-  // 🔧 NEW: Map blend mode names to React Native values
+  // Map blend mode names to React Native values
   const getBlendModeStyle = () => {
     const blendModeMap: Record<string, any> = {
       normal: 'normal',
@@ -73,7 +77,6 @@ export function PatternCanvas({
       overlay: 'overlay',
       lighten: 'lighten',
       darken: 'darken',
-      // Add more if needed
     };
 
     return {
@@ -87,7 +90,7 @@ export function PatternCanvas({
       style={[
         styles.container, 
         overlayAnimatedStyle,
-        getBlendModeStyle(), // 🔧 NEW: Apply blend mode here
+        getBlendModeStyle(),
       ]} 
       pointerEvents="box-none"
     >
@@ -258,6 +261,7 @@ function AnchorPoint({
         strokeWidth={2}
       />
 
+      {/* ✅ ENHANCED: Monospace pattern label */}
       {showLabel && (
         <SvgText
           x={pos.x}
@@ -265,7 +269,9 @@ function AnchorPoint({
           fill={color}
           fontSize="12"
           fontWeight="700"
+          fontFamily={Theme.typography.fontFamily.mono} // ✅ NEW: Monospace font
           textAnchor="middle"
+          letterSpacing="1" // ✅ NEW: Enhanced letter-spacing
         >
           {label}
         </SvgText>

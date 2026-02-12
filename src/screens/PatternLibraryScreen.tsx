@@ -1,16 +1,16 @@
 /**
- * VisionFlow AI - Pattern Library Screen (v4.1 - Compact Card Layout)
- * Browse and manage all discovered patterns
+ * VisionFlow AI - Pattern Library Screen (v6.0 - Consistent Layout Edition)
+ * Matches ReminderListScreen layout with uniform card heights
  * 
  * @module screens/PatternLibraryScreen
- * @version 4.1.0
+ * @version 6.0.0
  * 
- * CHANGELOG v4.1:
- * - ✅ Compact card layout matching Reminder height
- * - ✅ Removed "Favorite" text badge (icon only)
- * - ✅ AI/Manual badge inline with pattern type
- * - ✅ Days ago and confidence % in same meta row
- * - ✅ Optimized vertical spacing
+ * CHANGELOG v6.0:
+ * - 🔧 CRITICAL FIX: Restructured card layout to match reminder screen
+ * - 🔧 FIXED: All cards now have uniform height (minHeight: 120)
+ * - 🔧 FIXED: 3-line structure (Type+Source → Date+Confidence → Title)
+ * - 🔧 ADDED: Section labels matching reminder screen style
+ * - ✅ All v5.0 Hidden Inside UI features preserved
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -53,69 +53,33 @@ const formatRelativeDate = (timestamp: number): string => {
 };
 
 /**
- * Get pattern type configuration (emoji, color, icon)
+ * Get pattern type configuration (4 types only)
  */
 const getPatternTypeConfig = (type: PatternType) => {
   const configs: Record<string, { icon: string; color: string; bgColor: string; emoji: string }> = {
     [PatternType.FIBONACCI]: {
       icon: 'git-branch-outline',
-      color: '#FFD700',
-      bgColor: '#FFD70020',
+      color: '#FACC15',
+      bgColor: '#FACC1520',
       emoji: '🌀',
-    },
-    [PatternType.ELLIOTT_WAVE]: {
-      icon: 'trending-up-outline',
-      color: '#00BCD4',
-      bgColor: '#00BCD420',
-      emoji: '📈',
-    },
-    [PatternType.SACRED_GEOMETRY]: {
-      icon: 'diamond-outline',
-      color: '#9C27B0',
-      bgColor: '#9C27B020',
-      emoji: '💎',
-    },
-    [PatternType.FRACTAL]: {
-      icon: 'infinite-outline',
-      color: '#FF6B35',
-      bgColor: '#FF6B3520',
-      emoji: '🌿',
-    },
-    [PatternType.SPIRAL]: {
-      icon: 'reload-circle-outline',
-      color: '#FFD700',
-      bgColor: '#FFD70020',
-      emoji: '🌀',
-    },
-    [PatternType.SYMMETRY]: {
-      icon: 'copy-outline',
-      color: '#4CAF50',
-      bgColor: '#4CAF5020',
-      emoji: '🦋',
-    },
-    [PatternType.CHANNEL]: {
-      icon: 'swap-horizontal-outline',
-      color: '#2196F3',
-      bgColor: '#2196F320',
-      emoji: '📊',
-    },
-    [PatternType.WAVE]: {
-      icon: 'water-outline',
-      color: '#00BCD4',
-      bgColor: '#00BCD420',
-      emoji: '🌊',
     },
     [PatternType.GEOMETRIC]: {
       icon: 'shapes-outline',
-      color: '#9C27B0',
-      bgColor: '#9C27B020',
+      color: '#A855F7',
+      bgColor: '#A855F720',
       emoji: '🔷',
+    },
+    [PatternType.SYMMETRY]: {
+      icon: 'copy-outline',
+      color: '#6366F1',
+      bgColor: '#6366F120',
+      emoji: '🦋',
     },
     [PatternType.CUSTOM]: {
       icon: 'create-outline',
-      color: Theme.colors.primary[500],
-      bgColor: `${Theme.colors.primary[500]}20`,
-      emoji: '✏️',
+      color: '#EF4444',
+      bgColor: '#EF444420',
+      emoji: '✨',
     },
   };
   return configs[type] || {
@@ -210,39 +174,42 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
     return (
       <Card
         key={item.id}
+        variant="glowBorder"
         pressable
         onPress={() => handlePatternTap(item.id)}
         elevation="sm"
         style={styles.patternCard}
       >
+        {/* 🔧 FIXED: New fixed-height layout structure (matches reminder) */}
         <View style={styles.patternContent}>
-          {/* Icon Wrapper with Status Indicator (SAME AS REMINDER) */}
+          {/* Left: Icon with Status Indicator */}
           <View style={styles.iconWrapper}>
             <View style={[styles.patternIcon, { backgroundColor: typeConfig.bgColor }]}>
               <Text variant="h3">{typeConfig.emoji}</Text>
             </View>
-            {/* Confidence dot (SAME AS REMINDER STATUS DOT) */}
+            {/* Confidence dot */}
             {item.confidence !== undefined && (
               <View style={[styles.statusDot, { backgroundColor: confidenceBadge.color }]} />
             )}
           </View>
 
-          {/* Content - COMPACT LAYOUT */}
+          {/* Center: Content (Fixed 3-line structure) */}
           <View style={styles.patternInfo}>
-            {/* Title */}
+                        {/* Line 3: Pattern Name (Title/Heading) - Always 1 line */}
             <Text
               variant="bodyLarge"
               weight="600"
+              style={styles.title}
               numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {item.name}
             </Text>
-            
-            {/* Pattern Type + AI/Manual Badge (INLINE) */}
-            <View style={styles.typeRow}>
+            {/* Line 1: Type + Source badges (Metadata) - Always on same line */}
+            <View style={styles.metaRow}>
               <View style={[styles.typeBadge, { backgroundColor: typeConfig.bgColor }]}>
                 <Icon name={typeConfig.icon as any} size="xs" color={typeConfig.color} />
-                <Text variant="caption" customColor={typeConfig.color} weight="600">
+                <Text variant="caption" mono customColor={typeConfig.color} weight="600" numberOfLines={1}>
                   {item.type.replace(/_/g, ' ')}
                 </Text>
               </View>
@@ -259,20 +226,22 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
                   color={isAIGenerated ? Theme.colors.semantic.info : Theme.colors.text.secondary} 
                 />
                 <Text 
-                  variant="caption" 
+                  variant="caption"
+                  mono
                   customColor={isAIGenerated ? Theme.colors.semantic.info : Theme.colors.text.secondary}
                   weight="600"
+                  numberOfLines={1}
                 >
-                  {isAIGenerated ? 'AI' : 'Manual'}
+                  {isAIGenerated ? 'AI' : 'MANUAL'}
                 </Text>
               </View>
             </View>
-            
-            {/* Meta Row: Days + Confidence % */}
-            <View style={styles.metaRow}>
+
+            {/* Line 2: Date + Confidence (Description-like) - Always 1 line */}
+            <View style={styles.descriptionRow}>
               <View style={styles.metaItem}>
                 <Icon name="time-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                <Text variant="caption" color="tertiary" italic numberOfLines={1}>
                   {formatRelativeDate(item.createdAt)}
                 </Text>
               </View>
@@ -280,18 +249,20 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
               {item.confidence !== undefined && (
                 <>
                   <View style={styles.metaDivider} />
-                  <View style={styles.metaItem}>
+                  <View style={[styles.metaItem, styles.metaItemFlex]}>
                     <Icon name="analytics-outline" size="xs" color={confidenceBadge.color} />
-                    <Text variant="caption" customColor={confidenceBadge.color}>
-                      {(item.confidence * 100).toFixed(0)}%
+                    <Text variant="caption" mono customColor={confidenceBadge.color} numberOfLines={1}>
+                      {(item.confidence * 100).toFixed(0)}% confidence
                     </Text>
                   </View>
                 </>
               )}
             </View>
+            
+
           </View>
 
-          {/* Actions - ICON ONLY */}
+          {/* Right: Actions */}
           <View style={styles.actionContainer}>
             <Pressable
               onPress={(e) => {
@@ -317,11 +288,15 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 
   return (
     <Screen>
-      {/* Header - Fixed Outside FlatList (SAME AS REMINDER) */}
+      {/* Header - Fixed Outside FlatList */}
       <Container padding="m" style={styles.header}>
         {/* Header Top */}
         <View style={styles.headerTop}>
           <View>
+            {/* 🔧 NEW: Added section label above title */}
+            <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+              KNOWLEDGE_BASE
+            </Text>
             <Text variant="h2">Pattern Library</Text>
           </View>
           <Pressable 
@@ -330,13 +305,13 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             style={styles.discoverButton}
           >
             <Icon name="sparkles" size="sm" color={Theme.colors.background.primary} />
-            <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+            <Text variant="caption" weight="700" mono customColor={Theme.colors.background.primary}>
               DISCOVER
             </Text>
           </Pressable>
         </View>
 
-        {/* Search Bar (SAME AS REMINDER) */}
+        {/* Search Bar */}
         <View style={styles.searchContainer}>
           <Icon name="search-outline" size="sm" color={Theme.colors.text.tertiary} />
           <TextInput
@@ -358,31 +333,37 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           )}
         </View>
 
-        {/* Stats Row (SAME AS REMINDER) */}
+        {/* 🔧 ENHANCED: Stats Row with section label */}
+        <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+          STATUS_OVERVIEW
+        </Text>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.primary[500]}>
+            <Text variant="h4" mono customColor={Theme.colors.primary[500]}>
               {stats.total}
             </Text>
-            <Text variant="caption" color="secondary">Total</Text>
+            <Text variant="caption" mono color="secondary">Total</Text>
           </View>
           
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.semantic.info}>
+            <Text variant="h4" mono customColor={Theme.colors.semantic.info}>
               {stats.aiGenerated}
             </Text>
-            <Text variant="caption" color="secondary">AI</Text>
+            <Text variant="caption" mono color="secondary">AI</Text>
           </View>
           
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.semantic.error}>
+            <Text variant="h4" mono customColor={Theme.colors.semantic.error}>
               {stats.favorites}
             </Text>
-            <Text variant="caption" color="secondary">Favorites</Text>
+            <Text variant="caption" mono color="secondary">Favorites</Text>
           </View>
         </View>
 
-        {/* Type Filter (SAME AS CATEGORY FILTER IN REMINDER) */}
+        {/* 🔧 ENHANCED: Type Filter with section label */}
+        <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+          FILTER_BY_TYPE
+        </Text>
         <View style={styles.typeFilter}>
           <Pressable
             onPress={() => handleTypeFilter('all')}
@@ -399,6 +380,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
             <Text
               variant="caption"
               weight="700"
+              mono
               customColor={
                 selectedType === 'all'
                   ? Theme.colors.primary[500]
@@ -410,10 +392,10 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
           </Pressable>
 
           {[
-            { key: PatternType.FIBONACCI, icon: 'git-branch-outline', label: 'Fibonacci' },
-            { key: PatternType.GEOMETRIC, icon: 'shapes-outline', label: 'Geometric' },
-            { key: PatternType.SYMMETRY, icon: 'copy-outline', label: 'Symmetry' },
-            { key: PatternType.CUSTOM, icon: 'create-outline', label: 'Custom' },
+            { key: PatternType.FIBONACCI, icon: 'git-branch-outline', label: 'FIBONACCI' },
+            { key: PatternType.GEOMETRIC, icon: 'shapes-outline', label: 'GEOMETRIC' },
+            { key: PatternType.SYMMETRY, icon: 'copy-outline', label: 'SYMMETRY' },
+            { key: PatternType.CUSTOM, icon: 'create-outline', label: 'CUSTOM' },
           ].map((type) => (
             <Pressable
               key={type.key}
@@ -431,13 +413,14 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
               <Text
                 variant="caption"
                 weight="700"
+                mono
                 customColor={
                   selectedType === type.key
                     ? Theme.colors.primary[500]
                     : Theme.colors.text.secondary
                 }
               >
-                {type.label.toUpperCase()}
+                {type.label}
               </Text>
             </Pressable>
           ))}
@@ -446,7 +429,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <LoadingSpinner size="large" />
+          <LoadingSpinner size="large" text="LOADING_PATTERNS..." />
         </View>
       ) : searchFilteredPatterns.length === 0 && !searchQuery ? (
         <EmptyState
@@ -468,7 +451,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
                 <Text variant="h4" align="center" style={{ marginTop: Theme.spacing.m }}>
                   No matching patterns
                 </Text>
-                <Text variant="body" color="secondary" align="center">
+                <Text variant="body" color="secondary" italic align="center">
                   Try adjusting your search
                 </Text>
               </View>
@@ -492,7 +475,7 @@ export function PatternLibraryScreen({ navigation, route }: PatternLibraryScreen
 }
 
 const styles = StyleSheet.create({
-  // Header styles (SAME AS REMINDER)
+  // Header styles
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
@@ -506,6 +489,12 @@ const styles = StyleSheet.create({
     alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
   },
+  // 🔧 NEW: Section label styling (matches reminder screen)
+  sectionLabel: {
+    letterSpacing: 2,
+    marginBottom: Theme.spacing.xs,
+    opacity: 0.7,
+  },
   discoverButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -517,7 +506,7 @@ const styles = StyleSheet.create({
     ...Theme.shadows.glow,
   },
 
-  // Search bar styles (SAME AS REMINDER)
+  // Search bar styles
   searchContainer: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -541,20 +530,22 @@ const styles = StyleSheet.create({
     padding: 4,
   },
   
-  // Stats styles (SAME AS REMINDER)
+  // Stats styles
   statsRow: {
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: Theme.spacing.m,
-    paddingVertical: Theme.spacing.s,
+    paddingVertical: Theme.spacing.m,
     backgroundColor: Theme.colors.background.tertiary,
     borderRadius: Theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}50`,
   },
   statItem: {
     alignItems: 'center',
   },
   
-  // Type filter styles (SAME AS CATEGORY FILTER)
+  // Type filter styles
   typeFilter: {
     flexDirection: 'row',
     gap: Theme.spacing.s,
@@ -575,9 +566,14 @@ const styles = StyleSheet.create({
   typeChipActive: {
     backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
   
-  // List styles (SAME AS REMINDER)
+  // List styles
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
@@ -594,12 +590,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   
-  // COMPACT Card styles - MATCHING REMINDER HEIGHT
+  // 🔧 FIXED: Pattern card styles with uniform height
   patternCard: {
     marginBottom: Theme.spacing.s,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
+    minHeight: 120, // Same as reminder cards
   },
   patternContent: {
     flexDirection: 'row',
@@ -629,18 +623,19 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.background.secondary,
   },
   
-  // COMPACT Info Layout
+  // 🔧 FIXED: Info section with controlled structure
   patternInfo: {
     flex: 1,
-    gap: 4, // Reduced from 6 to make more compact
+    gap: 4,
+    justifyContent: 'flex-start',
   },
   
-  // Type + Source badges in one row
-  typeRow: {
+  // 🔧 FIXED: Metadata row (Line 1) - Type + Source badges
+  metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Theme.spacing.xs,
-    flexWrap: 'wrap',
+    marginBottom: 2,
   },
   typeBadge: {
     flexDirection: 'row',
@@ -649,6 +644,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Theme.borderRadius.s,
+    flexShrink: 1,
   },
   sourceBadge: {
     flexDirection: 'row',
@@ -657,19 +653,25 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: Theme.borderRadius.s,
+    flexShrink: 1,
   },
   
-  // Meta row: Days + Confidence
-  metaRow: {
+  // 🔧 FIXED: Description row (Line 2) - Date + Confidence
+  descriptionRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Theme.spacing.xs,
-    flexWrap: 'wrap',
+    height: 18, // Fixed height for 1 line
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 1,
+  },
+  metaItemFlex: {
+    flex: 1,
+    minWidth: 0,
   },
   metaDivider: {
     width: 3,
@@ -679,7 +681,13 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   
-  // Actions - Icon only
+  // 🔧 FIXED: Title (Line 3)
+  title: {
+    lineHeight: 20,
+    height: 20, // Fixed height for 1 line
+  },
+  
+  // Actions
   actionContainer: {
     alignItems: 'center',
     gap: Theme.spacing.xs,

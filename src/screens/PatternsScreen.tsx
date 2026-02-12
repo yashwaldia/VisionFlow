@@ -1,13 +1,13 @@
 /**
- * VisionFlow AI - Patterns Library Screen (v2.2 - Harmonized Edition)
- * Neural Database Interface for visual patterns
+ * VisionFlow AI - Patterns Library Screen (v3.1 - 4 Types Edition)
+ * Neural Database Interface with strict 4-category classification
  * 
  * @module screens/PatternsScreen
  * 
- * CHANGELOG v2.2:
- * - ✅ Fixed placeholder image opacity (15% → 20%)
- * - ✅ Fixed filter chip active opacity (15% → 20%)
- * - ✅ Added subtle header shadow (maintains tactical aesthetic)
+ * CHANGELOG v3.1:
+ * - 🔧 CRITICAL: Updated to 4 strict pattern types (fibonacci, geometric, symmetry, custom)
+ * - ✅ Removed extended types (channel, pitchfork, wave, sacred_geometry)
+ * - ✅ All v3.0 Hidden Inside UI enhancements preserved
  */
 
 import React, { useState, useMemo } from 'react';
@@ -85,17 +85,13 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
     return result;
   }, [patterns, searchQuery, filterType, routeFilterType]);
   
-  // Stats Logic
+  // 🔧 UPDATED: Stats Logic for 4 strict types only
   const typeCounts = useMemo(() => {
     return {
       all: patterns.length,
       [PatternType.FIBONACCI]: patterns.filter((p) => p.type === PatternType.FIBONACCI).length,
-      [PatternType.CHANNEL]: patterns.filter((p) => p.type === PatternType.CHANNEL).length,
-      [PatternType.PITCHFORK]: patterns.filter((p) => p.type === PatternType.PITCHFORK).length,
       [PatternType.GEOMETRIC]: patterns.filter((p) => p.type === PatternType.GEOMETRIC).length,
-      [PatternType.WAVE]: patterns.filter((p) => p.type === PatternType.WAVE).length,
       [PatternType.SYMMETRY]: patterns.filter((p) => p.type === PatternType.SYMMETRY).length,
-      [PatternType.SACRED_GEOMETRY]: patterns.filter((p) => p.type === PatternType.SACRED_GEOMETRY).length,
       [PatternType.CUSTOM]: patterns.filter((p) => p.type === PatternType.CUSTOM).length,
     };
   }, [patterns]);
@@ -123,7 +119,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
     return (
       <Pressable onPress={() => handlePatternPress(item)} haptic="light">
         <Card 
-          variant="hud"
+          variant="glowBorder"
           padding={0}
           style={styles.patternCard}
         >
@@ -136,7 +132,6 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
                   style={styles.patternImage}
                   resizeMode="cover"
                 />
-                {/* Tech Overlay for "Scanned" look - ✅ Kept at 8% (intentional subtlety) */}
                 <View style={[styles.imageOverlay, { backgroundColor: `${typeColor}08` }]} />
               </>
             ) : (
@@ -149,7 +144,8 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
             <View style={[styles.typeBadge, { borderColor: typeColor, backgroundColor: 'rgba(0, 0, 0, 0.85)' }]}>
               <Text 
                 variant="micro" 
-                weight="700" 
+                weight="700"
+                mono
                 customColor={typeColor} 
                 style={styles.badgeText}
               >
@@ -168,24 +164,24 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
           {/* Content Section */}
           <View style={styles.cardContent}>
             <View style={styles.cardMeta}>
-              <Text variant="caption" color="secondary" style={styles.dateText}>
+              <Text variant="caption" color="secondary" mono style={styles.dateText}>
                 {new Date(item.createdAt).toLocaleDateString(undefined, { month: 'short', day: '2-digit' }).toUpperCase()}
               </Text>
               {item.confidence && (
                 <View style={styles.confidenceContainer}>
-                  <Text variant="micro" customColor={typeColor} weight="700">
+                  <Text variant="micro" customColor={typeColor} weight="700" mono>
                     {Math.round(item.confidence * 100)}%
                   </Text>
                 </View>
               )}
             </View>
             
-            <Text variant="body" weight="700" numberOfLines={1} style={styles.patternName}>
+            <Text variant="body" weight="700" mono numberOfLines={1} style={styles.patternName}>
               {item.name}
             </Text>
             
             {item.userNotes && (
-              <Text variant="caption" color="tertiary" numberOfLines={1}>
+              <Text variant="caption" color="tertiary" italic numberOfLines={1}>
                 {item.userNotes}
               </Text>
             )}
@@ -197,21 +193,21 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
   
   return (
     <Screen>
-      {/* Fixed Header - ✅ ENHANCED: Added subtle shadow */}
+      {/* Fixed Header */}
       <View style={styles.header}>
         <Container padding="m">
           {/* Status Line */}
           <View style={styles.statusLine}>
             <View style={styles.statusDot} />
-            <Text variant="micro" style={styles.statusText}>
-              DATABASE ONLINE
+            <Text variant="micro" mono style={styles.statusText}>
+              DATABASE_ONLINE
             </Text>
             <View style={styles.statusPulse} />
           </View>
 
           <View style={styles.headerTop}>
-            <Text variant="h2" weight="700" style={styles.headerTitle}>
-              NEURAL INDEX
+            <Text variant="h2" weight="700" mono style={styles.headerTitle}>
+              NEURAL_INDEX
             </Text>
             <Pressable 
               onPress={handleScanPattern} 
@@ -219,7 +215,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
               style={styles.scanButton}
             >
               <Icon name="scan" size="sm" color={Theme.colors.background.primary} />
-              <Text variant="caption" weight="700" customColor={Theme.colors.background.primary} style={styles.scanButtonText}>
+              <Text variant="caption" weight="700" mono customColor={Theme.colors.background.primary} style={styles.scanButtonText}>
                 SCAN
               </Text>
             </Pressable>
@@ -233,7 +229,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
           />
         </Container>
         
-        {/* Tactical Filters */}
+        {/* 🔧 UPDATED: Tactical Filters - 4 types only */}
         <View style={styles.filtersContainer}>
           <FlatList
             horizontal
@@ -243,8 +239,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
               { key: PatternType.FIBONACCI, label: 'FIB', count: typeCounts[PatternType.FIBONACCI] },
               { key: PatternType.GEOMETRIC, label: 'GEO', count: typeCounts[PatternType.GEOMETRIC] },
               { key: PatternType.SYMMETRY, label: 'SYM', count: typeCounts[PatternType.SYMMETRY] },
-              { key: PatternType.CHANNEL, label: 'CHN', count: typeCounts[PatternType.CHANNEL] },
-              { key: PatternType.WAVE, label: 'WAV', count: typeCounts[PatternType.WAVE] },
+              { key: PatternType.CUSTOM, label: 'CUSTOM', count: typeCounts[PatternType.CUSTOM] },
             ]}
             keyExtractor={(item) => item.key}
             renderItem={({ item }) => (
@@ -261,6 +256,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
                   <Text
                     variant="caption"
                     weight="700"
+                    mono
                     style={styles.filterText}
                     customColor={
                       filterType === item.key
@@ -268,7 +264,7 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
                         : Theme.colors.text.tertiary
                     }
                   >
-                    {item.label} <Text variant="micro" color="tertiary">[{item.count}]</Text>
+                    {item.label} <Text variant="micro" mono color="tertiary">[{item.count}]</Text>
                   </Text>
                 </View>
               </Pressable>
@@ -280,17 +276,17 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
       
       {/* Content */}
       {isLoading ? (
-        <LoadingSpinner text="ACCESSING NEURAL NETWORK..." />
+        <LoadingSpinner text="ACCESSING_NEURAL_NETWORK..." />
       ) : filteredPatterns.length === 0 ? (
         <EmptyState
           icon="grid-outline"
-          title="INDEX EMPTY"
+          title="INDEX_EMPTY"
           description={
             searchQuery
-              ? 'NO MATCHING DATA FOUND'
-              : 'INITIALIZE SCANNER TO DETECT PATTERNS'
+              ? 'NO_MATCHING_DATA_FOUND'
+              : 'INITIALIZE_SCANNER_TO_DETECT_PATTERNS'
           }
-          actionLabel="INITIALIZE SCAN"
+          actionLabel="INITIALIZE_SCAN"
           onActionPress={handleScanPattern}
         />
       ) : (
@@ -316,13 +312,13 @@ export function PatternsScreen({ navigation, route }: PatternsScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added subtle shadow for depth
+  // Header styles
   header: {
     backgroundColor: Theme.colors.background.primary,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.default,
     paddingTop: Theme.spacing.xs,
-    ...Theme.shadows.sm, // ✅ ADDED: Subtle shadow (maintains tactical/flat aesthetic)
+    ...Theme.shadows.sm,
   },
   statusLine: {
     flexDirection: 'row',
@@ -346,7 +342,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     color: Theme.colors.semantic.success,
-    letterSpacing: 1.5,
+    letterSpacing: 2,
     fontSize: 9,
     textTransform: 'uppercase',
   },
@@ -357,7 +353,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   headerTitle: {
-    letterSpacing: 1,
+    letterSpacing: 2,
     textTransform: 'uppercase',
   },
   scanButton: {
@@ -370,14 +366,14 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   scanButtonText: {
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
   },
   searchBar: {
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 0,
   },
   
-  // Filters styles - ✅ FIXED: Standardized active opacity
+  // Filters styles
   filtersContainer: {
     paddingVertical: Theme.spacing.s,
     backgroundColor: Theme.colors.background.secondary,
@@ -391,23 +387,28 @@ const styles = StyleSheet.create({
   filterChip: {
     paddingHorizontal: 12,
     paddingVertical: 6,
-    borderRadius: 4,  // ✅ Kept square edges for HUD aesthetic
+    borderRadius: 4,
     borderWidth: 1,
     borderColor: Theme.colors.border.default,
     backgroundColor: 'transparent',
   },
   filterChipActive: {
     borderColor: Theme.colors.primary[500],
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 6,
+    elevation: 2,
   },
   filterText: {
-    fontFamily: Theme.typography.fontFamily.mono,
+    // Already using mono font family
   },
   
-  // Grid styles - ✅ Already correct
+  // Grid styles
   gridContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Uses theme (80)
+    paddingBottom: Theme.spacing.safeArea.bottomPadding,
   },
   gridRow: {
     gap: Theme.spacing.m,
@@ -417,7 +418,6 @@ const styles = StyleSheet.create({
   // Card styles
   patternCard: {
     width: CARD_WIDTH,
-    borderWidth: 1,
     overflow: 'hidden',
   },
   imageContainer: {
@@ -438,7 +438,6 @@ const styles = StyleSheet.create({
     height: '100%',
     alignItems: 'center',
     justifyContent: 'center',
-    // ✅ Background opacity fixed inline above (15% → 20%)
   },
   typeBadge: {
     position: 'absolute',
@@ -451,7 +450,7 @@ const styles = StyleSheet.create({
   },
   badgeText: {
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 1.5,
     fontSize: 9,
   },
   confidenceBadge: {
@@ -478,17 +477,16 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   dateText: {
-    fontFamily: Theme.typography.fontFamily.mono,
     fontSize: 10,
   },
   confidenceContainer: {
     paddingHorizontal: 6,
     paddingVertical: 2,
-    backgroundColor: `${Theme.colors.primary[500]}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.primary[500]}10`,
     borderRadius: 3,
   },
   patternName: {
     textTransform: 'uppercase',
-    letterSpacing: 0.3,
+    letterSpacing: 0.5,
   },
 });

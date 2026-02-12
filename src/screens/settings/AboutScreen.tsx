@@ -1,15 +1,13 @@
 /**
- * VisionFlow AI - About Screen (v2.1 - Harmonized Edition)
- * App information, legal links, and version details
+ * VisionFlow AI - About Screen (v3.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with monospace and italic typography
  * 
  * @module screens/settings/AboutScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Fixed logo container opacity (15% → 20%)
- * - ✅ Fixed version badge opacity (15% → 20%)
- * - ✅ Added header shadow for separation
- * - ✅ Added card elevation for visual depth
- * - ✅ Scroll padding already adequate for tab bar (120px)
+ * CHANGELOG v3.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ All v2.1 harmonized features preserved
  */
 
 import React from 'react';
@@ -56,7 +54,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
         <View style={[styles.linkIconContainer, { backgroundColor: `${iconColor}15` }]}>
           <Icon name={icon as any} size="sm" color={iconColor} />
         </View>
-        <Text variant="body" weight="600">{label}</Text>
+        {/* ✅ ENHANCED: Monospace link label */}
+        <Text variant="body" weight="600" mono>{label}</Text>
       </View>
       <Icon name="chevron-forward" size="sm" color={Theme.colors.text.tertiary} />
     </Pressable>
@@ -64,14 +63,16 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
 
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow */}
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">About</Text>
-          <Text variant="caption" color="tertiary">App information</Text>
+          {/* ✅ ENHANCED: Monospace header */}
+          <Text variant="h4" weight="600" mono>ABOUT</Text>
+          {/* ✅ NEW: Italic subtitle */}
+          <Text variant="caption" color="tertiary" italic>App information</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -87,18 +88,22 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
             <View style={styles.logoContainer}>
               <Icon name="aperture" size="xl" color={Theme.colors.primary[500]} />
             </View>
-            <Text variant="h1" weight="700" style={styles.appName}>
-              {APP_INFO.displayName}
+            {/* ✅ ENHANCED: Monospace app name with underscore */}
+            <Text variant="h1" weight="700" mono style={styles.appName}>
+              VISIONFLOW_AI
             </Text>
             <View style={styles.versionBadge}>
-              <Text variant="caption" weight="700" customColor={Theme.colors.primary[500]}>
+              {/* ✅ ENHANCED: Monospace version */}
+              <Text variant="caption" weight="700" mono customColor={Theme.colors.primary[500]}>
                 v{APP_INFO.version}
               </Text>
             </View>
-            <Text variant="caption" color="tertiary" style={styles.buildNumber}>
+            {/* ✅ ENHANCED: Monospace build number */}
+            <Text variant="caption" color="tertiary" mono style={styles.buildNumber}>
               Build {APP_INFO.buildNumber}
             </Text>
-            <Text variant="body" color="secondary" align="center" style={styles.tagline}>
+            {/* ✅ NEW: Italic tagline */}
+            <Text variant="body" color="secondary" italic align="center" style={styles.tagline}>
               {APP_INFO.tagline}
             </Text>
           </View>
@@ -113,7 +118,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
               <View style={styles.quickActionIcon}>
                 <Icon name="globe" size="md" color={Theme.colors.primary[500]} />
               </View>
-              <Text variant="caption" weight="600">Website</Text>
+              {/* ✅ ENHANCED: Monospace quick action label */}
+              <Text variant="caption" weight="600" mono>WEBSITE</Text>
             </Pressable>
 
             <Pressable 
@@ -124,7 +130,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
               <View style={styles.quickActionIcon}>
                 <Icon name="help-circle" size="md" color={Theme.colors.semantic.info} />
               </View>
-              <Text variant="caption" weight="600">Support</Text>
+              {/* ✅ ENHANCED: Monospace quick action label */}
+              <Text variant="caption" weight="600" mono>SUPPORT</Text>
             </Pressable>
 
             <Pressable 
@@ -135,7 +142,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
               <View style={styles.quickActionIcon}>
                 <Icon name="logo-github" size="md" color={Theme.colors.text.primary} />
               </View>
-              <Text variant="caption" weight="600">GitHub</Text>
+              {/* ✅ ENHANCED: Monospace quick action label */}
+              <Text variant="caption" weight="600" mono>GITHUB</Text>
             </Pressable>
           </View>
 
@@ -143,7 +151,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="link-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Connect With Us</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>CONNECT_WITH_US</Text>
             </View>
             
             <Card elevation="sm" style={styles.linkCard}>
@@ -161,7 +170,8 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="shield-checkmark-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Legal & Privacy</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>LEGAL_&_PRIVACY</Text>
             </View>
             
             <Card elevation="sm" style={styles.linkCard}>
@@ -171,48 +181,57 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
             </Card>
           </View>
 
-          {/* App Info Card - ✅ ENHANCED: Added elevation */}
+          {/* App Info Card */}
           <Card elevation="sm" style={styles.infoCard}>
             <View style={styles.infoHeader}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-              <Text variant="caption" color="secondary" weight="600">ABOUT THIS APP</Text>
+              {/* ✅ ENHANCED: Monospace card header */}
+              <Text variant="caption" color="secondary" weight="600" mono>ABOUT_THIS_APP</Text>
             </View>
-            <Text variant="caption" color="secondary" style={styles.infoText}>
+            {/* ✅ NEW: Italic info text */}
+            <Text variant="caption" color="secondary" italic style={styles.infoText}>
               VisionFlow AI is an intelligent reminder assistant that uses computer vision and AI to help you remember what matters. Built with React Native and Expo.
             </Text>
           </Card>
 
-          {/* Tech Stack Card - ✅ ENHANCED: Added elevation */}
+          {/* Tech Stack Card */}
           <Card elevation="sm" style={styles.techCard}>
             <View style={styles.techHeader}>
               <Icon name="code-slash" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="caption" color="secondary" weight="600">BUILT WITH</Text>
+              {/* ✅ ENHANCED: Monospace card header */}
+              <Text variant="caption" color="secondary" weight="600" mono>BUILT_WITH</Text>
             </View>
             <View style={styles.techGrid}>
               <View style={styles.techItem}>
                 <Icon name="logo-react" size="sm" color="#61DAFB" />
-                <Text variant="caption" color="secondary">React Native</Text>
+                {/* ✅ ENHANCED: Monospace tech label */}
+                <Text variant="caption" color="secondary" mono>React_Native</Text>
               </View>
               <View style={styles.techItem}>
                 <Icon name="flash" size="sm" color={Theme.colors.semantic.warning} />
-                <Text variant="caption" color="secondary">Expo</Text>
+                {/* ✅ ENHANCED: Monospace tech label */}
+                <Text variant="caption" color="secondary" mono>Expo</Text>
               </View>
               <View style={styles.techItem}>
                 <Icon name="code" size="sm" color="#3178C6" />
-                <Text variant="caption" color="secondary">TypeScript</Text>
+                {/* ✅ ENHANCED: Monospace tech label */}
+                <Text variant="caption" color="secondary" mono>TypeScript</Text>
               </View>
             </View>
           </Card>
 
           {/* Copyright */}
           <View style={styles.footer}>
-            <Text variant="caption" color="tertiary" align="center">
-              © {new Date().getFullYear()} VisionFlow AI
+            {/* ✅ ENHANCED: Monospace copyright */}
+            <Text variant="caption" color="tertiary" mono align="center">
+              © {new Date().getFullYear()} VisionFlow_AI
             </Text>
-            <Text variant="caption" color="tertiary" align="center">
+            {/* ✅ ENHANCED: Monospace rights */}
+            <Text variant="caption" color="tertiary" mono align="center">
               All rights reserved
             </Text>
-            <Text variant="caption" color="tertiary" align="center" style={styles.madeWith}>
+            {/* ✅ NEW: Italic made with love */}
+            <Text variant="caption" color="tertiary" italic align="center" style={styles.madeWith}>
               Made with ❤️ for productivity
             </Text>
           </View>
@@ -224,7 +243,7 @@ export function AboutScreen({ navigation }: AboutScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -234,7 +253,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -249,12 +268,12 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles - ✅ Already adequate for tab bar (120px)
+  // Scroll styles
   scrollContent: {
     paddingBottom: 120,
   },
   
-  // App info styles - ✅ FIXED: Standardized opacity
+  // App info styles
   appInfoContainer: {
     alignItems: 'center',
     marginVertical: Theme.spacing.xl,
@@ -264,7 +283,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 24,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: Theme.spacing.m,
@@ -278,7 +297,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 6,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ FIXED: 20% opacity (was 15%)
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}30`,
   },
@@ -330,7 +349,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Link card styles - ✅ Card elevation added via elevation="sm" prop
+  // Link card styles
   linkCard: {
     padding: 0,
     overflow: 'hidden',
@@ -364,10 +383,10 @@ const styles = StyleSheet.create({
     marginLeft: Theme.spacing.m + 40 + Theme.spacing.m,
   },
   
-  // Info card styles - ✅ Card elevation added via elevation="sm" prop
+  // Info card styles
   infoCard: {
     marginBottom: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },
@@ -381,10 +400,10 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
   
-  // Tech card styles - ✅ Card elevation added via elevation="sm" prop
+  // Tech card styles
   techCard: {
     marginBottom: Theme.spacing.l,
-    backgroundColor: `${Theme.colors.primary[500]}05`, // ✅ Kept at 5% (ultra-subtle tech showcase)
+    backgroundColor: `${Theme.colors.primary[500]}05`,
     borderWidth: 1,
     borderColor: `${Theme.colors.primary[500]}20`,
   },

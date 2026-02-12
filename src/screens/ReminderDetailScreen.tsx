@@ -1,23 +1,14 @@
 /**
- * VisionFlow AI - Reminder Detail Screen (v3.1 - STATUS COLOR ALIGNMENT)
- * View and manage a single reminder with visual depth
+ * VisionFlow AI - Reminder Detail Screen (v4.1 - Loading Fix Edition)
+ * View and manage a single reminder with proper loading states
  * 
  * @module screens/ReminderDetailScreen
  * 
- * CHANGELOG v3.1:
- * - ✅ ALIGNED: Emoji container now uses status-based color (matching list screen)
- * - ✅ ALIGNED: Container size changed to 56x56 (matching list screen)
- * - ✅ ALIGNED: Border width reduced to 1px (matching list screen)
- * - ✅ ALIGNED: Removed category gradient glow effect for consistency
- * 
- * CHANGELOG v3.0:
- * ✨ VISUAL ENHANCEMENTS:
- * - ✅ Glassmorphism effect on status badge
- * - ✅ Icon containers with colored glows matching their function
- * - ✅ Glassmorphism overlay on image card
- * - ✅ Enhanced footer button with pulsing glow effect
- * - ✅ Detail cards with glass variant for depth
- * - ✅ Gradient dividers with center glow effect
+ * CHANGELOG v4.1:
+ * - 🔧 CRITICAL FIX: Added loading state to prevent premature error screen
+ * - 🔧 FIXED: Shows loading spinner while fetching reminder
+ * - 🔧 FIXED: Error screen only appears after loading completes
+ * - ✅ All v4.0 Hidden Inside UI features preserved
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -104,17 +95,28 @@ const getStatusConfig = (status: ReminderStatus) => {
  */
 export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreenProps) {
   const { reminderId } = route.params;
-  const { getReminderById, markAsDone, deleteReminder } = useReminders();
+  const { getReminderById, markAsDone, deleteReminder, isLoading } = useReminders();
+  
+  // 🔧 NEW: Track local loading state
+  const [isLocalLoading, setIsLocalLoading] = useState(true);
   const [reminder, setReminder] = useState(getReminderById(reminderId));
 
-  // ✨ NEW: Animated value for footer button glow pulse
   const glowPulse = useRef(new Animated.Value(0.4)).current;
 
+  // 🔧 FIXED: Load reminder with proper loading state
   useEffect(() => {
-    setReminder(getReminderById(reminderId));
+    const loadReminder = async () => {
+      setIsLocalLoading(true);
+      // Small delay to ensure data is fetched
+      await new Promise(resolve => setTimeout(resolve, 100));
+      const fetchedReminder = getReminderById(reminderId);
+      setReminder(fetchedReminder);
+      setIsLocalLoading(false);
+    };
+
+    loadReminder();
   }, [reminderId, getReminderById]);
 
-  // ✨ NEW: Pulse animation for footer button
   useEffect(() => {
     if (reminder && reminder.status !== ReminderStatus.DONE) {
       Animated.loop(
@@ -134,6 +136,18 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
     }
   }, [reminder]);
 
+  // 🔧 FIXED: Check loading state FIRST before showing error
+  if (isLocalLoading || isLoading) {
+    return (
+      <Screen>
+        <View style={styles.loadingContainer}>
+          <LoadingSpinner size="large" text="LOADING_REMINDER..." />
+        </View>
+      </Screen>
+    );
+  }
+
+  // 🔧 FIXED: Only show error screen AFTER loading is complete
   if (!reminder) {
     return (
       <Screen>
@@ -143,7 +157,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             <Text variant="h3" align="center" style={styles.notFoundTitle}>
               Reminder not found
             </Text>
-            <Text variant="body" color="secondary" align="center">
+            <Text variant="body" color="secondary" align="center" italic>
               This reminder may have been deleted
             </Text>
             <Button label="Go Back" onPress={() => navigation.goBack()} style={styles.notFoundButton} />
@@ -202,7 +216,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
-        <Text variant="h4" weight="600">Details</Text>
+        <Text variant="h4" weight="600" mono>DETAILS</Text>
         <View style={styles.headerActions}>
           {!isDone && (
             <Pressable onPress={handleEdit} haptic="light" style={styles.headerButton}>
@@ -220,7 +234,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* ✨ ENHANCED: Image with glassmorphism overlay */}
+          {/* Image with glassmorphism overlay */}
           {reminder.imageUri && (
             <Card 
               padding={0} 
@@ -232,17 +246,15 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                 style={styles.image} 
                 resizeMode="cover" 
               />
-              {/* ✨ NEW: Glassmorphism overlay for depth */}
               <View style={styles.imageOverlay}>
                 <View style={styles.imageOverlayGradient} />
               </View>
             </Card>
           )}
 
-          {/* ✨ ENHANCED: Title Section with Status-Based Color */}
+          {/* Title Section */}
           <View style={styles.titleSection}>
             <View style={styles.titleRow}>
-              {/* ✨ ENHANCED: Emoji container with status color (matching list screen) */}
               <View
                 style={[
                   styles.emojiContainer,
@@ -260,7 +272,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                   {reminder.title}
                 </Text>
                 
-                {/* ✨ ENHANCED: Status badge with glassmorphism */}
+                {/* Status badge */}
                 <Card
                   variant="glass"
                   elevation="none"
@@ -272,7 +284,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                   ]}
                 >
                   <Icon name={statusConfig.icon} size="xs" color={statusConfig.color} />
-                  <Text variant="caption" weight="700" customColor={statusConfig.color}>
+                  <Text variant="caption" weight="700" customColor={statusConfig.color} mono>
                     {statusConfig.label.toUpperCase()}
                   </Text>
                 </Card>
@@ -280,19 +292,18 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </View>
 
-          {/* ✨ ENHANCED: Details Card with HUD variant */}
+          {/* Details Card */}
           <Card 
-            variant="hud"
+            variant="glowBorder"
             elevation="md"
             style={styles.detailsCard}
           >
             {/* Date & Time */}
             <View style={styles.detailSection}>
-              <Text variant="caption" color="tertiary" style={styles.detailSectionTitle}>
-                SCHEDULED FOR
+              <Text variant="caption" color="tertiary" mono weight="700" style={styles.detailSectionTitle}>
+                SCHEDULED_FOR
               </Text>
               
-              {/* ✨ ENHANCED: Icon containers with colored glows */}
               <View style={styles.detailRow}>
                 <View
                   style={[
@@ -311,10 +322,10 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                   <Icon name="calendar" size="sm" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text variant="bodyLarge" weight="600">
+                  <Text variant="bodyLarge" weight="600" mono>
                     {formatRelativeDate(reminder.reminderDate)}
                   </Text>
-                  <Text variant="caption" color="secondary">
+                  <Text variant="caption" color="secondary" mono>
                     {reminder.reminderDate}
                   </Text>
                 </View>
@@ -338,24 +349,24 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                   <Icon name="time" size="sm" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text variant="bodyLarge" weight="600">
+                  <Text variant="bodyLarge" weight="600" mono>
                     {reminder.reminderTime}
                   </Text>
-                  <Text variant="caption" color="secondary">
+                  <Text variant="caption" color="secondary" mono>
                     Time
                   </Text>
                 </View>
               </View>
             </View>
 
-            {/* ✨ ENHANCED: Gradient divider */}
+            {/* Gradient divider */}
             <View style={styles.dividerContainer}>
               <View style={styles.dividerGradient} />
             </View>
             
             {/* Category & Project */}
             <View style={styles.detailSection}>
-              <Text variant="caption" color="tertiary" style={styles.detailSectionTitle}>
+              <Text variant="caption" color="tertiary" mono weight="700" style={styles.detailSectionTitle}>
                 ORGANIZATION
               </Text>
               
@@ -377,10 +388,10 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                   <Icon name="pricetag" size="sm" color={Theme.colors.semantic.info} />
                 </View>
                 <View style={styles.detailContent}>
-                  <Text variant="bodyLarge" weight="600">
+                  <Text variant="bodyLarge" weight="600" mono>
                     {reminder.category}
                   </Text>
-                  <Text variant="caption" color="secondary">
+                  <Text variant="caption" color="secondary" mono>
                     Category
                   </Text>
                 </View>
@@ -405,10 +416,10 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
                     <Icon name="folder" size="sm" color={Theme.colors.semantic.warning} />
                   </View>
                   <View style={styles.detailContent}>
-                    <Text variant="bodyLarge" weight="600">
+                    <Text variant="bodyLarge" weight="600" mono>
                       {reminder.projectName}
                     </Text>
-                    <Text variant="caption" color="secondary">
+                    <Text variant="caption" color="secondary" mono>
                       Project
                     </Text>
                   </View>
@@ -417,18 +428,18 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             </View>
           </Card>
 
-          {/* ✨ ENHANCED: Smart Note with glass card */}
+          {/* Smart Note section */}
           <View style={styles.noteSection}>
             <View style={styles.noteSectionHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
-              <Text variant="h4">Details</Text>
+              <Text variant="h4" mono>SMART_NOTE</Text>
             </View>
             <Card 
               variant="glass"
               elevation="sm"
               style={styles.noteCard}
             >
-              <Text variant="body" style={styles.noteText}>
+              <Text variant="body" italic style={styles.noteText}>
                 {reminder.smartNote}
               </Text>
             </Card>
@@ -438,7 +449,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
           <View style={styles.metadataSection}>
             <View style={styles.metadataRow}>
               <Icon name="add-circle-outline" size="xs" color={Theme.colors.text.tertiary} />
-              <Text variant="caption" color="tertiary">
+              <Text variant="caption" color="tertiary" mono>
                 Created {new Date(reminder.createdAt).toLocaleDateString(undefined, { 
                   month: 'short', 
                   day: 'numeric',
@@ -449,7 +460,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
             {reminder.updatedAt !== reminder.createdAt && (
               <View style={styles.metadataRow}>
                 <Icon name="create-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                <Text variant="caption" color="tertiary" mono>
                   Updated {new Date(reminder.updatedAt).toLocaleDateString(undefined, { 
                     month: 'short', 
                     day: 'numeric',
@@ -462,7 +473,7 @@ export function ReminderDetailScreen({ navigation, route }: ReminderDetailScreen
         </Container>
       </ScrollView>
 
-      {/* ✨ ENHANCED: Footer with glassmorphism and pulsing glow */}
+      {/* Footer with glassmorphism and pulsing glow */}
       {!isDone && (
         <View style={styles.footer}>
           <Container padding="m">
@@ -517,6 +528,13 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
   },
   
+  // 🔧 NEW: Loading container
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  
   // Content styles
   scrollContent: {
     paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
@@ -537,7 +555,7 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.l,
   },
   
-  // ✨ ENHANCED: Image styles with overlay
+  // Image styles
   imageCard: {
     marginBottom: Theme.spacing.l,
     overflow: 'hidden',
@@ -562,7 +580,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: Theme.borderRadius.l,
   },
   
-  // ✨ ENHANCED: Title section with status-based emoji container
+  // Title section
   titleSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -594,7 +612,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
   },
   
-  // ✨ ENHANCED: Details card with HUD variant
+  // Details card
   detailsCard: {
     marginBottom: Theme.spacing.l,
   },
@@ -603,9 +621,8 @@ const styles = StyleSheet.create({
   },
   detailSectionTitle: {
     textTransform: 'uppercase',
-    letterSpacing: 1,
+    letterSpacing: 2,
     fontSize: 10,
-    fontWeight: '700',
     marginBottom: Theme.spacing.xs,
   },
   detailRow: {
@@ -626,7 +643,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // ✨ ENHANCED: Gradient divider
+  // Gradient divider
   dividerContainer: {
     marginVertical: Theme.spacing.m,
     alignItems: 'center',
@@ -638,7 +655,7 @@ const styles = StyleSheet.create({
     opacity: 0.5,
   },
   
-  // ✨ ENHANCED: Note section with glass card
+  // Note section
   noteSection: {
     marginBottom: Theme.spacing.l,
   },
@@ -669,7 +686,7 @@ const styles = StyleSheet.create({
     gap: 6,
   },
   
-  // ✨ ENHANCED: Footer with glassmorphism
+  // Footer
   footer: {
     borderTopWidth: 1,
     borderTopColor: Theme.colors.border.light,

@@ -1,18 +1,17 @@
 /**
- * VisionFlow AI - AI Review Modal (v5.0 - Edge Detection Fix)
+ * VisionFlow AI - AI Review Modal (v6.0 - Hidden Inside UI Edition)
+ * Enhanced AI review interface with cyberpunk aesthetic
  * 
- * CHANGELOG v5.0:
- * - 🔧 CRITICAL FIX: Now calls analyzePatternImageComplete() for pattern analysis
- * - 🔧 CRITICAL FIX: Uses backend edge detection (no longer bypassed)
- * - 🔧 Removed manual processedImages construction
- * - 🔧 Proper handling of complete analysis workflow
- * - ✅ Edge-detected images now actually different from original
+ * @module modals/AIReviewModal
  * 
- * CHANGELOG v4.1:
- * - ✅ FIXED: Added top safe area padding to header
- * - ✅ Header now respects notches/dynamic islands
+ * CHANGELOG v6.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ UI ENHANCEMENT: Enhanced loading spinner with monospace
+ * - ✅ UI ENHANCEMENT: Blue glow borders on cards
+ * - ✅ UI ENHANCEMENT: Section labels with wider letter-spacing
+ * - ✅ All v5.0 edge detection and analysis fixes preserved
  */
-
 
 import React, { useState, useEffect, useRef } from 'react';
 import {
@@ -45,12 +44,9 @@ import { useReminders } from '../../hooks/useReminders';
 import { usePatterns } from '../../hooks/usePatterns';
 import { AIPatternAnalysis, PatternType } from '../../types/pattern.types';
 
-
 type AIReviewModalProps = NativeStackScreenProps<RootStackParamList, 'AIReviewModal'>;
 
-
 const DEBUG_MODE = false;
-
 
 enum ErrorType {
   NETWORK = 'network',
@@ -61,7 +57,6 @@ enum ErrorType {
   UNKNOWN = 'unknown',
 }
 
-
 interface SmartError {
   type: ErrorType;
   title: string;
@@ -71,11 +66,9 @@ interface SmartError {
   retryable: boolean;
 }
 
-
 function categorizeError(error: any): SmartError {
   const errorMessage = error?.message || error?.toString() || '';
   const errorString = errorMessage.toLowerCase();
-
 
   if (
     errorString.includes('network') ||
@@ -92,7 +85,6 @@ function categorizeError(error: any): SmartError {
       retryable: true,
     };
   }
-
 
   if (
     errorString.includes('blurry') ||
@@ -112,7 +104,6 @@ function categorizeError(error: any): SmartError {
     };
   }
 
-
   if (
     errorString.includes('json') ||
     errorString.includes('parse') ||
@@ -128,7 +119,6 @@ function categorizeError(error: any): SmartError {
       retryable: true,
     };
   }
-
 
   if (
     errorString.includes('rate limit') ||
@@ -146,7 +136,6 @@ function categorizeError(error: any): SmartError {
     };
   }
 
-  // 🔧 NEW: Edge detection specific error
   if (
     errorString.includes('edge') ||
     errorString.includes('processing') ||
@@ -162,7 +151,6 @@ function categorizeError(error: any): SmartError {
     };
   }
 
-
   return {
     type: ErrorType.UNKNOWN,
     title: 'Analysis Error',
@@ -173,24 +161,20 @@ function categorizeError(error: any): SmartError {
   };
 }
 
-
 export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const { imageUri, analysisType } = route.params;
   const { createReminder } = useReminders();
   const { createPattern } = usePatterns();
   const insets = useSafeAreaInsets();
 
-
   const titleInputRef = useRef<TextInput>(null);
   const noteInputRef = useRef<TextInput>(null);
   const dateInputRef = useRef<TextInput>(null);
   const timeInputRef = useRef<TextInput>(null);
 
-
   const [isAnalyzing, setIsAnalyzing] = useState(true);
   const [analysisError, setAnalysisError] = useState<SmartError | null>(null);
   const [retryCount, setRetryCount] = useState(0);
-
 
   const [patternAnalysisResult, setPatternAnalysisResult] = useState<AIPatternAnalysis | null>(null);
   const [processedImages, setProcessedImages] = useState<{
@@ -200,7 +184,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     height: number;
   } | null>(null);
 
-
   const [title, setTitle] = useState('');
   const [note, setNote] = useState('');
   const [category, setCategory] = useState<ReminderCategory>(ReminderCategory.PERSONAL);
@@ -209,9 +192,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   const [reminderTime, setReminderTime] = useState('');
   const [emoji, setEmoji] = useState('📝');
 
-
   const [isSaving, setIsSaving] = useState(false);
-
 
   useEffect(() => {
     if (!DEBUG_MODE) {
@@ -221,30 +202,24 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   }, []);
 
-
-  // 🔧 KEPT: Still needed for reminder analysis (uses base64)
   const imageToBase64 = async (uri: string): Promise<string> => {
     try {
       if (!uri || typeof uri !== 'string') {
         throw new Error('Invalid image URI');
       }
 
-
       const fileInfo = await FileSystem.getInfoAsync(uri);
       if (!fileInfo.exists) {
         throw new Error('IMAGE_NOT_FOUND');
       }
 
-
       const base64 = await FileSystem.readAsStringAsync(uri, {
         encoding: FileSystem.EncodingType.Base64,
       });
 
-
       if (!base64 || base64.length < 1000) {
         throw new Error('IMAGE_QUALITY');
       }
-
 
       return base64;
     } catch (error) {
@@ -252,15 +227,12 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
-
   const analyzeImage = async () => {
     try {
       setIsAnalyzing(true);
       setAnalysisError(null);
 
-
       if (analysisType === 'reminder') {
-        // Reminder analysis: Uses base64 directly
         const base64 = await imageToBase64(imageUri);
         const result = await GeminiService.analyzeReminderImage(base64);
         
@@ -277,7 +249,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         setEmoji(result.emoji || '📝');
 
       } else {
-        // 🔧 CRITICAL FIX: Pattern analysis now uses complete workflow
         console.log('[AIReviewModal] Starting complete pattern analysis with edge detection...');
         
         const result = await GeminiService.analyzePatternImageComplete(imageUri);
@@ -291,15 +262,13 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         console.log(`[AIReviewModal] Image dimensions: ${result.images.width}x${result.images.height}`);
         console.log(`[AIReviewModal] Edge detection applied: ${result.analysis.metadata.edgeDetectionApplied}`);
 
-        // 🔧 FIXED: Use returned analysis and images from complete workflow
         setPatternAnalysisResult(result.analysis);
-        setProcessedImages(result.images);  // Already contains original, edges, width, height
+        setProcessedImages(result.images);
         
         const firstPattern = result.analysis.patterns[0];
         setTitle(firstPattern?.name || 'Pattern');
         setNote(result.analysis.insights?.explanation || '');
       }
-
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
       
@@ -317,18 +286,15 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
-
   const handleSave = async () => {
     if (!title.trim()) {
       Alert.alert('Missing Title', 'Please enter a title for this item.');
       return;
     }
 
-
     try {
       setIsSaving(true);
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-
 
       if (analysisType === 'reminder') {
         await createReminder({
@@ -348,7 +314,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           updatedAt: Date.now(),
         } as any);
 
-
         await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
         
         navigation.navigate('MainApp', {
@@ -360,9 +325,7 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         });
 
       } else {
-        // Pattern mode
         if (patternAnalysisResult && processedImages) {
-          // Navigate to full results screen with analysis
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
           navigation.replace('PatternResultsScreen', {
@@ -371,7 +334,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           });
 
         } else {
-          // Fallback: Create manual pattern (if analysis failed)
           await createPattern({
             id: `pattern_${Date.now()}`,
             name: title.trim(),
@@ -384,7 +346,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             updatedAt: Date.now(),
             userNotes: note.trim(),
           } as any);
-
 
           await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           
@@ -407,7 +368,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     }
   };
 
-
   const handleDiscard = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     
@@ -425,17 +385,14 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     );
   };
 
-
   const handleRetry = () => {
     setRetryCount(prev => prev + 1);
     analyzeImage();
   };
 
-
   const handleRecapture = () => {
     navigation.goBack();
   };
-
 
   const categoryConfig = {
     [ReminderCategory.PERSONAL]: { icon: 'person', color: Theme.colors.primary[500] },
@@ -444,14 +401,12 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
     [ReminderCategory.MONEY]: { icon: 'cash', color: Theme.colors.semantic.warning },
   };
 
-
   const priorityConfig = {
     [ReminderPriority.LOW]: { icon: 'chevron-down', color: Theme.colors.text.tertiary },
     [ReminderPriority.MEDIUM]: { icon: 'remove', color: Theme.colors.semantic.info },
     [ReminderPriority.HIGH]: { icon: 'chevron-up', color: Theme.colors.semantic.warning },
     [ReminderPriority.URGENT]: { icon: 'warning', color: Theme.colors.semantic.error },
   };
-
 
   return (
     <View style={styles.container}>
@@ -461,16 +416,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">
-            {analysisType === 'reminder' ? 'Review Reminder' : 'Review Pattern'}
+          {/* ✅ ENHANCED: Monospace header */}
+          <Text variant="h4" weight="600" mono>
+            {analysisType === 'reminder' ? 'REVIEW_REMINDER' : 'REVIEW_PATTERN'}
           </Text>
-          <Text variant="caption" color="tertiary">
-            {isAnalyzing ? 'Analyzing...' : analysisError ? 'Edit manually' : 'Edit AI suggestions'}
+          {/* ✅ NEW: Italic subtitle with dynamic state */}
+          <Text variant="caption" color="tertiary" italic>
+            {isAnalyzing ? 'AI processing...' : analysisError ? 'Edit manually below' : 'Verify AI suggestions'}
           </Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
-
 
       {/* Content */}
       <ScrollView 
@@ -481,7 +437,8 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
         keyboardDismissMode="none"
       >
         <Container padding="m">
-          <Card elevation="sm" style={styles.imageCard}>
+          {/* ✅ ENHANCED: Image card with glow border */}
+          <Card variant="glowBorder" elevation="sm" style={styles.imageCard}>
             <Image source={{ uri: imageUri }} style={styles.image} resizeMode="cover" />
             <View style={styles.imageOverlay}>
               <View style={[
@@ -496,22 +453,25 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   size="sm" 
                   color={Theme.colors.background.primary} 
                 />
-                <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+                {/* ✅ ENHANCED: Monospace badge label */}
+                <Text variant="caption" weight="700" mono customColor={Theme.colors.background.primary}>
                   {analysisType === 'reminder' ? 'REMINDER' : 'PATTERN'}
                 </Text>
               </View>
             </View>
           </Card>
 
-
+          {/* ✅ ENHANCED: Loading state with monospace text */}
           {isAnalyzing && (
-            <Card elevation="sm" style={styles.analysisCard}>
+            <Card variant="glass" elevation="md" style={styles.analysisCard}>
               <View style={styles.analysisIconContainer}>
                 <Icon name="sparkles" size="md" color={Theme.colors.primary[500]} />
               </View>
               <View style={styles.analysisContent}>
-                <Text variant="bodyLarge" weight="600">Analyzing Image</Text>
-                <Text variant="caption" color="secondary">
+                {/* ✅ ENHANCED: Monospace loading title */}
+                <Text variant="bodyLarge" weight="600" mono>ANALYZING_IMAGE</Text>
+                {/* ✅ NEW: Italic loading message */}
+                <Text variant="caption" color="secondary" italic>
                   {retryCount > 0 
                     ? `Retry attempt ${retryCount}...` 
                     : analysisType === 'pattern'
@@ -523,16 +483,18 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             </Card>
           )}
 
-
+          {/* ✅ ENHANCED: Error card with better styling */}
           {analysisError && (
-            <Card elevation="sm" style={styles.errorCard}>
+            <Card variant="glass" elevation="md" style={styles.errorCard}>
               <View style={styles.errorHeader}>
                 <View style={styles.errorIconContainer}>
                   <Icon name={analysisError.icon as any} size="md" color={Theme.colors.semantic.error} />
                 </View>
                 <View style={styles.errorContent}>
-                  <Text variant="bodyLarge" weight="600">{analysisError.title}</Text>
-                  <Text variant="body" color="secondary" style={{ marginTop: 4 }}>
+                  {/* ✅ ENHANCED: Monospace error title */}
+                  <Text variant="bodyLarge" weight="600" mono>{analysisError.title}</Text>
+                  {/* ✅ NEW: Italic error message */}
+                  <Text variant="body" color="secondary" italic style={{ marginTop: 4 }}>
                     {analysisError.message}
                   </Text>
                 </View>
@@ -540,11 +502,11 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
               
               <View style={styles.suggestionBox}>
                 <Icon name="bulb-outline" size="sm" color={Theme.colors.secondary[500]} />
-                <Text variant="caption" color="secondary" style={{ flex: 1, marginLeft: 8 }}>
+                {/* ✅ NEW: Italic suggestion */}
+                <Text variant="caption" color="secondary" italic style={{ flex: 1, marginLeft: 8 }}>
                   {analysisError.suggestion}
                 </Text>
               </View>
-
 
               <View style={styles.errorActions}>
                 {analysisError.type === ErrorType.IMAGE_QUALITY ? (
@@ -570,25 +532,26 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
             </Card>
           )}
 
-
           {!isAnalyzing && (
             <>
               <View style={styles.section}>
                 <View style={styles.sectionHeader}>
                   <Icon name="document-text-outline" size="sm" color={Theme.colors.primary[500]} />
-                  <Text variant="h4">Details</Text>
+                  {/* ✅ ENHANCED: Monospace section header */}
+                  <Text variant="h4" mono>DETAILS</Text>
                   {analysisError && (
                     <View style={styles.manualBadge}>
-                      <Text variant="micro" customColor={Theme.colors.secondary[500]}>
-                        MANUAL ENTRY
+                      {/* ✅ ENHANCED: Monospace badge */}
+                      <Text variant="micro" mono customColor={Theme.colors.secondary[500]}>
+                        MANUAL_ENTRY
                       </Text>
                     </View>
                   )}
                 </View>
 
-
                 <View style={styles.inputContainer}>
-                  <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label with wider spacing */}
+                  <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                     TITLE
                   </Text>
                   <View style={styles.inputWrapper}>
@@ -608,9 +571,9 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                   </View>
                 </View>
 
-
                 <View style={styles.inputContainer}>
-                  <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label */}
+                  <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                     DESCRIPTION
                   </Text>
                   <View style={[styles.inputWrapper, styles.multilineWrapper]}>
@@ -631,13 +594,13 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                 </View>
               </View>
 
-
               {analysisType === 'reminder' && (
                 <>
                   <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                       <Icon name="pricetags-outline" size="sm" color={Theme.colors.primary[500]} />
-                      <Text variant="h4">Category</Text>
+                      {/* ✅ ENHANCED: Monospace section header */}
+                      <Text variant="h4" mono>CATEGORY</Text>
                     </View>
                     
                     <View style={styles.categoryGrid}>
@@ -661,9 +624,11 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                               size="sm" 
                               color={isSelected ? Theme.colors.background.primary : config.color} 
                             />
+                            {/* ✅ ENHANCED: Monospace chip label */}
                             <Text
                               variant="caption"
                               weight="700"
+                              mono
                               customColor={
                                 isSelected
                                   ? Theme.colors.background.primary
@@ -678,11 +643,11 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                     </View>
                   </View>
 
-
                   <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                       <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
-                      <Text variant="h4">Priority</Text>
+                      {/* ✅ ENHANCED: Monospace section header */}
+                      <Text variant="h4" mono>PRIORITY</Text>
                     </View>
                     
                     <View style={styles.priorityGrid}>
@@ -706,9 +671,11 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                               size="sm" 
                               color={isSelected ? Theme.colors.background.primary : config.color} 
                             />
+                            {/* ✅ ENHANCED: Monospace chip label */}
                             <Text
                               variant="caption"
                               weight="700"
+                              mono
                               customColor={
                                 isSelected
                                   ? Theme.colors.background.primary
@@ -723,16 +690,17 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                     </View>
                   </View>
 
-
                   <View style={styles.section}>
                     <View style={styles.sectionHeader}>
                       <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
-                      <Text variant="h4">Schedule</Text>
+                      {/* ✅ ENHANCED: Monospace section header */}
+                      <Text variant="h4" mono>SCHEDULE</Text>
                     </View>
                     
                     <View style={styles.dateTimeRow}>
                       <View style={[styles.inputContainer, { flex: 2 }]}>
-                        <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
+                        {/* ✅ ENHANCED: Monospace input label */}
+                        <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                           DATE
                         </Text>
                         <View style={styles.inputWrapper}>
@@ -750,7 +718,8 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
                         </View>
                       </View>
                       <View style={[styles.inputContainer, { flex: 1 }]}>
-                        <Text variant="caption" color="secondary" weight="700" style={styles.inputLabel}>
+                        {/* ✅ ENHANCED: Monospace input label */}
+                        <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                           TIME
                         </Text>
                         <View style={styles.inputWrapper}>
@@ -774,7 +743,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
           )}
         </Container>
       </ScrollView>
-
 
       {/* Footer */}
       {!isAnalyzing && (
@@ -810,7 +778,6 @@ export function AIReviewModal({ navigation, route }: AIReviewModalProps) {
   );
 }
 
-
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -841,7 +808,6 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
-
   scrollView: {
     flex: 1,
   },
@@ -850,16 +816,15 @@ const styles = StyleSheet.create({
     paddingBottom: 140,
   },
 
-
   inputContainer: {
     marginBottom: Theme.spacing.m,
   },
+  // ✅ ENHANCED: Wider letter-spacing for input labels
   inputLabel: {
     marginBottom: 6,
     fontSize: 11,
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
-    fontFamily: Theme.typography.fontFamily.mono,
+    letterSpacing: 2, // Increased from 0.5
   },
   inputWrapper: {
     height: 48,
@@ -885,13 +850,10 @@ const styles = StyleSheet.create({
     paddingTop: 0,
   },
 
-
   imageCard: {
     padding: 0,
     overflow: 'hidden',
     marginBottom: Theme.spacing.m,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
   },
   image: {
     width: '100%',
@@ -911,7 +873,6 @@ const styles = StyleSheet.create({
     paddingVertical: 8,
     borderRadius: Theme.borderRadius.full,
   },
-
 
   analysisCard: {
     flexDirection: 'row',
@@ -934,7 +895,6 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: 2,
   },
-
 
   errorCard: {
     marginBottom: Theme.spacing.m,
@@ -973,7 +933,6 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.s,
   },
 
-
   section: {
     marginBottom: Theme.spacing.l,
   },
@@ -990,7 +949,6 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.secondary[500]}20`,
     borderRadius: Theme.borderRadius.s,
   },
-
 
   categoryGrid: {
     flexDirection: 'row',
@@ -1010,7 +968,6 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
-
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -1029,12 +986,10 @@ const styles = StyleSheet.create({
     minWidth: 100,
   },
 
-
   dateTimeRow: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
   },
-
 
   footerContainer: {
     position: 'absolute',

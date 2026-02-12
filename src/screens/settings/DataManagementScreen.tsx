@@ -1,20 +1,13 @@
 /**
- * VisionFlow AI - Data Management Screen (v4.0 - Production Fix)
- * Handle data backup, restoration, and storage management
+ * VisionFlow AI - Data Management Screen (v5.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with monospace and italic typography
  * 
  * @module screens/settings/DataManagementScreen
  * 
- * CHANGELOG v4.0:
- * - 🔧 CRITICAL FIX: Using expo-sharing instead of Share.share() for Android compatibility
- * - 🔧 FIXED: WhatsApp "empty message" error resolved
- * - 🔧 FIXED: Download option now appears in share sheet
- * - 🔧 FIXED: File properly written before sharing
- * - ✅ Works with WhatsApp, Email, Drive, all apps
- * 
- * CHANGELOG v3.0:
- * - ✅ Import function fully implemented
- * - ✅ Uses expo-document-picker for file selection
- * - ✅ Validates and confirms before import
+ * CHANGELOG v5.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ All v4.0 production fixes preserved (expo-sharing)
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -23,7 +16,7 @@ import { NativeStackScreenProps } from '@react-navigation/native-stack';
 import * as Haptics from 'expo-haptics';
 import { File, Paths } from 'expo-file-system';
 import * as DocumentPicker from 'expo-document-picker';
-import * as Sharing from 'expo-sharing'; // 🔧 CRITICAL: Use expo-sharing for file sharing
+import * as Sharing from 'expo-sharing';
 
 import { SettingsStackParamList } from '../../types/navigation.types';
 import { Theme } from '../../constants/theme';
@@ -74,29 +67,23 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
     return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
   };
 
-  // 🔧 FIXED: Export function using expo-sharing
+  // Export function using expo-sharing
   const handleExport = async () => {
     try {
       setIsProcessing(true);
       
-      // Step 1: Get JSON data from storage service
       const jsonData = await StorageService.exportAllData();
-      
-      // Step 2: Generate timestamped filename
       const timestamp = new Date().toISOString().replace(/[:.]/g, '-').slice(0, -5);
       const filename = `visionflow-backup-${timestamp}.json`;
       
-      // Step 3: Create file and write data
       const file = new File(Paths.cache, filename);
-      file.write(jsonData); // Synchronous write
+      file.write(jsonData);
       
-      // Step 4: Verify file was created
-      const fileExists = file.exists;  // ✅ No await, no parentheses
+      const fileExists = file.exists;
       if (!fileExists) {
         throw new Error('Failed to create backup file');
       }
       
-      // Step 5: Check if sharing is available
       const canShare = await Sharing.isAvailableAsync();
       if (!canShare) {
         Alert.alert(
@@ -106,11 +93,10 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
         return;
       }
       
-      // Step 6: Share the file using expo-sharing (works on both iOS and Android)
       await Sharing.shareAsync(file.uri, {
         mimeType: 'application/json',
         dialogTitle: 'Export VisionFlow Data',
-        UTI: 'public.json', // iOS Universal Type Identifier
+        UTI: 'public.json',
       });
 
       await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
@@ -126,24 +112,20 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
     }
   };
 
-  // ✅ Import function (already working correctly)
+  // Import function
   const handleImport = async () => {
     try {
-      // Step 1: Pick file
       const result = await DocumentPicker.getDocumentAsync({
         type: 'application/json',
         copyToCacheDirectory: true,
       });
 
-      // User canceled
       if (result.canceled) {
         return;
       }
 
-      // Get the selected file
       const pickedFile = result.assets[0];
       
-      // Validate file extension
       if (!pickedFile.name.endsWith('.json')) {
         Alert.alert(
           'Invalid File',
@@ -152,7 +134,6 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
         return;
       }
 
-      // Step 2: Show confirmation dialog
       Alert.alert(
         'Confirm Import',
         `This will replace all current data with data from:\n\n"${pickedFile.name}"\n\nYour current data will be permanently lost. Continue?`,
@@ -165,17 +146,12 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               try {
                 setIsProcessing(true);
 
-                // Step 3: Read file content
                 const file = new File(pickedFile.uri);
                 const fileContent = await file.text();
 
-                // Step 4: Import data (validates and applies)
                 await StorageService.importAllData(fileContent);
-
-                // Step 5: Reload stats
                 await loadStats();
 
-                // Step 6: Success feedback
                 await Haptics.notificationAsync(
                   Haptics.NotificationFeedbackType.Success
                 );
@@ -187,7 +163,6 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
               } catch (error: any) {
                 console.error('[DataManagement] Import failed:', error);
                 
-                // Handle specific error codes from storage service
                 const errorMessage = error.code === 'IMPORT_ERROR'
                   ? 'The backup file is corrupted or invalid. Please try a different file.'
                   : 'Could not import data. Please try again.';
@@ -261,8 +236,10 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">Data & Storage</Text>
-          <Text variant="caption" color="tertiary">Manage your app data</Text>
+          {/* ✅ ENHANCED: Monospace header */}
+          <Text variant="h4" weight="600" mono>DATA_&_STORAGE</Text>
+          {/* ✅ NEW: Italic subtitle */}
+          <Text variant="caption" color="tertiary" italic>Manage your app data</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
@@ -277,7 +254,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pie-chart-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Storage Usage</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>STORAGE_USAGE</Text>
             </View>
             
             <Card elevation="sm" style={styles.statsCard}>
@@ -286,8 +264,10 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                   <Icon name="server" size="xl" color={Theme.colors.primary[500]} />
                 </View>
                 <View style={styles.usageInfo}>
-                  <Text variant="h2" weight="700">{formatSize(stats.estimatedSizeBytes)}</Text>
-                  <Text variant="caption" color="secondary">Total estimated size</Text>
+                  {/* ✅ ENHANCED: Monospace size display */}
+                  <Text variant="h2" weight="700" mono>{formatSize(stats.estimatedSizeBytes)}</Text>
+                  {/* ✅ NEW: Italic description */}
+                  <Text variant="caption" color="secondary" italic>Total estimated size</Text>
                 </View>
               </View>
 
@@ -298,25 +278,21 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                   <View style={styles.statIconContainer}>
                     <Icon name="notifications" size="sm" color={Theme.colors.primary[500]} />
                   </View>
-                  <Text variant="h3" weight="700">{stats.remindersCount}</Text>
-                  <Text variant="caption" color="tertiary">Reminders</Text>
+                  {/* ✅ ENHANCED: Monospace count */}
+                  <Text variant="h3" weight="700" mono>{stats.remindersCount}</Text>
+                  {/* ✅ ENHANCED: Monospace label */}
+                  <Text variant="caption" color="tertiary" mono>REMINDERS</Text>
                 </View>
 
                 <View style={styles.statCard}>
                   <View style={styles.statIconContainer}>
                     <Icon name="analytics" size="sm" color={Theme.colors.semantic.info} />
                   </View>
-                  <Text variant="h3" weight="700">{stats.patternsCount}</Text>
-                  <Text variant="caption" color="tertiary">Patterns</Text>
+                  {/* ✅ ENHANCED: Monospace count */}
+                  <Text variant="h3" weight="700" mono>{stats.patternsCount}</Text>
+                  {/* ✅ ENHANCED: Monospace label */}
+                  <Text variant="caption" color="tertiary" mono>PATTERNS</Text>
                 </View>
-
-                {/* <View style={styles.statCard}>
-                  <View style={styles.statIconContainer}>
-                    <Icon name="folder" size="sm" color={Theme.colors.semantic.warning} />
-                  </View>
-                  <Text variant="h3" weight="700">{stats.projectsCount}</Text>
-                  <Text variant="caption" color="tertiary">Projects</Text>
-                </View> */}
               </View>
             </Card>
           </View>
@@ -325,7 +301,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="sync-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Backup & Restore</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>BACKUP_&_RESTORE</Text>
             </View>
             
             <Card elevation="sm" style={styles.actionCard}>
@@ -336,8 +313,10 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                     <Icon name="download" size="md" color={Theme.colors.semantic.success} />
                   </View>
                   <View style={styles.actionInfo}>
-                    <Text variant="bodyLarge" weight="600">Export Data</Text>
-                    <Text variant="caption" color="secondary" style={styles.actionDescription}>
+                    {/* ✅ ENHANCED: Monospace action label */}
+                    <Text variant="bodyLarge" weight="600" mono>EXPORT_DATA</Text>
+                    {/* ✅ NEW: Italic description */}
+                    <Text variant="caption" color="secondary" italic style={styles.actionDescription}>
                       Download JSON file with all your data
                     </Text>
                   </View>
@@ -361,8 +340,10 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                     <Icon name="cloud-upload" size="md" color={Theme.colors.semantic.info} />
                   </View>
                   <View style={styles.actionInfo}>
-                    <Text variant="bodyLarge" weight="600">Import Data</Text>
-                    <Text variant="caption" color="secondary" style={styles.actionDescription}>
+                    {/* ✅ ENHANCED: Monospace action label */}
+                    <Text variant="bodyLarge" weight="600" mono>IMPORT_DATA</Text>
+                    {/* ✅ NEW: Italic description */}
+                    <Text variant="caption" color="secondary" italic style={styles.actionDescription}>
                       Restore from previously exported file
                     </Text>
                   </View>
@@ -382,7 +363,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
             <Card elevation="sm" style={styles.infoCard}>
               <View style={styles.infoRow}>
                 <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-                <Text variant="caption" color="secondary" style={styles.infoText}>
+                {/* ✅ NEW: Italic info text */}
+                <Text variant="caption" color="secondary" italic style={styles.infoText}>
                   Backups include all reminders, patterns, projects, and settings. Keep your backups safe and secure.
                 </Text>
               </View>
@@ -393,7 +375,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="warning-outline" size="sm" color={Theme.colors.semantic.error} />
-              <Text variant="h4" customColor={Theme.colors.semantic.error}>Danger Zone</Text>
+              {/* ✅ ENHANCED: Monospace danger header */}
+              <Text variant="h4" mono customColor={Theme.colors.semantic.error}>DANGER_ZONE</Text>
             </View>
             
             <Card elevation="sm" style={styles.dangerCard}>
@@ -402,10 +385,12 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
                   <Icon name="trash" size="lg" color={Theme.colors.semantic.error} />
                 </View>
                 <View style={styles.dangerInfo}>
-                  <Text variant="h4" customColor={Theme.colors.semantic.error}>
-                    Factory Reset
+                  {/* ✅ ENHANCED: Monospace danger title */}
+                  <Text variant="h4" mono customColor={Theme.colors.semantic.error}>
+                    FACTORY_RESET
                   </Text>
-                  <Text variant="caption" color="secondary" style={styles.dangerDescription}>
+                  {/* ✅ NEW: Italic danger description */}
+                  <Text variant="caption" color="secondary" italic style={styles.dangerDescription}>
                     Permanently delete all local data. This action cannot be undone and will reset the app to its initial state.
                   </Text>
                 </View>
@@ -426,7 +411,8 @@ export function DataManagementScreen({ navigation }: DataManagementScreenProps) 
             <Card elevation="sm" style={styles.warningCard}>
               <View style={styles.infoRow}>
                 <Icon name="alert-circle" size="sm" color={Theme.colors.semantic.warning} />
-                <Text variant="caption" color="secondary" style={styles.infoText}>
+                {/* ✅ NEW: Italic warning text */}
+                <Text variant="caption" color="secondary" italic style={styles.infoText}>
                   Make sure to export your data before performing a factory reset. Deleted data cannot be recovered.
                 </Text>
               </View>

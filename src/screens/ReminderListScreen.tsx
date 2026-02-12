@@ -1,16 +1,15 @@
 /**
- * VisionFlow AI - Reminder List Screen (v5.0 - Keyboard & Layout Fix)
- * Browse and manage all reminders
+ * VisionFlow AI - Reminder List Screen (v7.0 - Fixed Layout Edition)
+ * Browse and manage all reminders with consistent card heights
  * 
  * @module screens/ReminderListScreen
  * 
- * CHANGELOG v5.0:
- * - ✅ CRITICAL FIX: Applied Pattern screen keyboard handling (keyboardShouldPersistTaps/keyboardDismissMode)
- * - ✅ CRITICAL FIX: Replaced View wrapper with Screen component (Pattern baseline)
- * - ✅ CRITICAL FIX: Moved header outside FlatList to prevent keyboard interference
- * - ✅ LAYOUT FIX: Removed manual safe area insets (Screen handles it)
- * - ✅ LAYOUT FIX: TextInput fontSize locked at 16px (prevents iOS zoom)
- * - ✅ Preserved Reminder's superior list styling (borders + status dots)
+ * CHANGELOG v7.0:
+ * - 🔧 CRITICAL FIX: All cards now have uniform height
+ * - 🔧 FIXED: Card layout restructured for consistency
+ * - 🔧 FIXED: Metadata (category + date) on same line
+ * - 🔧 FIXED: Title and smart note with fixed line counts
+ * - ✅ All v6.0 Hidden Inside UI features preserved
  */
 
 import React, { useState, useEffect, useMemo, useRef } from 'react';
@@ -180,66 +179,79 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
         key={item.id}
         pressable
         onPress={() => handleReminderTap(item.id)}
+        variant="glowBorder"
         elevation="sm"
         style={[
           styles.reminderCard,
           isDone ? styles.reminderCardDone : {},
         ]}
       >
+        {/* 🔧 FIXED: New fixed-height layout structure */}
         <View style={styles.reminderContent}>
-          {/* Emoji Icon with Status Indicator */}
+          {/* Left: Emoji Icon with Status Indicator */}
           <View style={styles.iconWrapper}>
             <View style={[styles.reminderIcon, { backgroundColor: statusConfig.bgColor }]}>
               <Text variant="h3">{item.emoji}</Text>
             </View>
-            {/* Status dot */}
             <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
           </View>
 
-          {/* Content */}
+          {/* Center: Content (Fixed 3-line structure) */}
           <View style={styles.reminderInfo}>
+
+            {/* Line 3: Title (Heading) - Always 1 line */}
             <Text
               variant="bodyLarge"
               weight="600"
-              style={isDone ? styles.textDone : undefined}
+              style={[styles.title, ...(isDone ? [styles.textDone] : [])]}
               numberOfLines={1}
+              ellipsizeMode="tail"
             >
               {item.title}
             </Text>
-            
-            <Text variant="body" color="secondary" numberOfLines={1} style={styles.smartNote}>
-              {item.smartNote}
+
+            {/* Line 2: Smart Note (Description) - Always 1 line */}
+            <Text 
+              variant="body" 
+              color="secondary" 
+              italic 
+              numberOfLines={1}
+              ellipsizeMode="tail"
+              style={styles.smartNote}
+            >
+              {item.smartNote || 'No description'}
             </Text>
-            
+            {/* Line 1: Metadata (Category + Date) - Always on same line */}
             <View style={styles.metaRow}>
               <View style={styles.metaItem}>
                 <Icon name="pricetag-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                <Text variant="caption" color="tertiary" mono numberOfLines={1}>
                   {item.category}
                 </Text>
               </View>
               
               <View style={styles.metaDivider} />
               
-              <View style={styles.metaItem}>
+              <View style={[styles.metaItem, styles.metaItemFlex]}>
                 <Icon name="calendar-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                <Text variant="caption" color="tertiary" mono numberOfLines={1}>
                   {formatRelativeDate(item.reminderDate, item.reminderTime)}
                 </Text>
               </View>
-            </View>
-            
+            </View>            
+
+            {/* Optional: Project Tag (if present, shows below) */}
             {item.projectName && (
               <View style={styles.projectTag}>
                 <Icon name="folder-outline" size="xs" color={Theme.colors.primary[500]} />
-                <Text variant="caption" customColor={Theme.colors.primary[500]}>
+                <Text variant="caption" customColor={Theme.colors.primary[500]} mono weight="600" numberOfLines={1}>
                   {item.projectName}
                 </Text>
               </View>
             )}
           </View>
 
-          {/* Actions */}
+          {/* Right: Actions */}
           <View style={styles.actionContainer}>
             {item.status === ReminderStatus.UPCOMING && (
               <Pressable
@@ -266,11 +278,14 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
 
   return (
     <Screen>
-      {/* Header - Fixed Outside FlatList (Pattern Baseline) */}
+      {/* Header - Fixed Outside FlatList */}
       <Container padding="m" style={styles.header}>
         {/* Header Top */}
         <View style={styles.headerTop}>
           <View>
+            <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+              COMMAND_CENTER
+            </Text>
             <Text variant="h2">Reminders</Text>
           </View>
           <Pressable 
@@ -279,7 +294,7 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
             style={styles.captureButton}
           >
             <Icon name="camera" size="sm" color={Theme.colors.background.primary} />
-            <Text variant="caption" weight="700" customColor={Theme.colors.background.primary}>
+            <Text variant="caption" weight="700" customColor={Theme.colors.background.primary} mono>
               CAPTURE
             </Text>
           </Pressable>
@@ -308,30 +323,42 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
         </View>
 
         {/* Stats Row */}
+        <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+          STATUS_OVERVIEW
+        </Text>
         <View style={styles.statsRow}>
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.primary[500]}>
+            <Text variant="h4" customColor={Theme.colors.primary[500]} mono>
               {stats.upcoming}
             </Text>
-            <Text variant="caption" color="secondary">Upcoming</Text>
+            <Text variant="caption" color="secondary" mono>
+              Upcoming
+            </Text>
           </View>
           
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.semantic.success}>
+            <Text variant="h4" customColor={Theme.colors.semantic.success} mono>
               {stats.done}
             </Text>
-            <Text variant="caption" color="secondary">Done</Text>
+            <Text variant="caption" color="secondary" mono>
+              Done
+            </Text>
           </View>
           
           <View style={styles.statItem}>
-            <Text variant="h4" customColor={Theme.colors.semantic.error}>
+            <Text variant="h4" customColor={Theme.colors.semantic.error} mono>
               {stats.overdue}
             </Text>
-            <Text variant="caption" color="secondary">Overdue</Text>
+            <Text variant="caption" color="secondary" mono>
+              Overdue
+            </Text>
           </View>
         </View>
 
         {/* Category Filter */}
+        <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+          FILTER_BY_CATEGORY
+        </Text>
         <View style={styles.categoryFilter}>
           <Pressable
             onPress={() => handleCategoryFilter('all')}
@@ -348,6 +375,7 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
             <Text
               variant="caption"
               weight="700"
+              mono
               customColor={
                 selectedCategory === 'all'
                   ? Theme.colors.primary[500]
@@ -380,6 +408,7 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
               <Text
                 variant="caption"
                 weight="700"
+                mono
                 customColor={
                   selectedCategory === cat.key
                     ? Theme.colors.primary[500]
@@ -395,7 +424,7 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
 
       {isLoading && !refreshing ? (
         <View style={styles.loadingContainer}>
-          <LoadingSpinner size="large" />
+          <LoadingSpinner size="large" text="LOADING_REMINDERS..." />
         </View>
       ) : searchFilteredReminders.length === 0 && !searchQuery ? (
         <EmptyState
@@ -417,7 +446,7 @@ export function ReminderListScreen({ navigation, route }: ReminderListScreenProp
                 <Text variant="h4" align="center" style={{ marginTop: Theme.spacing.m }}>
                   No matching reminders
                 </Text>
-                <Text variant="body" color="secondary" align="center">
+                <Text variant="body" color="secondary" align="center" italic>
                   Try adjusting your search
                 </Text>
               </View>
@@ -454,6 +483,11 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
+  },
+  sectionLabel: {
+    letterSpacing: 2,
+    marginBottom: Theme.spacing.xs,
+    opacity: 0.7,
   },
   captureButton: {
     flexDirection: 'row',
@@ -495,9 +529,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: Theme.spacing.m,
-    paddingVertical: Theme.spacing.s,
+    paddingVertical: Theme.spacing.m,
     backgroundColor: Theme.colors.background.tertiary,
     borderRadius: Theme.borderRadius.m,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.border.default}50`,
   },
   statItem: {
     alignItems: 'center',
@@ -524,6 +560,11 @@ const styles = StyleSheet.create({
   categoryChipActive: {
     backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
   
   // List styles
@@ -543,16 +584,14 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   
-  // Reminder card styles
+  // 🔧 FIXED: Reminder card styles with uniform height
   reminderCard: {
     marginBottom: Theme.spacing.s,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
-    ...Theme.shadows.sm,
+    minHeight: 120, // Ensures consistent minimum height
   },
   reminderCardDone: {
     opacity: 0.7,
-    borderColor: `${Theme.colors.semantic.success}30`,
+    borderColor: `${Theme.colors.semantic.success}50`,
   },
   reminderContent: {
     flexDirection: 'row',
@@ -581,27 +620,28 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Theme.colors.background.secondary,
   },
+  // 🔧 FIXED: Info section with controlled structure
   reminderInfo: {
     flex: 1,
-    gap: 6,
+    gap: 4, // Reduced gap for tighter layout
+    justifyContent: 'flex-start',
   },
-  smartNote: {
-    lineHeight: 18,
-  },
-  textDone: {
-    textDecorationLine: 'line-through',
-    opacity: 0.6,
-  },
+  // 🔧 FIXED: Metadata row (Line 1)
   metaRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: Theme.spacing.xs,
-    flexWrap: 'wrap',
+    marginBottom: 2,
   },
   metaItem: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
+    flexShrink: 1,
+  },
+  metaItemFlex: {
+    flex: 1,
+    minWidth: 0,
   },
   metaDivider: {
     width: 3,
@@ -610,6 +650,21 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.text.tertiary,
     opacity: 0.5,
   },
+  // 🔧 FIXED: Smart note (Line 2)
+  smartNote: {
+    lineHeight: 18,
+    height: 18, // Fixed height for 1 line
+  },
+  // 🔧 FIXED: Title (Line 3)
+  title: {
+    lineHeight: 20,
+    height: 20, // Fixed height for 1 line
+  },
+  textDone: {
+    textDecorationLine: 'line-through',
+    opacity: 0.6,
+  },
+  // Project tag (optional, below main structure)
   projectTag: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -618,7 +673,10 @@ const styles = StyleSheet.create({
     paddingVertical: 2,
     backgroundColor: `${Theme.colors.primary[500]}10`,
     borderRadius: Theme.borderRadius.s,
+    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}30`,
     alignSelf: 'flex-start',
+    marginTop: 4,
   },
   actionContainer: {
     alignItems: 'center',

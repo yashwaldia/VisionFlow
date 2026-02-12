@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Telemetry Panel Component
- * Display pattern metadata, measurements, and technical details
+ * VisionFlow AI - Telemetry Panel Component (v2.0 - Hidden Inside UI Edition)
+ * Enhanced technical display with monospace aesthetic
  * 
  * @module components/patterns/TelemetryPanel
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for all technical labels
+ * - ✅ UI ENHANCEMENT: Enhanced letter-spacing
+ * - ✅ All original functionality preserved
  */
 
 import React from 'react';
@@ -30,11 +35,13 @@ export function TelemetryPanel({
     <View style={styles.container}>
       <View style={styles.header}>
         <Icon name="analytics-outline" size="sm" color={Theme.colors.primary[500]} />
-        <Text variant="h4" weight="700" style={styles.headerText}>
-          PATTERN TELEMETRY
+        {/* ✅ ENHANCED: Monospace header */}
+        <Text variant="h4" weight="700" mono style={styles.headerText}>
+          PATTERN_TELEMETRY
         </Text>
         <View style={styles.badge}>
-          <Text variant="micro" weight="700" customColor={Theme.colors.primary[500]}>
+          {/* ✅ ENHANCED: Monospace count */}
+          <Text variant="micro" weight="700" mono customColor={Theme.colors.primary[500]}>
             {patterns.length}
           </Text>
         </View>
@@ -72,38 +79,42 @@ function PatternTelemetryCard({
 
   return (
     <Pressable onPress={onPress} haptic="light">
-        <Card
+      <Card
         variant="hud"
         style={[
-            styles.patternCard,
-            ...(isSelected ? [styles.patternCardSelected] : []),
-            { borderColor: isSelected ? patternColor : Theme.colors.border.default },
+          styles.patternCard,
+          ...(isSelected ? [styles.patternCardSelected] : []),
+          { borderColor: isSelected ? patternColor : Theme.colors.border.default },
         ]}
-        >
+      >
         {/* Header */}
         <View style={styles.cardHeader}>
           <View style={styles.cardHeaderLeft}>
             <View style={[styles.patternIndicator, { backgroundColor: patternColor }]} />
-            <Text variant="caption" weight="700" style={styles.patternIndex}>
+            {/* ✅ Already uses mono font via style, now also using mono prop */}
+            <Text variant="caption" weight="700" mono style={styles.patternIndex}>
               NODE_{index + 1}
             </Text>
           </View>
           <View style={styles.confidenceBadge}>
             <Icon name="checkmark-circle" size="xs" color={patternColor} />
-            <Text variant="micro" weight="700" customColor={patternColor}>
+            {/* ✅ ENHANCED: Monospace confidence percentage */}
+            <Text variant="micro" weight="700" mono customColor={patternColor}>
               {Math.round((pattern.confidence || 0) * 100)}%
             </Text>
           </View>
         </View>
 
         {/* Pattern Name */}
-        <Text variant="body" weight="700" numberOfLines={2} style={styles.patternName}>
+        {/* ✅ ENHANCED: Monospace pattern name */}
+        <Text variant="body" weight="700" mono numberOfLines={2} style={styles.patternName}>
           {pattern.name}
         </Text>
 
         {/* Type Badge */}
         <View style={[styles.typeBadge, { backgroundColor: `${patternColor}15` }]}>
-          <Text variant="micro" weight="700" customColor={patternColor}>
+          {/* ✅ ENHANCED: Monospace type label */}
+          <Text variant="micro" weight="700" mono customColor={patternColor}>
             {pattern.type.toUpperCase().replace('_', ' ')}
           </Text>
         </View>
@@ -114,7 +125,7 @@ function PatternTelemetryCard({
             {pattern.measurements.goldenRatio && (
               <MeasurementItem
                 icon="analytics"
-                label="φ Ratio"
+                label="φ_RATIO"
                 value={pattern.measurements.goldenRatio.toFixed(3)}
                 color={patternColor}
               />
@@ -122,7 +133,7 @@ function PatternTelemetryCard({
             {pattern.measurements.angles && pattern.measurements.angles.length > 0 && (
               <MeasurementItem
                 icon="shapes-outline"
-                label="Angles"
+                label="ANGLES"
                 value={`${pattern.measurements.angles.length}°`}
                 color={patternColor}
               />
@@ -130,7 +141,7 @@ function PatternTelemetryCard({
             {pattern.measurements.symmetryAxes !== undefined && (
               <MeasurementItem
                 icon="git-branch-outline"
-                label="Axes"
+                label="AXES"
                 value={pattern.measurements.symmetryAxes.toString()}
                 color={patternColor}
               />
@@ -138,7 +149,7 @@ function PatternTelemetryCard({
             {pattern.measurements.nodeCount !== undefined && (
               <MeasurementItem
                 icon="ellipse-outline"
-                label="Nodes"
+                label="NODES"
                 value={pattern.measurements.nodeCount.toString()}
                 color={patternColor}
               />
@@ -149,8 +160,9 @@ function PatternTelemetryCard({
         {/* Anchors Count */}
         <View style={styles.anchorInfo}>
           <Icon name="locate-outline" size="xs" color={Theme.colors.text.tertiary} />
-          <Text variant="micro" color="tertiary">
-            {pattern.anchors.length} anchor point{pattern.anchors.length !== 1 ? 's' : ''}
+          {/* ✅ ENHANCED: Monospace anchor count */}
+          <Text variant="micro" color="tertiary" mono>
+            {pattern.anchors.length} anchor_point{pattern.anchors.length !== 1 ? 's' : ''}
           </Text>
         </View>
       </Card>
@@ -170,10 +182,12 @@ function MeasurementItem({ icon, label, value, color }: MeasurementItemProps) {
     <View style={styles.measurementItem}>
       <Icon name={icon as any} size="xs" color={color} />
       <View style={styles.measurementText}>
-        <Text variant="micro" color="tertiary">
+        {/* ✅ ENHANCED: Monospace measurement label */}
+        <Text variant="micro" color="tertiary" mono>
           {label}
         </Text>
-        <Text variant="caption" weight="700" customColor={color}>
+        {/* ✅ ENHANCED: Monospace measurement value */}
+        <Text variant="caption" weight="700" mono customColor={color}>
           {value}
         </Text>
       </View>

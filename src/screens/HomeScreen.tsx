@@ -1,15 +1,16 @@
 /**
- * VisionFlow AI - Home Screen (v4.5 - ICON STYLE CONSISTENCY FIX)
+ * VisionFlow AI - Home Screen (v5.0 - Hidden Inside UI Edition)
+ * Enhanced dashboard with cyberpunk aesthetic
  * 
- * CHANGELOG v4.5:
- * ✅ VISUAL FIX: Icon background now matches Reminder List screen (solid color instead of gradient)
- * ✅ VISUAL FIX: Icon size increased to 56x56 (matching Reminder List)
- * ✅ VISUAL FIX: Added border (1px with 20% opacity, matching Reminder List)
- * ✅ VISUAL FIX: Using status-based background colors (matching Reminder List)
+ * @module screens/HomeScreen
  * 
- * CHANGELOG v4.4:
- * ✅ CRITICAL ARCHITECTURAL FIX: Removed scroll prop from Screen
- * ✅ CRITICAL FIX: Added ScrollView inside Screen (matching Reminder/Pattern pattern)
+ * CHANGELOG v5.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ UI ENHANCEMENT: Blue glow borders on reminder cards
+ * - ✅ UI ENHANCEMENT: Section label above main header
+ * - ✅ UI ENHANCEMENT: Enhanced stats with monospace numbers
+ * - ✅ All v4.5 functionality and icon consistency preserved
  */
 
 import React, { useMemo } from 'react';
@@ -37,7 +38,6 @@ import {
 import { useReminders } from '../hooks/useReminders';
 import { usePatterns } from '../hooks/usePatterns';
 
-
 type HomeScreenNavigationProp = CompositeNavigationProp<
   NativeStackScreenProps<HomeStackParamList, 'Home'>['navigation'],
   CompositeNavigationProp<
@@ -46,11 +46,9 @@ type HomeScreenNavigationProp = CompositeNavigationProp<
   >
 >;
 
-
 type HomeScreenProps = {
   navigation: HomeScreenNavigationProp;
 };
-
 
 const PREMIUM_COLORS = {
   accent: '#00E5FF',
@@ -72,7 +70,6 @@ const PREMIUM_COLORS = {
   },
 };
 
-
 const getGreeting = (): string => {
   const hour = new Date().getHours();
   if (hour < 12) return 'Good Morning';
@@ -80,29 +77,24 @@ const getGreeting = (): string => {
   return 'Good Evening';
 };
 
-
 const formatReminderDate = (dateString: string, timeString?: string): string => {
   const date = new Date(dateString);
   const today = new Date();
   const tomorrow = new Date(today);
   tomorrow.setDate(tomorrow.getDate() + 1);
 
-
   const isToday = date.toDateString() === today.toDateString();
   const isTomorrow = date.toDateString() === tomorrow.toDateString();
 
-
   if (isToday) return timeString ? `Today at ${timeString}` : 'Today';
   if (isTomorrow) return timeString ? `Tomorrow at ${timeString}` : 'Tomorrow';
-
 
   const options: Intl.DateTimeFormatOptions = { month: 'short', day: 'numeric' };
   return date.toLocaleDateString(undefined, options);
 };
 
-
 /**
- * ✅ NEW: Get status configuration (matching Reminder List screen)
+ * Get status configuration (matching Reminder List screen)
  */
 const getStatusConfig = (status: ReminderStatus) => {
   const configs = {
@@ -126,14 +118,11 @@ const getStatusConfig = (status: ReminderStatus) => {
   return configs[status] || configs[ReminderStatus.UPCOMING];
 };
 
-
 export function HomeScreen({ navigation }: HomeScreenProps) {
   const { reminders, isLoading, refreshReminders } = useReminders();
   const { patterns } = usePatterns();
 
-
   const [refreshing, setRefreshing] = React.useState(false);
-
 
   const stats = useMemo(() => ({
     totalReminders: reminders.length,
@@ -148,7 +137,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     totalPatterns: patterns.length,
   }), [reminders, patterns]);
 
-
   const recentReminders = useMemo(() => 
     reminders
       .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
@@ -156,38 +144,31 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     [reminders]
   );
 
-
   const handleRefresh = async () => {
     setRefreshing(true);
     await refreshReminders();
     setRefreshing(false);
   };
 
-
   const handleCaptureReminder = () => {
     navigation.navigate('CameraModal', { mode: 'reminder' });
   };
-
 
   const handleDiscoverPattern = () => {
     navigation.navigate('CameraModal', { mode: 'pattern' });
   };
 
-
   const handleViewAllReminders = () => {
     navigation.navigate('RemindersTab', { screen: 'ReminderList', params: {} });
   };
-
 
   const handleViewPatterns = () => {
     navigation.navigate('PatternsTab', { screen: 'PatternLibrary', params: {} });
   };
 
-
   const handleReminderDetail = (reminderId: string) => {
     navigation.navigate('RemindersTab', { screen: 'ReminderDetail', params: { reminderId } });
   };
-
 
   return (
     <Screen>
@@ -206,9 +187,14 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text variant="caption" style={styles.greeting}>
-              {getGreeting().toUpperCase()}
+            {/* ✅ NEW: Section label above greeting */}
+            <Text variant="caption" mono weight="700" color="tertiary" style={styles.systemLabel}>
+              SYSTEM_DASHBOARD
             </Text>
+            {/* ✅ ENHANCED: Monospace greeting */}
+            {/* <Text variant="caption" mono weight="700" style={styles.greeting}>
+              {getGreeting().toUpperCase()}
+            </Text> */}
             <Text variant="h1" style={styles.headerTitle}>
               VisionFlow AI
             </Text>
@@ -223,69 +209,77 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           </Pressable>
         </View>
 
-
-        {/* Stat Cards with IDENTICAL Heights */}
-        <View style={styles.statsContainer}>
-          {/* Active Reminders */}
-          <Pressable onPress={handleViewAllReminders} style={styles.statCardPressable}>
-            <Card variant="glass" elevation="sm" style={styles.statCard}>
-              <View style={styles.statContent}>
-                <View style={styles.statHeader}>
-                  <Text variant="caption" style={styles.statLabel}>
-                    ACTIVE REMINDERS
-                  </Text>
-                  {stats.overdueReminders > 0 && (
-                    <View style={styles.alertBadge}>
-                      <View style={styles.alertDot} />
-                    </View>
-                  )}
-                </View>
-                <Text style={styles.statNumber}>
-                  {stats.activeReminders}
-                </Text>
-                <View style={styles.statMetaContainer}>
-                  {stats.overdueReminders > 0 ? (
-                    <Text variant="caption" style={styles.statMeta}>
-                      {stats.overdueReminders} overdue
+        {/* ✅ ENHANCED: Stats section with label */}
+        <View style={styles.statsSection}>
+          <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+            STATUS_OVERVIEW
+          </Text>
+          <View style={styles.statsContainer}>
+            {/* Active Reminders */}
+            <Pressable onPress={handleViewAllReminders} style={styles.statCardPressable}>
+              <Card variant="glass" elevation="sm" style={styles.statCard}>
+                <View style={styles.statContent}>
+                  <View style={styles.statHeader}>
+                    {/* ✅ ENHANCED: Monospace stat label */}
+                    <Text variant="caption" mono weight="700" style={styles.statLabel}>
+                      ACTIVE_REMINDERS
                     </Text>
-                  ) : (
-                    <Text variant="caption" style={styles.statMetaPlaceholder}>
-                      {' '}
+                    {stats.overdueReminders > 0 && (
+                      <View style={styles.alertBadge}>
+                        <View style={styles.alertDot} />
+                      </View>
+                    )}
+                  </View>
+                  {/* ✅ ENHANCED: Monospace number */}
+                  <Text style={[styles.statNumber, { fontFamily: Theme.typography.fontFamily.mono }]}>
+                    {stats.activeReminders}
+                  </Text>
+                  <View style={styles.statMetaContainer}>
+                    {stats.overdueReminders > 0 ? (
+                      <Text variant="caption" mono style={styles.statMeta}>
+                        {stats.overdueReminders} overdue
+                      </Text>
+                    ) : (
+                      <Text variant="caption" style={styles.statMetaPlaceholder}>
+                        {' '}
+                      </Text>
+                    )}
+                  </View>
+                </View>
+              </Card>
+            </Pressable>
+
+            {/* Patterns */}
+            <Pressable onPress={handleViewPatterns} style={styles.statCardPressable}>
+              <Card variant="glass" elevation="sm" style={styles.statCard}>
+                <View style={styles.statContent}>
+                  <View style={styles.statHeader}>
+                    {/* ✅ ENHANCED: Monospace stat label */}
+                    <Text variant="caption" mono weight="700" style={styles.statLabel}>
+                      PATTERNS
                     </Text>
-                  )}
-                </View>
-              </View>
-            </Card>
-          </Pressable>
-
-
-          {/* Patterns */}
-          <Pressable onPress={handleViewPatterns} style={styles.statCardPressable}>
-            <Card variant="glass" elevation="sm" style={styles.statCard}>
-              <View style={styles.statContent}>
-                <View style={styles.statHeader}>
-                  <Text variant="caption" style={styles.statLabel}>
-                    PATTERNS
+                  </View>
+                  {/* ✅ ENHANCED: Monospace number */}
+                  <Text style={[styles.statNumber, { fontFamily: Theme.typography.fontFamily.mono }]}>
+                    {stats.totalPatterns}
                   </Text>
+                  <View style={styles.statMetaContainer}>
+                    {/* ✅ ENHANCED: Monospace meta */}
+                    <Text variant="caption" mono style={styles.statMeta}>
+                      Discovered
+                    </Text>
+                  </View>
                 </View>
-                <Text style={styles.statNumber}>
-                  {stats.totalPatterns}
-                </Text>
-                <View style={styles.statMetaContainer}>
-                  <Text variant="caption" style={styles.statMeta}>
-                    Discovered
-                  </Text>
-                </View>
-              </View>
-            </Card>
-          </Pressable>
+              </Card>
+            </Pressable>
+          </View>
         </View>
-
 
         {/* Full-Width Buttons */}
         <View style={styles.section}>
-          <Text variant="caption" style={styles.sectionLabel}>
-            QUICK ACTIONS
+          {/* ✅ ENHANCED: Monospace section label */}
+          <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+            QUICK_ACTIONS
           </Text>
           <View style={styles.actionButtons}>
             <Button
@@ -307,22 +301,21 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           </View>
         </View>
 
-
         {/* Recent Activity */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text variant="caption" style={styles.sectionLabel}>
-              RECENT REMINDERS
+            {/* ✅ ENHANCED: Monospace section label */}
+            <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+              RECENT_ACTIVITY
             </Text>
             {recentReminders.length > 0 && (
               <Pressable onPress={handleViewAllReminders}>
-                <Text variant="body" style={styles.viewAllText}>
+                <Text variant="body" mono weight="600" style={styles.viewAllText}>
                   View All →
                 </Text>
               </Pressable>
             )}
           </View>
-
 
           {recentReminders.length === 0 ? (
             <EmptyState
@@ -342,38 +335,36 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
                     key={reminder.id}
                     onPress={() => handleReminderDetail(reminder.id)}
                   >
-                    <Card variant="glass" elevation="sm" style={styles.reminderCard}>
+                    {/* ✅ ENHANCED: Blue glow border */}
+                    <Card variant="glowBorder" elevation="sm" style={styles.reminderCard}>
                       <View style={styles.reminderContent}>
-                        {/* ✅ UPDATED: Solid color icon (matching Reminder List screen) */}
                         <View style={styles.iconWrapper}>
                           <View style={[styles.reminderIcon, { backgroundColor: statusConfig.bgColor }]}>
                             <Text variant="h3">{reminder.emoji}</Text>
                           </View>
-                          {/* Status dot */}
                           <View style={[
                             styles.statusDot,
                             { backgroundColor: statusConfig.color }
                           ]} />
                         </View>
 
-
                         <View style={styles.reminderInfo}>
                           <Text variant="bodyLarge" weight="600" numberOfLines={1}>
                             {reminder.title}
                           </Text>
                           <View style={styles.reminderMeta}>
-                            <Text variant="caption" style={styles.metaText}>
+                            {/* ✅ ENHANCED: Monospace meta text */}
+                            <Text variant="caption" mono style={styles.metaText}>
                               {reminder.category}
                             </Text>
                             <Text variant="caption" style={styles.metaSeparator}>
                               •
                             </Text>
-                            <Text variant="caption" style={styles.metaText}>
+                            <Text variant="caption" mono style={styles.metaText}>
                               {formatReminderDate(reminder.reminderDate, reminder.reminderTime)}
                             </Text>
                           </View>
                         </View>
-
 
                         <Icon 
                           name="chevron-forward" 
@@ -389,16 +380,17 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
           )}
         </View>
 
-
         {/* Completion Indicator */}
         {stats.completedToday > 0 && (
           <Card variant="glass" elevation="none" style={styles.completionCard}>
             <View style={styles.completionIndicator} />
             <View style={styles.completionContent}>
-              <Text variant="body" weight="600" style={styles.completionTitle}>
+              {/* ✅ ENHANCED: Monospace completion title */}
+              <Text variant="body" weight="600" mono style={styles.completionTitle}>
                 {stats.completedToday} completed today
               </Text>
-              <Text variant="caption" style={styles.completionText}>
+              {/* ✅ NEW: Italic descriptive text */}
+              <Text variant="caption" italic style={styles.completionText}>
                 Keep up the momentum
               </Text>
             </View>
@@ -408,7 +400,6 @@ export function HomeScreen({ navigation }: HomeScreenProps) {
     </Screen>
   );
 }
-
 
 const styles = StyleSheet.create({
   contentContainer: {
@@ -427,11 +418,18 @@ const styles = StyleSheet.create({
   headerLeft: {
     flex: 1,
   },
+  // ✅ NEW: System label above greeting
+  systemLabel: {
+    letterSpacing: 2,
+    fontSize: 9,
+    marginBottom: 2,
+    opacity: 0.7,
+  },
   greeting: {
     letterSpacing: 2,
     fontSize: 9,
-    fontWeight: '700',
     color: PREMIUM_COLORS.neutral[500],
+    marginBottom: 4,
   },
   headerTitle: {
     fontSize: 28,
@@ -441,6 +439,7 @@ const styles = StyleSheet.create({
   },
   settingsButton: {
     padding: 4,
+    paddingTop: 22,
   },
   settingsIconContainer: {
     width: 36,
@@ -451,12 +450,13 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
 
-
-  // Stat Cards - IDENTICAL Heights
+  // ✅ NEW: Stats section wrapper
+  statsSection: {
+    marginBottom: Theme.spacing.xxl,
+  },
   statsContainer: {
     flexDirection: 'row',
     gap: Theme.spacing.m,
-    marginBottom: Theme.spacing.xxl,
   },
   statCardPressable: {
     flex: 1,
@@ -477,8 +477,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.2,
+    letterSpacing: 1.5, // Increased for technical feel
     color: PREMIUM_COLORS.neutral[500],
   },
   alertBadge: {
@@ -514,7 +513,6 @@ const styles = StyleSheet.create({
     color: 'transparent',
   },
 
-
   // Sections
   section: {
     marginBottom: Theme.spacing.xxl,
@@ -527,17 +525,15 @@ const styles = StyleSheet.create({
   },
   sectionLabel: {
     fontSize: 10,
-    fontWeight: '700',
-    letterSpacing: 1.2,
+    letterSpacing: 2, // Increased from 1.2
     color: PREMIUM_COLORS.neutral[500],
     marginBottom: Theme.spacing.m,
+    opacity: 0.7,
   },
   viewAllText: {
     fontSize: 13,
-    fontWeight: '600',
     color: PREMIUM_COLORS.accent,
   },
-
 
   // Full-Width Buttons
   actionButtons: {
@@ -546,7 +542,6 @@ const styles = StyleSheet.create({
   actionButton: {
     width: '100%',
   },
-
 
   // Reminder Cards
   remindersList: {
@@ -561,7 +556,7 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.m,
   },
   
-  // ✅ UPDATED: Icon styles matching Reminder List screen exactly
+  // Icon styles (matching Reminder List screen)
   iconWrapper: {
     position: 'relative',
   },
@@ -602,7 +597,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: PREMIUM_COLORS.neutral[600],
   },
-
 
   // Completion Card
   completionCard: {

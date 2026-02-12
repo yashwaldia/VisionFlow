@@ -1,18 +1,14 @@
 /**
- * VisionFlow AI - Settings Screen (v2.4 - Full Layout Alignment)
- * App configuration and preferences
+ * VisionFlow AI - Settings Screen (v3.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with monospace and italic typography
  * 
  * @module screens/SettingsScreen
  * 
- * CHANGELOG v2.4:
- * - ✅ CRITICAL RESTRUCTURE: Matches Reminder/Project layout (fixed header + ScrollView)
- * - ✅ REMOVED: Subtitle "Customize your VisionFlow experience"
- * - ✅ ADDED: Fixed header with border/shadow (matches reference)
- * - ✅ ADDED: Proper ScrollView contentContainerStyle with bottom safe area
- * - ✅ LAYOUT: Header outside scroll, content inside (reference baseline)
+ * CHANGELOG v3.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ All v2.4 layout alignment preserved
  */
-
-
 
 import React from 'react';
 import { View, ScrollView, StyleSheet, Alert, Linking, Platform } from 'react-native';
@@ -36,8 +32,6 @@ import {
   Divider,
 } from '../components';
 
-
-
 type SettingsScreenNavigationProp = CompositeNavigationProp<
   NativeStackScreenProps<SettingsStackParamList, 'SettingsHome'>['navigation'],
   CompositeNavigationProp<
@@ -46,16 +40,12 @@ type SettingsScreenNavigationProp = CompositeNavigationProp<
   >
 >;
 
-
-
 type SettingsScreenProps = NativeStackScreenProps<
   SettingsStackParamList,
   'SettingsHome'
 > & {
   navigation: SettingsScreenNavigationProp;
 };
-
-
 
 interface SettingItem {
   id: string;
@@ -70,16 +60,8 @@ interface SettingItem {
   iconBgColor?: string;
 }
 
-
-
 /**
  * SettingsScreen Component
- * 
- * Features:
- * - App preferences
- * - Notification settings
- * - Data management
- * - About & support
  */
 export function SettingsScreen({ navigation }: SettingsScreenProps) {
   // Navigation handlers
@@ -164,16 +146,6 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
       iconColor: Theme.colors.primary[500],
       iconBgColor: `${Theme.colors.primary[500]}20`,
     },
-    /* {
-      id: 'theme',
-      icon: 'color-palette-outline',
-      label: 'Appearance',
-      subtitle: 'Theme and display',
-      onPress: handleThemeSettings,
-      rightElement: 'chevron',
-      iconColor: Theme.colors.semantic.warning,
-      iconBgColor: `${Theme.colors.semantic.warning}20`,
-    }, */
     {
       id: 'data',
       icon: 'server-outline',
@@ -289,15 +261,18 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           </View>
           
           <View style={styles.settingInfo}>
+            {/* ✅ ENHANCED: Monospace setting label */}
             <Text
               variant="body"
               weight="600"
+              mono
               customColor={item.destructive ? Theme.colors.semantic.error : undefined}
             >
               {item.label}
             </Text>
+            {/* ✅ NEW: Italic subtitle */}
             {item.subtitle && (
-              <Text variant="caption" color="tertiary" style={styles.subtitle}>
+              <Text variant="caption" color="tertiary" italic style={styles.subtitle}>
                 {item.subtitle}
               </Text>
             )}
@@ -307,7 +282,8 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
         <View style={styles.settingRight}>
           {item.rightElement === 'badge' && item.badgeText && (
             <View style={styles.badge}>
-              <Text variant="caption" weight="700" customColor={Theme.colors.primary[500]}>
+              {/* ✅ ENHANCED: Monospace badge text */}
+              <Text variant="caption" weight="700" mono customColor={Theme.colors.primary[500]}>
                 {item.badgeText}
               </Text>
             </View>
@@ -323,11 +299,11 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   
   return (
     <Screen>
-      {/* Header - Fixed Outside Scroll (Pattern Baseline) */}
+      {/* Header - Fixed Outside Scroll */}
       <Container padding="m" style={styles.header}>
-        <Text variant="h2">Settings</Text>
+        {/* ✅ ENHANCED: Monospace header */}
+        <Text variant="h2" mono>SETTINGS</Text>
       </Container>
-
 
       {/* Scrollable Content */}
       <ScrollView
@@ -342,15 +318,18 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
                 <Icon name="aperture" size="lg" color={Theme.colors.primary[500]} />
               </View>
               <View style={styles.appInfo}>
-                <Text variant="bodyLarge" weight="700">
-                  VisionFlow AI
+                {/* ✅ ENHANCED: Monospace app name */}
+                <Text variant="bodyLarge" weight="700" mono>
+                  VISIONFLOW_AI
                 </Text>
-                <Text variant="caption" color="secondary">
+                {/* ✅ NEW: Italic subtitle */}
+                <Text variant="caption" color="secondary" italic>
                   Visual Intelligence Platform
                 </Text>
               </View>
               <View style={styles.versionBadge}>
-                <Text variant="micro" weight="700" color="secondary">
+                {/* ✅ ENHANCED: Monospace version */}
+                <Text variant="micro" weight="700" mono color="secondary">
                   v{APP_INFO.version}
                 </Text>
               </View>
@@ -361,8 +340,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="settings-outline" size="xs" color={Theme.colors.text.tertiary} />
-              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-                APP SETTINGS
+              {/* ✅ ENHANCED: Monospace section title */}
+              <Text variant="caption" color="tertiary" mono style={styles.sectionTitle}>
+                APP_SETTINGS
               </Text>
             </View>
             <Card elevation="sm" padding={0} style={styles.card}>
@@ -379,8 +359,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="heart-outline" size="xs" color={Theme.colors.text.tertiary} />
-              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-                SUPPORT & FEEDBACK
+              {/* ✅ ENHANCED: Monospace section title */}
+              <Text variant="caption" color="tertiary" mono style={styles.sectionTitle}>
+                SUPPORT_&_FEEDBACK
               </Text>
             </View>
             <Card elevation="sm" padding={0} style={styles.card}>
@@ -397,8 +378,9 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="document-outline" size="xs" color={Theme.colors.text.tertiary} />
-              <Text variant="caption" color="tertiary" style={styles.sectionTitle}>
-                LEGAL & ABOUT
+              {/* ✅ ENHANCED: Monospace section title */}
+              <Text variant="caption" color="tertiary" mono style={styles.sectionTitle}>
+                LEGAL_&_ABOUT
               </Text>
             </View>
             <Card elevation="sm" padding={0} style={styles.card}>
@@ -416,7 +398,8 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
             <View style={styles.section}>
               <View style={styles.sectionHeader}>
                 <Icon name="bug-outline" size="xs" color={Theme.colors.semantic.error} />
-                <Text variant="caption" customColor={Theme.colors.semantic.error} style={styles.sectionTitle}>
+                {/* ✅ ENHANCED: Monospace section title */}
+                <Text variant="caption" customColor={Theme.colors.semantic.error} mono style={styles.sectionTitle}>
                   DEVELOPER
                 </Text>
               </View>
@@ -430,12 +413,14 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
           <View style={styles.footer}>
             <View style={styles.footerContent}>
               <Icon name="heart" size="sm" color={Theme.colors.semantic.error} />
-              <Text variant="caption" color="tertiary">
+              {/* ✅ NEW: Italic footer text */}
+              <Text variant="caption" color="tertiary" italic>
                 Made with love in India
               </Text>
             </View>
-            <Text variant="micro" color="tertiary" align="center" style={styles.footerBuild}>
-              Build {APP_INFO.buildNumber} • © 2026 VisionFlow AI
+            {/* ✅ ENHANCED: Monospace build info */}
+            <Text variant="micro" color="tertiary" mono align="center" style={styles.footerBuild}>
+              Build {APP_INFO.buildNumber} • © 2026 VisionFlow_AI
             </Text>
           </View>
         </Container>
@@ -444,10 +429,8 @@ export function SettingsScreen({ navigation }: SettingsScreenProps) {
   );
 }
 
-
-
 const styles = StyleSheet.create({
-  // ✅ ADDED: Fixed header (matches Reminder/Project baseline)
+  // Fixed header
   header: {
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
@@ -456,7 +439,7 @@ const styles = StyleSheet.create({
     ...Theme.shadows.sm,
   },
   
-  // ✅ CRITICAL: Bottom safe area in ScrollView content (matches reference)
+  // Bottom safe area in ScrollView content
   scrollContent: {
     paddingBottom: Theme.spacing.safeArea.bottomPaddingLarge,
   },

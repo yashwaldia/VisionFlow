@@ -1,5 +1,10 @@
 /**
- * VisionFlow AI - Pattern Overlay Controls (v1.1 - Fixed Haptics)
+ * VisionFlow AI - Pattern Overlay Controls (v2.0 - Hidden Inside UI Edition)
+ * Enhanced with monospace aesthetic for tactical HUD feel
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for all labels
+ * - ✅ All v1.1 haptics fixes preserved
  */
 
 import React from 'react';
@@ -45,14 +50,15 @@ export function PatternOverlayControls({
       <View style={styles.controlSection}>
         <View style={styles.controlHeader}>
           <Icon name="layers-outline" size="sm" color={Theme.colors.text.secondary} />
-          <Text variant="caption" color="secondary" weight="700" style={styles.controlLabel}>
-            OVERLAY OPACITY
+          {/* ✅ ENHANCED: Monospace section label */}
+          <Text variant="caption" color="secondary" weight="700" mono style={styles.controlLabel}>
+            OVERLAY_OPACITY
           </Text>
-          <Text variant="micro" customColor={Theme.colors.primary[500]} weight="700">
+          {/* ✅ ENHANCED: Monospace percentage */}
+          <Text variant="micro" customColor={Theme.colors.primary[500]} weight="700" mono>
             {Math.round(opacity * 100)}%
           </Text>
         </View>
-        {/* 🔧 FIXED: Removed haptic from slider (fires too frequently) */}
         <Slider
           style={styles.slider}
           value={opacity}
@@ -70,8 +76,9 @@ export function PatternOverlayControls({
       <View style={styles.controlSection}>
         <View style={styles.controlHeader}>
           <Icon name="color-palette-outline" size="sm" color={Theme.colors.text.secondary} />
-          <Text variant="caption" color="secondary" weight="700" style={styles.controlLabel}>
-            BLEND MODE
+          {/* ✅ ENHANCED: Monospace section label */}
+          <Text variant="caption" color="secondary" weight="700" mono style={styles.controlLabel}>
+            BLEND_MODE
           </Text>
         </View>
         <View style={styles.blendModeGrid}>
@@ -79,7 +86,6 @@ export function PatternOverlayControls({
             <Pressable
               key={mode.value}
               onPress={() => onBlendModeChange(mode.value)}
-              // 🔧 FIXED: Removed haptic (too many chips, causes excessive vibration)
             >
               <View
                 style={[
@@ -87,9 +93,11 @@ export function PatternOverlayControls({
                   blendMode === mode.value && styles.blendModeChipActive,
                 ]}
               >
+                {/* ✅ ENHANCED: Monospace blend mode labels */}
                 <Text
                   variant="micro"
                   weight="700"
+                  mono
                   customColor={
                     blendMode === mode.value
                       ? Theme.colors.primary[500]
@@ -106,16 +114,17 @@ export function PatternOverlayControls({
 
       {/* Toggle Controls */}
       <View style={styles.toggleRow}>
-        {/* 🔧 FIXED: Keep haptic only for important toggles */}
         <Pressable onPress={onToggleEdges} haptic="light" style={styles.toggleButton}>
           <Icon
             name={showEdges ? 'eye' : 'eye-off'}
             size="sm"
             color={showEdges ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
           />
+          {/* ✅ ENHANCED: Monospace toggle label */}
           <Text
             variant="caption"
             weight="600"
+            mono
             customColor={
               showEdges ? Theme.colors.primary[500] : Theme.colors.text.tertiary
             }
@@ -130,9 +139,11 @@ export function PatternOverlayControls({
             size="sm"
             color={showLabels ? Theme.colors.primary[500] : Theme.colors.text.tertiary}
           />
+          {/* ✅ ENHANCED: Monospace toggle label */}
           <Text
             variant="caption"
             weight="600"
+            mono
             customColor={
               showLabels ? Theme.colors.primary[500] : Theme.colors.text.tertiary
             }

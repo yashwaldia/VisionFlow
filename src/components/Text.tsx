@@ -1,22 +1,18 @@
 /**
- * VisionFlow AI - Text Component (v2.1 - Harmonized Edition)
+ * VisionFlow AI - Text Component (v2.2 - Italic Support Edition)
  * Themeable text component with semantic variants
  * 
  * @module components/Text
  * 
- * CHANGELOG v2.1:
- * - Now uses Theme.typography.variants for consistency
- * - Simplified variant style logic
- * - All headers use standardized font weights
+ * CHANGELOG v2.2:
+ * - ✅ Added italic prop for descriptive/insight text (matches web prototype)
+ * - ✅ Italic style used for secondary descriptions (Hidden Inside pattern)
  */
 
 import React from 'react';
 import { Text as RNText, TextProps as RNTextProps, TextStyle } from 'react-native';
 import { Theme } from '../constants/theme';
 
-/**
- * Text variant types
- */
 export type TextVariant =
   | 'display'
   | 'h1'
@@ -28,65 +24,28 @@ export type TextVariant =
   | 'caption'
   | 'micro';
 
-/**
- * Text color presets
- */
 export type TextColor = 'primary' | 'secondary' | 'tertiary' | 'disabled' | 'inverse';
 
-/**
- * Text component props
- */
 export interface TextProps extends Omit<RNTextProps, 'style'> {
-  /**
-   * Text variant (defines size, weight, line height)
-   */
   variant?: TextVariant;
-  
-  /**
-   * Text color preset
-   */
   color?: TextColor;
-  
-  /**
-   * Custom color (overrides color preset)
-   */
   customColor?: string;
-  
-  /**
-   * Font weight override
-   * NOTE: Only use this if you MUST override the variant's default weight
-   */
   weight?: '400' | '500' | '600' | '700';
-  
-  /**
-   * Text alignment
-   */
   align?: 'left' | 'center' | 'right' | 'justify';
-  
-  /**
-   * Enable monospace font (for timestamps, code)
-   */
   mono?: boolean;
-  
   /**
-   * Additional custom styles
+   * ✅ NEW: Enable italic font style
+   * Use for descriptive text, insights, secondary information
+   * @default false
    */
+  italic?: boolean;
   style?: TextStyle | TextStyle[];
-  
-  /**
-   * Text content
-   */
   children: React.ReactNode;
 }
 
-/**
- * Get text style for variant
- * Now uses the centralized Typography.variants from theme
- */
 function getVariantStyle(variant: TextVariant): TextStyle {
   const { typography } = Theme;
   
-  // Use the new variants from theme.ts
   switch (variant) {
     case 'display':
       return {
@@ -161,7 +120,6 @@ function getVariantStyle(variant: TextVariant): TextStyle {
       };
       
     default:
-      // Fallback to body
       return {
         fontSize: typography.variants.body.fontSize,
         lineHeight: typography.variants.body.lineHeight,
@@ -171,9 +129,6 @@ function getVariantStyle(variant: TextVariant): TextStyle {
   }
 }
 
-/**
- * Get color for color preset
- */
 function getColorStyle(colorPreset: TextColor): string {
   const { text } = Theme.colors;
   
@@ -198,23 +153,15 @@ function getColorStyle(colorPreset: TextColor): string {
  * 
  * @example
  * ```tsx
- * // Screen titles - always use h2
- * <Text variant="h2">Reminders</Text>
+ * // Italic descriptive text (web prototype style)
+ * <Text variant="body" color="secondary" italic>
+ *   A high-precision vision kernel built to reveal...
+ * </Text>
  * 
- * // Large feature titles - rare, only for Home
- * <Text variant="h1">VisionFlow AI</Text>
- * 
- * // Section headers
- * <Text variant="h3">Quick Actions</Text>
- * 
- * // Body text
- * <Text variant="body" color="secondary">Description text</Text>
- * 
- * // Small metadata
- * <Text variant="caption" color="tertiary">2 days ago</Text>
- * 
- * // Tiny badges/labels
- * <Text variant="micro">NEW</Text>
+ * // Monospace technical labels
+ * <Text variant="caption" mono weight="700">
+ *   ACTIVE REMINDERS
+ * </Text>
  * ```
  */
 export function Text({
@@ -224,11 +171,11 @@ export function Text({
   weight,
   align = 'left',
   mono = false,
+  italic = false, // ✅ NEW
   style,
   children,
   ...rest
 }: TextProps) {
-  // Build style object
   const variantStyle = getVariantStyle(variant);
   const colorStyle = customColor || getColorStyle(color);
   
@@ -237,20 +184,19 @@ export function Text({
     color: colorStyle,
     textAlign: align,
     fontFamily: mono ? Theme.typography.fontFamily.mono : Theme.typography.fontFamily.primary,
+    fontStyle: italic ? 'italic' : 'normal', // ✅ NEW
   };
   
-  // Override font weight if provided (use sparingly!)
   if (weight) {
     composedStyle.fontWeight = weight;
   }
   
-  // Merge with custom styles
   const finalStyle = [composedStyle, style].filter(Boolean);
   
   return (
     <RNText
       style={finalStyle}
-      allowFontScaling={false} // Prevent system font scaling for consistent design
+      allowFontScaling={false}
       {...rest}
     >
       {children}
@@ -258,9 +204,6 @@ export function Text({
   );
 }
 
-/**
- * Heading component (h1 variant shorthand)
- */
 export function Heading({ children, ...props }: Omit<TextProps, 'variant'>) {
   return (
     <Text variant="h1" {...props}>
@@ -269,9 +212,6 @@ export function Heading({ children, ...props }: Omit<TextProps, 'variant'>) {
   );
 }
 
-/**
- * Display text component (display variant shorthand)
- */
 export function Display({ children, ...props }: Omit<TextProps, 'variant'>) {
   return (
     <Text variant="display" {...props}>
@@ -280,9 +220,6 @@ export function Display({ children, ...props }: Omit<TextProps, 'variant'>) {
   );
 }
 
-/**
- * Caption component (caption variant shorthand)
- */
 export function Caption({ children, ...props }: Omit<TextProps, 'variant'>) {
   return (
     <Text variant="caption" {...props}>

@@ -1,12 +1,14 @@
 /**
- * VisionFlow AI - Card Component (v2.1 - Keyboard Support Edition)
- * Tactical surfaces with glassmorphism and scanline support
+ * VisionFlow AI - Card Component (v2.2 - Enhanced Glow Edition)
+ * Tactical surfaces with glassmorphism and stronger blue glow
+ * Matches Hidden Inside web prototype
  * 
  * @module components/Card
  * 
- * CHANGELOG v2.1:
- * - ✅ Added pointerEvents prop for keyboard interaction fixes
- * - ✅ Proper touch event propagation for forms inside cards
+ * CHANGELOG v2.2:
+ * - ✅ Enhanced blue glow borders (50% opacity instead of generic)
+ * - ✅ Stronger glow shadow effect for active/HUD elements
+ * - ✅ Added 'glowBorder' variant for emphasized cards
  */
 
 import React from 'react';
@@ -14,21 +16,10 @@ import { View, ViewStyle, StyleSheet } from 'react-native';
 import { Theme } from '../constants/theme';
 import { Pressable } from './Pressable';
 
-/**
- * Card elevation levels
- * Added 'glow' for HUD elements
- */
 export type CardElevation = 'none' | 'sm' | 'md' | 'lg' | 'xl' | 'glow';
 
-/**
- * Card variants
- * Added 'hud' for tactical data blocks
- */
-export type CardVariant = 'default' | 'outlined' | 'glass' | 'hud';
+export type CardVariant = 'default' | 'outlined' | 'glass' | 'hud' | 'glowBorder';
 
-/**
- * Card props
- */
 export interface CardProps {
   children: React.ReactNode;
   variant?: CardVariant;
@@ -41,21 +32,10 @@ export interface CardProps {
   padding?: number;
   style?: ViewStyle | ViewStyle[];
   testID?: string;
-  /**
-   * If true, applies a subtle active state border/glow
-   */
   active?: boolean;
-  /**
-   * Touch event handling
-   * Use 'box-none' for cards containing inputs to allow keyboard interaction
-   * @default 'auto'
-   */
   pointerEvents?: 'box-none' | 'none' | 'box-only' | 'auto';
 }
 
-/**
- * Get shadow style from elevation
- */
 function getShadowStyle(elevation: CardElevation): ViewStyle {
   switch (elevation) {
     case 'none': return Theme.shadows.none;
@@ -63,15 +43,18 @@ function getShadowStyle(elevation: CardElevation): ViewStyle {
     case 'md': return Theme.shadows.md;
     case 'lg': return Theme.shadows.lg;
     case 'xl': return Theme.shadows.xl;
-    case 'glow': return Theme.shadows.glow;
+    case 'glow': return {
+      // ✅ ENHANCED: Stronger glow effect
+      shadowColor: Theme.colors.primary[500],
+      shadowOffset: { width: 0, height: 0 },
+      shadowOpacity: 0.6, // Increased from 0.4
+      shadowRadius: 15, // Increased from 10
+      elevation: 8,
+    };
     default: return Theme.shadows.sm;
   }
 }
 
-/**
- * Card Component
- * ✅ Now supports pointerEvents for proper keyboard handling in forms
- */
 export function Card({
   children,
   variant = 'default',
@@ -88,7 +71,6 @@ export function Card({
   pointerEvents = 'auto',
 }: CardProps) {
   
-  // Get variant-specific styles
   const getVariantStyle = (): ViewStyle => {
     switch (variant) {
       case 'default':
@@ -117,6 +99,15 @@ export function Card({
           borderWidth: 1,
           borderColor: borderColor || Theme.colors.border.default,
         };
+      
+      // ✅ NEW: Glow border variant (matches web prototype)
+      case 'glowBorder':
+        return {
+          backgroundColor: backgroundColor || Theme.colors.background.secondary,
+          borderWidth: 1.5,
+          borderColor: borderColor || `${Theme.colors.primary[500]}80`, // 50% opacity blue
+          ...Theme.shadows.glow,
+        };
         
       default:
         return {
@@ -128,17 +119,20 @@ export function Card({
   const variantStyle = getVariantStyle();
   const shadowStyle = getShadowStyle(elevation);
   
-  // Active State Styling (e.g. selected item)
+  // ✅ ENHANCED: Active state with stronger blue emphasis
   const activeStyle: ViewStyle = active ? {
-    borderColor: Theme.colors.border.active,
-    borderWidth: 1,
+    borderColor: `${Theme.colors.primary[500]}CC`, // 80% opacity
+    borderWidth: 1.5, // Thicker border
     backgroundColor: variant === 'glass' 
       ? Theme.glassmorphism.tint 
-      : Theme.colors.background.tertiary,
-    ...Theme.shadows.glow,
+      : `${Theme.colors.background.tertiary}`,
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.6,
+    shadowRadius: 15,
+    elevation: 8,
   } : {};
 
-  // Base card style
   const cardStyle: ViewStyle = {
     borderRadius,
     padding,
@@ -148,7 +142,6 @@ export function Card({
     ...activeStyle,
   };
   
-  // Combine styles
   const combinedStyles: ViewStyle[] = [cardStyle];
   if (style) {
     if (Array.isArray(style)) {
@@ -158,7 +151,6 @@ export function Card({
     }
   }
   
-  // Render pressable or static card
   if (pressable && onPress) {
     return (
       <Pressable

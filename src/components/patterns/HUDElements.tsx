@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - HUD Elements Component
- * Corner brackets and tactical overlays for pattern display
+ * VisionFlow AI - HUD Elements Component (v2.0 - Hidden Inside UI Edition)
+ * Enhanced tactical overlays with monospace aesthetic
  * 
  * @module components/patterns/HUDElements
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ UI ENHANCEMENT: Monospace status badge text
+ * - ✅ UI ENHANCEMENT: Enhanced letter-spacing
+ * - ✅ All original HUD styling preserved
  */
 
 import React from 'react';
@@ -26,11 +31,18 @@ export function HUDElements({ patternCount, showStatus = true }: HUDElementsProp
         <View style={[styles.hudCorner, styles.hudCornerBR]} />
       </View>
 
-      {/* Status Badge */}
+      {/* ✅ ENHANCED: Status Badge with monospace text */}
       {showStatus && (
         <View style={styles.statusBadge} pointerEvents="none">
           <View style={styles.statusDot} />
-          <Text variant="micro" weight="700" customColor={Theme.colors.primary[500]}>
+          {/* ✅ ENHANCED: Monospace status text */}
+          <Text 
+            variant="micro" 
+            weight="700" 
+            mono 
+            customColor={Theme.colors.primary[500]}
+            style={styles.statusText}
+          >
             {patternCount} NODE{patternCount !== 1 ? 'S' : ''} • DATA_LOCKED
           </Text>
         </View>
@@ -98,5 +110,9 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     backgroundColor: Theme.colors.primary[500],
+  },
+  // ✅ NEW: Enhanced letter-spacing for status text
+  statusText: {
+    letterSpacing: 1,
   },
 });

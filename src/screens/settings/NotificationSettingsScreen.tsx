@@ -1,16 +1,14 @@
 /**
- * VisionFlow AI - Notification Settings Screen (v2.1 - Harmonized Edition)
- * Manage push notification preferences
+ * VisionFlow AI - Notification Settings Screen (v3.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with monospace and italic typography
  * 
  * @module screens/settings/NotificationSettingsScreen
  * 
- * CHANGELOG v2.1:
- * - ✅ Added header shadow for separation
- * - ✅ Added card elevation for visual depth
- * - ✅ Opacity already correct at 20% (no changes needed)
- * - ✅ Scroll padding already adequate for tab bar (120px)
+ * CHANGELOG v3.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ All v2.1 harmonized features preserved
  */
-
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { View, StyleSheet, Switch, Alert, Linking, AppState, ScrollView } from 'react-native';
@@ -31,9 +29,7 @@ import {
 import * as NotificationService from '../../services/notification.service';
 import * as StorageService from '../../services/storage.service';
 
-
 type NotificationSettingsScreenProps = NativeStackScreenProps<SettingsStackParamList, 'NotificationSettings'>;
-
 
 export function NotificationSettingsScreen({ navigation }: NotificationSettingsScreenProps) {
   const [isLoading, setIsLoading] = useState(true);
@@ -46,7 +42,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
   const [soundEnabled, setSoundEnabled] = useState(true);
   const [hapticsEnabled, setHapticsEnabled] = useState(true);
 
-
   // Check permissions on mount and app foreground
   const checkPermissions = useCallback(async () => {
     try {
@@ -56,7 +51,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       console.error('[NotificationSettings] Failed to check permissions:', error);
     }
   }, []);
-
 
   // Load saved preferences
   const loadPreferences = useCallback(async () => {
@@ -80,10 +74,8 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     }
   }, [checkPermissions]);
 
-
   useEffect(() => {
     loadPreferences();
-
 
     const subscription = AppState.addEventListener('change', (nextAppState) => {
       if (nextAppState === 'active') {
@@ -91,12 +83,10 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       }
     });
 
-
     return () => {
       subscription.remove();
     };
   }, [loadPreferences, checkPermissions]);
-
 
   /**
    * Save preference helper
@@ -110,7 +100,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
       const currentPrefs = await StorageService.getUserPreferences();
       
       let updates: Partial<UserPreferences> = {};
-
 
       if (section === 'notifications') {
         updates = {
@@ -128,7 +117,6 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
         };
       }
 
-
       await StorageService.updateUserPreferences(updates);
       
     } catch (error) {
@@ -137,11 +125,9 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     }
   };
 
-
   const openSystemSettings = () => {
     Linking.openSettings();
   };
-
 
   if (isLoading) {
     return (
@@ -153,31 +139,30 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
     );
   }
 
-
   const isPermissionGranted = permissionStatus === PermissionStatus.GRANTED;
-
 
   return (
     <Screen>
-      {/* Header - ✅ ENHANCED: Added shadow */}
+      {/* Header */}
       <View style={styles.header}>
         <Pressable onPress={() => navigation.goBack()} haptic="light" style={styles.headerButton}>
           <Icon name="arrow-back" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">Notifications</Text>
-          <Text variant="caption" color="tertiary">Manage your alerts</Text>
+          {/* ✅ ENHANCED: Monospace header */}
+          <Text variant="h4" weight="600" mono>NOTIFICATIONS</Text>
+          {/* ✅ NEW: Italic subtitle */}
+          <Text variant="caption" color="tertiary" italic>Manage your alerts</Text>
         </View>
         <View style={{ width: 40 }} />
       </View>
-
 
       <ScrollView 
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}
       >
         <Container padding="m">
-          {/* Permission Status Card - ✅ ENHANCED: Added elevation */}
+          {/* Permission Status Card */}
           <Card elevation="sm" style={[
             styles.permissionCard,
             isPermissionGranted ? styles.permissionCardEnabled : styles.permissionCardDisabled
@@ -194,10 +179,12 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
               <View style={styles.permissionInfo}>
-                <Text variant="h4">
-                  {isPermissionGranted ? 'Notifications Enabled' : 'Notifications Disabled'}
+                {/* ✅ ENHANCED: Monospace permission status */}
+                <Text variant="h4" mono>
+                  {isPermissionGranted ? 'NOTIFICATIONS_ENABLED' : 'NOTIFICATIONS_DISABLED'}
                 </Text>
-                <Text variant="caption" color="secondary" style={styles.permissionDescription}>
+                {/* ✅ NEW: Italic permission description */}
+                <Text variant="caption" color="secondary" italic style={styles.permissionDescription}>
                   {isPermissionGranted 
                     ? 'VisionFlow can send you reminders and updates' 
                     : 'Enable permissions in settings to receive alerts'}
@@ -217,12 +204,12 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             )}
           </Card>
 
-
           {/* Alert Types Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="notifications-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Alert Types</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>ALERT_TYPES</Text>
             </View>
             
             <Card elevation="sm" style={styles.optionsCard}>
@@ -233,8 +220,10 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                     <Icon name="alarm" size="sm" color={Theme.colors.primary[500]} />
                   </View>
                   <View style={styles.optionInfo}>
-                    <Text variant="body" weight="600">Reminders</Text>
-                    <Text variant="caption" color="secondary">Get notified for due tasks</Text>
+                    {/* ✅ ENHANCED: Monospace option label */}
+                    <Text variant="body" weight="600" mono>REMINDERS</Text>
+                    {/* ✅ NEW: Italic option description */}
+                    <Text variant="caption" color="secondary" italic>Get notified for due tasks</Text>
                   </View>
                 </View>
                 <Switch
@@ -253,9 +242,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
 
-
               <View style={styles.divider} />
-
 
               {/* Patterns Toggle */}
               <View style={styles.optionRow}>
@@ -265,14 +252,17 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                   </View>
                   <View style={styles.optionInfo}>
                     <View style={styles.optionTitleRow}>
-                      <Text variant="body" weight="600" color="secondary">Pattern Insights</Text>
+                      {/* ✅ ENHANCED: Monospace option label */}
+                      <Text variant="body" weight="600" mono color="secondary">PATTERN_INSIGHTS</Text>
                       <View style={styles.comingSoonBadge}>
-                        <Text variant="caption" weight="700" customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
-                          COMING SOON
+                        {/* ✅ ENHANCED: Monospace badge */}
+                        <Text variant="caption" weight="700" mono customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
+                          COMING_SOON
                         </Text>
                       </View>
                     </View>
-                    <Text variant="caption" color="tertiary">Weekly pattern discoveries</Text>
+                    {/* ✅ NEW: Italic option description */}
+                    <Text variant="caption" color="tertiary" italic>Weekly pattern discoveries</Text>
                   </View>
                 </View>
                 <Switch
@@ -291,9 +281,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
 
-
               <View style={styles.divider} />
-
 
               {/* Updates Toggle */}
               <View style={styles.optionRow}>
@@ -303,14 +291,17 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                   </View>
                   <View style={styles.optionInfo}>
                     <View style={styles.optionTitleRow}>
-                      <Text variant="body" weight="600" color="secondary">Product Updates</Text>
+                      {/* ✅ ENHANCED: Monospace option label */}
+                      <Text variant="body" weight="600" mono color="secondary">PRODUCT_UPDATES</Text>
                       <View style={styles.comingSoonBadge}>
-                        <Text variant="caption" weight="700" customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
-                          COMING SOON
+                        {/* ✅ ENHANCED: Monospace badge */}
+                        <Text variant="caption" weight="700" mono customColor={Theme.colors.semantic.info} style={styles.comingSoonText}>
+                          COMING_SOON
                         </Text>
                       </View>
                     </View>
-                    <Text variant="caption" color="tertiary">News about new features</Text>
+                    {/* ✅ NEW: Italic option description */}
+                    <Text variant="caption" color="tertiary" italic>News about new features</Text>
                   </View>
                 </View>
                 <Switch
@@ -331,14 +322,13 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             </Card>
           </View>
 
-
           {/* Preferences Section */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="options-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Experience</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>EXPERIENCE</Text>
             </View>
-
 
             <Card elevation="sm" style={styles.optionsCard}>
               {/* Sound Toggle */}
@@ -348,8 +338,10 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                     <Icon name="volume-high" size="sm" color={Theme.colors.semantic.success} />
                   </View>
                   <View style={styles.optionInfo}>
-                    <Text variant="body" weight="600">In-App Sound</Text>
-                    <Text variant="caption" color="secondary">Play sounds for actions</Text>
+                    {/* ✅ ENHANCED: Monospace option label */}
+                    <Text variant="body" weight="600" mono>IN-APP_SOUND</Text>
+                    {/* ✅ NEW: Italic option description */}
+                    <Text variant="caption" color="secondary" italic>Play sounds for actions</Text>
                   </View>
                 </View>
                 <Switch
@@ -367,9 +359,7 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                 />
               </View>
 
-
               <View style={styles.divider} />
-
 
               {/* Haptics Toggle */}
               <View style={styles.optionRow}>
@@ -378,8 +368,10 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
                     <Icon name="phone-portrait" size="sm" color={Theme.colors.semantic.info} />
                   </View>
                   <View style={styles.optionInfo}>
-                    <Text variant="body" weight="600">Haptic Feedback</Text>
-                    <Text variant="caption" color="secondary">Vibrate on interactions</Text>
+                    {/* ✅ ENHANCED: Monospace option label */}
+                    <Text variant="body" weight="600" mono>HAPTIC_FEEDBACK</Text>
+                    {/* ✅ NEW: Italic option description */}
+                    <Text variant="caption" color="secondary" italic>Vibrate on interactions</Text>
                   </View>
                 </View>
                 <Switch
@@ -399,17 +391,16 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
             </Card>
           </View>
 
-
-          {/* Info Card - ✅ ENHANCED: Added elevation */}
+          {/* Info Card */}
           <Card elevation="sm" style={styles.infoCard}>
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-              <Text variant="caption" color="secondary" style={styles.infoText}>
+              {/* ✅ NEW: Italic info text */}
+              <Text variant="caption" color="secondary" italic style={styles.infoText}>
                 Notification settings are saved instantly. System notification permissions can be changed in your device settings at any time.
               </Text>
             </View>
           </Card>
-
 
         </Container>
       </ScrollView>
@@ -417,9 +408,8 @@ export function NotificationSettingsScreen({ navigation }: NotificationSettingsS
   );
 }
 
-
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -429,7 +419,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerButton: {
     width: 40,
@@ -444,22 +434,22 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   
-  // Scroll styles - ✅ Already adequate for tab bar (120px)
+  // Scroll styles
   scrollContent: {
     paddingBottom: 120,
   },
   
-  // Permission card styles - ✅ Card elevation added via elevation="sm" prop
+  // Permission card styles
   permissionCard: {
     marginBottom: Theme.spacing.l,
     borderWidth: 2,
   },
   permissionCardEnabled: {
-    backgroundColor: `${Theme.colors.semantic.success}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.semantic.success}10`,
     borderColor: `${Theme.colors.semantic.success}30`,
   },
   permissionCardDisabled: {
-    backgroundColor: `${Theme.colors.semantic.error}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.semantic.error}10`,
     borderColor: `${Theme.colors.semantic.error}30`,
   },
   permissionHeader: {
@@ -477,11 +467,11 @@ const styles = StyleSheet.create({
     borderWidth: 2,
   },
   permissionIconEnabled: {
-    backgroundColor: `${Theme.colors.semantic.success}20`, // ✅ Already correct at 20%
+    backgroundColor: `${Theme.colors.semantic.success}20`,
     borderColor: `${Theme.colors.semantic.success}40`,
   },
   permissionIconDisabled: {
-    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ Already correct at 20%
+    backgroundColor: `${Theme.colors.semantic.error}20`,
     borderColor: `${Theme.colors.semantic.error}40`,
   },
   permissionInfo: {
@@ -506,7 +496,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
   
-  // Options card styles - ✅ Card elevation added via elevation="sm" prop
+  // Options card styles
   optionsCard: {
     padding: 0,
     overflow: 'hidden',
@@ -562,13 +552,13 @@ const styles = StyleSheet.create({
   divider: {
     height: 1,
     backgroundColor: Theme.colors.border.light,
-    marginLeft: Theme.spacing.m + 40 + Theme.spacing.m, // Left padding + icon + gap
+    marginLeft: Theme.spacing.m + 40 + Theme.spacing.m,
   },
   
-  // Info card styles - ✅ Card elevation added via elevation="sm" prop
+  // Info card styles
   infoCard: {
     marginTop: Theme.spacing.m,
-    backgroundColor: `${Theme.colors.semantic.info}10`, // ✅ Kept at 10% (intentionally subtle)
+    backgroundColor: `${Theme.colors.semantic.info}10`,
     borderWidth: 1,
     borderColor: `${Theme.colors.semantic.info}30`,
   },

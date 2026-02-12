@@ -1,21 +1,15 @@
 /**
- * VisionFlow AI - Pattern Results Screen (v4.1 - Safe Area Fixed)
- * Matches EditReminder/EditProject layout consistency
+ * VisionFlow AI - Pattern Results Screen (v5.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with interactive pattern analysis
  * 
  * @module screens/PatternResultsScreen
- * @version 4.1.0
+ * @version 5.0.0
  * 
- * CHANGELOG v4.1:
- * - ✅ FIXED: Added top safe area inset to header (universal solution)
- * - ✅ Header no longer goes behind status bar/notch
- * - ✅ Consistent with other detail screens
- * 
- * CHANGELOG v4.0:
- * - ✅ Consistent header layout (close button + title + subtitle)
- * - ✅ Consistent footer layout (equal-width buttons)
- * - ✅ Fixed ScrollView clearance (140px for footer)
- * - ✅ Removed haptic from frequent actions
- * - ✅ Matches EditReminder/EditProject UI patterns
+ * CHANGELOG v5.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ UI ENHANCEMENT: Enhanced letter-spacing throughout
+ * - ✅ All v4.1 layout and safe area fixes preserved
  */
 
 import React, { useState } from 'react';
@@ -162,14 +156,16 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
 
   return (
     <View style={styles.container}>
-      {/* ✅ FIXED: Header with safe area top inset */}
+      {/* Header with safe area top inset */}
       <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleDiscard} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">Pattern Analysis</Text>
-          <Text variant="caption" color="tertiary">
+          {/* ✅ ENHANCED: Monospace header title */}
+          <Text variant="h4" weight="600" mono>PATTERN_ANALYSIS</Text>
+          {/* ✅ NEW: Italic subtitle with pattern count */}
+          <Text variant="caption" color="tertiary" italic>
             {analysisResult.patterns.length} pattern{analysisResult.patterns.length !== 1 ? 's' : ''} detected
           </Text>
         </View>
@@ -186,7 +182,7 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
         </Pressable>
       </View>
 
-      {/* ✅ CONSISTENT: ScrollView with proper clearance */}
+      {/* ScrollView with proper clearance */}
       <ScrollView 
         style={styles.scrollView}
         contentContainerStyle={styles.scrollContent}
@@ -214,13 +210,14 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
           />
         </View>
 
-        {/* ✅ CONSISTENT: Content padding */}
+        {/* Content */}
         <View style={styles.content}>
           {/* Pattern Overlay Controls */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="layers-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Overlay Controls</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>OVERLAY_CONTROLS</Text>
             </View>
             <PatternOverlayControls
               opacity={overlayOpacity}
@@ -238,7 +235,8 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="analytics-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Pattern Telemetry</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>PATTERN_TELEMETRY</Text>
             </View>
             <TelemetryPanel
               patterns={analysisResult.patterns as Pattern[]}
@@ -251,14 +249,15 @@ export function PatternResultsScreen({ navigation, route }: PatternResultsScreen
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="bulb-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">AI Insights</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>AI_INSIGHTS</Text>
             </View>
             <InsightsSection insights={analysisResult.insights} />
           </View>
         </View>
       </ScrollView>
 
-      {/* ✅ CONSISTENT: Footer with equal-width buttons */}
+      {/* Footer with equal-width buttons */}
       <View style={[styles.footerContainer, { paddingBottom: insets.bottom + Theme.spacing.m }]}>
         <View style={styles.footer}>
           <View style={styles.footerButton}>
@@ -296,7 +295,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // ✅ FIXED: Header now receives dynamic top padding via inline style
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -307,7 +306,6 @@ const styles = StyleSheet.create({
     borderBottomColor: Theme.colors.border.light,
     backgroundColor: Theme.colors.background.secondary,
     ...Theme.shadows.sm,
-    // Note: paddingTop is applied inline as { paddingTop: insets.top + Theme.spacing.m }
   },
   headerButton: {
     width: 40,
@@ -322,16 +320,16 @@ const styles = StyleSheet.create({
     gap: 2,
   },
 
-  // ✅ CONSISTENT: Scroll styles matching reference
+  // Scroll styles
   scrollView: {
     flex: 1,
   },
   scrollContent: {
     flexGrow: 1,
-    paddingBottom: 140, // Clear space for footer
+    paddingBottom: 140,
   },
 
-  // Image container (unique to this screen)
+  // Image container
   imageContainer: {
     width: SCREEN_WIDTH,
     height: IMAGE_HEIGHT,
@@ -343,12 +341,12 @@ const styles = StyleSheet.create({
     height: '100%',
   },
 
-  // ✅ CONSISTENT: Content padding
+  // Content
   content: {
     padding: Theme.spacing.m,
   },
 
-  // ✅ CONSISTENT: Section styles matching reference
+  // Section styles
   section: {
     marginBottom: Theme.spacing.l,
   },
@@ -359,7 +357,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // ✅ CONSISTENT: Footer matching reference exactly
+  // Footer
   footerContainer: {
     position: 'absolute',
     bottom: 0,

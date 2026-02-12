@@ -1,15 +1,15 @@
 /**
- * VisionFlow AI - Camera Modal (v3.0 - SafeArea Edition)
- * Full-screen camera capture interface with universal SafeArea support
+ * VisionFlow AI - Camera Modal (v4.0 - Consistent Design Edition)
+ * Full-screen camera with clean UI matching app-wide design system
  * 
  * @module screens/modals/CameraModal
  * 
- * CHANGELOG v3.0:
- * - ✅ Added comprehensive SafeArea support using react-native-safe-area-context
- * - ✅ All UI elements respect safe area insets (top, bottom, left, right)
- * - ✅ Works universally across all devices (notch, dynamic island, home indicator)
- * - ✅ Maintains existing opacity fixes from v2.1
- * - ✅ Added dynamic positioning for loading/permission states
+ * CHANGELOG v4.0:
+ * - 🎨 REDESIGN: Consistent text hierarchy across all states
+ * - 🎨 IMPROVED: Cleaner loading/permission states
+ * - 🎨 SIMPLIFIED: Reduced visual clutter in overlays
+ * - 🎨 ENHANCED: Better use of monospace fonts for technical text
+ * - ✅ All v3.0 SafeArea features preserved
  */
 
 import React, { useState, useRef, useEffect } from 'react';
@@ -33,26 +33,18 @@ import * as ImageManipulator from 'expo-image-manipulator';
 
 type CameraModalProps = NativeStackScreenProps<RootStackParamList, 'CameraModal'>;
 
-/**
- * CameraModal Component
- */
 export function CameraModal({ navigation, route }: CameraModalProps) {
   const cameraRef = useRef<CameraView>(null);
   const { mode = 'reminder' } = route.params || {};
   
-  // SafeArea insets - Universal solution for all devices
   const insets = useSafeAreaInsets();
 
-  // State
   const [permission, requestPermission] = useCameraPermissions();
   const [cameraFacing, setCameraFacing] = useState<'back' | 'front'>('back');
   const [flashMode, setFlashMode] = useState<'off' | 'on' | 'auto'>('off');
   const [isCapturing, setIsCapturing] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
 
-  /**
-   * Request camera permissions on mount
-   */
   useEffect(() => {
     if (permission === null) {
       requestPermission();
@@ -68,9 +60,6 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     }
   }, [permission]);
 
-  /**
-   * Handle camera capture
-   */
   const handleCapture = async () => {
     if (!cameraRef.current || isCapturing || isProcessing) return;
 
@@ -108,9 +97,6 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     }
   };
 
-  /**
-   * Handle gallery picker
-   */
   const handlePickFromGallery = async () => {
     try {
       const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -153,31 +139,22 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
     }
   };
 
-  /**
-   * Toggle flash mode
-   */
   const toggleFlash = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setFlashMode((current) => current === 'off' ? 'on' : 'off');
   };
 
-  /**
-   * Toggle camera facing
-   */
   const toggleCameraFacing = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     setCameraFacing((current) => current === 'back' ? 'front' : 'back');
   };
 
-  /**
-   * Handle close
-   */
   const handleClose = async () => {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     navigation.goBack();
   };
 
-  // Loading state with SafeArea
+  // 🎨 IMPROVED: Loading state with consistent design
   if (!permission) {
     return (
       <View style={[
@@ -193,17 +170,17 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           <Icon name="camera" size="xl" color={Theme.colors.primary[500]} />
         </View>
         <LoadingSpinner size="large" />
-        <Text variant="h3" style={styles.loadingTitle}>
-          Initializing Camera
+        <Text variant="h3" mono style={styles.loadingTitle}>
+          INITIALIZING_CAMERA
         </Text>
-        <Text variant="body" color="secondary" align="center" style={styles.loadingText}>
-          Requesting camera access...
+        <Text variant="body" color="secondary" italic align="center" style={styles.loadingText}>
+          Requesting camera access
         </Text>
       </View>
     );
   }
 
-  // Permission denied with SafeArea
+  // 🎨 IMPROVED: Permission denied with consistent design
   if (!permission.granted) {
     return (
       <View style={[
@@ -216,28 +193,28 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
         }
       ]}>
         <View style={styles.permissionIconContainer}>
-          <Icon name="ban" size="xl" color={Theme.colors.semantic.error} />
+        <Icon name="alert-circle-outline" size="xl" color={Theme.colors.semantic.error} />
         </View>
         <Text variant="h2" style={styles.permissionTitle}>
           Camera Access Required
         </Text>
-        <Text variant="body" color="secondary" align="center" style={styles.permissionText}>
-          VisionFlow needs camera access to capture reminders and discover patterns from your photos.
+        <Text variant="body" color="secondary" italic align="center" style={styles.permissionText}>
+          VisionFlow needs camera access to capture reminders and discover patterns from your photos
         </Text>
         <Pressable 
           onPress={requestPermission}
           style={styles.permissionButton}
         >
           <Icon name="camera" size="sm" color={Theme.colors.background.primary} />
-          <Text variant="body" weight="600" customColor={Theme.colors.background.primary}>
-            Grant Camera Access
+          <Text variant="body" weight="600" mono customColor={Theme.colors.background.primary}>
+            GRANT_ACCESS
           </Text>
         </Pressable>
       </View>
     );
   }
 
-  // Processing overlay with SafeArea
+  // 🎨 IMPROVED: Processing overlay with consistent design
   if (isProcessing) {
     return (
       <View style={[
@@ -251,11 +228,11 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
       ]}>
         <View style={styles.processingContent}>
           <LoadingSpinner size="large" />
-          <Text variant="h2" style={styles.processingTitle}>
-            Processing Image
+          <Text variant="h2" mono style={styles.processingTitle}>
+            PROCESSING_IMAGE
           </Text>
-          <Text variant="body" color="secondary" align="center">
-            Optimizing and preparing for AI analysis...
+          <Text variant="body" color="secondary" italic align="center">
+            Optimizing and preparing for AI analysis
           </Text>
         </View>
       </View>
@@ -263,19 +240,18 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
   }
 
   const modeConfig = mode === 'reminder' 
-    ? { icon: 'notifications', label: 'Reminder Mode', color: Theme.colors.primary[500] }
-    : { icon: 'sparkles', label: 'Pattern Mode', color: Theme.colors.semantic.warning };
+    ? { icon: 'notifications', label: 'REMINDER', color: Theme.colors.primary[500] }
+    : { icon: 'sparkles', label: 'PATTERN', color: Theme.colors.semantic.warning };
 
   return (
     <View style={styles.container}>
-      {/* Camera View */}
       <CameraView
         ref={cameraRef}
         style={styles.camera}
         facing={cameraFacing}
         flash={flashMode}
       >
-        {/* Top Bar with SafeArea */}
+        {/* Top Bar */}
         <View style={[
           styles.topBar,
           {
@@ -291,13 +267,13 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
             </View>
           </Pressable>
 
-          {/* Mode Indicator */}
+          {/* 🎨 IMPROVED: Mode Indicator with monospace text */}
           <View style={styles.modeIndicator}>
             <View style={[styles.modeIconContainer, { backgroundColor: `${modeConfig.color}30` }]}>
               <Icon name={modeConfig.icon as any} size="sm" color={modeConfig.color} />
             </View>
-            <Text variant="caption" weight="700" style={styles.modeText}>
-              {modeConfig.label.toUpperCase()}
+            <Text variant="caption" weight="700" mono style={styles.modeText}>
+              {modeConfig.label}
             </Text>
           </View>
 
@@ -316,7 +292,7 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           </Pressable>
         </View>
 
-        {/* Grid Overlay (Rule of Thirds) */}
+        {/* 🎨 SIMPLIFIED: Grid Overlay (lighter, less intrusive) */}
         <View style={styles.gridOverlay} pointerEvents="none">
           <View style={styles.gridRow}>
             <View style={styles.gridCell} />
@@ -343,7 +319,7 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           <View style={[styles.focusCorner, styles.focusCornerBR]} />
         </View>
 
-        {/* Bottom Controls with SafeArea */}
+        {/* Bottom Controls */}
         <View style={[
           styles.bottomBar,
           {
@@ -388,7 +364,7 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
           </Pressable>
         </View>
 
-        {/* Capture Hint with SafeArea awareness */}
+        {/* 🎨 IMPROVED: Capture Hint with italic text */}
         {!isCapturing && (
           <View style={[
             styles.hintContainer,
@@ -400,9 +376,9 @@ export function CameraModal({ navigation, route }: CameraModalProps) {
               <Icon 
                 name={mode === 'reminder' ? 'bulb' : 'scan'} 
                 size="sm" 
-                color={Theme.colors.text.primary} 
+                color={Theme.colors.primary[500]}
               />
-              <Text variant="caption" weight="600" style={styles.hintText}>
+              <Text variant="caption" weight="600" italic style={styles.hintText}>
                 {mode === 'reminder' 
                   ? 'Capture a clear photo of your reminder' 
                   : 'Frame the pattern you want to analyze'}
@@ -424,7 +400,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   
-  // Loading State - ✅ SafeArea handled via dynamic padding
+  // 🎨 IMPROVED: Loading State
   loadingContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
@@ -436,7 +412,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.primary[500]}20`, // ✅ 20% opacity
+    backgroundColor: `${Theme.colors.primary[500]}15`,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -447,9 +423,10 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     maxWidth: 280,
+    lineHeight: 22,
   },
 
-  // Permission State - ✅ SafeArea handled via dynamic padding
+  // 🎨 IMPROVED: Permission State
   permissionContainer: {
     flex: 1,
     backgroundColor: Theme.colors.background.primary,
@@ -461,7 +438,7 @@ const styles = StyleSheet.create({
     width: 96,
     height: 96,
     borderRadius: 48,
-    backgroundColor: `${Theme.colors.semantic.error}20`, // ✅ 20% opacity
+    backgroundColor: `${Theme.colors.semantic.error}15`,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 2,
@@ -472,7 +449,7 @@ const styles = StyleSheet.create({
   },
   permissionText: {
     maxWidth: 300,
-    lineHeight: 22,
+    lineHeight: 24,
   },
   permissionButton: {
     flexDirection: 'row',
@@ -483,9 +460,10 @@ const styles = StyleSheet.create({
     borderRadius: Theme.borderRadius.full,
     backgroundColor: Theme.colors.primary[500],
     marginTop: Theme.spacing.m,
+    ...Theme.shadows.md,
   },
 
-  // Processing State - ✅ SafeArea handled via dynamic padding
+  // 🎨 IMPROVED: Processing State
   processingContainer: {
     flex: 1,
     backgroundColor: 'rgba(0, 0, 0, 0.95)',
@@ -501,13 +479,13 @@ const styles = StyleSheet.create({
     marginTop: Theme.spacing.m,
   },
 
-  // Top Bar - ✅ SafeArea handled via dynamic padding (removed hardcoded iOS padding)
+  // Top Bar
   topBar: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingBottom: Theme.spacing.m,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   topButton: {
     width: 52,
@@ -517,16 +495,18 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.6)',
+    backgroundColor: 'rgba(0, 0, 0, 0.5)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   buttonInnerActive: {
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.7)',
     borderColor: Theme.colors.primary[500],
   },
+  
+  // 🎨 IMPROVED: Mode Indicator
   modeIndicator: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -534,9 +514,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 10,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.7)',
+    backgroundColor: 'rgba(0, 0, 0, 0.6)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
   },
   modeIconContainer: {
     width: 28,
@@ -547,10 +527,10 @@ const styles = StyleSheet.create({
   },
   modeText: {
     fontSize: 11,
-    letterSpacing: 1,
+    letterSpacing: 1.5,
   },
 
-  // Grid Overlay
+  // 🎨 SIMPLIFIED: Grid Overlay (reduced opacity)
   gridOverlay: {
     position: 'absolute',
     top: 0,
@@ -565,7 +545,7 @@ const styles = StyleSheet.create({
   gridRowBorder: {
     borderTopWidth: 1,
     borderBottomWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
   gridCell: {
     flex: 1,
@@ -573,7 +553,7 @@ const styles = StyleSheet.create({
   gridCellBorder: {
     borderLeftWidth: 1,
     borderRightWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
   },
 
   // Focus Frame
@@ -620,7 +600,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: Theme.borderRadius.m,
   },
 
-  // Bottom Bar - ✅ SafeArea handled via dynamic padding (removed hardcoded iOS padding)
+  // Bottom Bar
   bottomBar: {
     position: 'absolute',
     bottom: 0,
@@ -630,7 +610,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     alignItems: 'center',
     paddingTop: Theme.spacing.xl,
-    backgroundColor: 'rgba(0, 0, 0, 0.4)',
+    backgroundColor: 'rgba(0, 0, 0, 0.3)',
   },
   sideButton: {
     width: 60,
@@ -642,7 +622,7 @@ const styles = StyleSheet.create({
     width: 84,
     height: 84,
     borderRadius: 42,
-    backgroundColor: 'rgba(255, 255, 255, 0.3)',
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
     justifyContent: 'center',
     alignItems: 'center',
     borderWidth: 4,
@@ -659,7 +639,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 
-  // Hint - ✅ SafeArea handled via dynamic bottom position
+  // 🎨 IMPROVED: Hint
   hintContainer: {
     position: 'absolute',
     left: 0,
@@ -674,12 +654,13 @@ const styles = StyleSheet.create({
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: 12,
     borderRadius: Theme.borderRadius.full,
-    backgroundColor: 'rgba(0, 0, 0, 0.8)',
+    backgroundColor: 'rgba(0, 0, 0, 0.75)',
     borderWidth: 2,
-    borderColor: 'rgba(255, 255, 255, 0.2)',
+    borderColor: 'rgba(255, 255, 255, 0.15)',
     maxWidth: 320,
   },
   hintText: {
     flex: 1,
+    lineHeight: 18,
   },
 });

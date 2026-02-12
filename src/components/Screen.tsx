@@ -1,19 +1,14 @@
 /**
- * VisionFlow AI - Screen Component (v2.2 - Modal Fix Edition)
- * Safe area wrapper with automatic bottom tab bar spacing
+ * VisionFlow AI - Screen Component (v2.3 - Background Pattern Edition)
+ * Safe area wrapper with tactical grid overlay
+ * Matches Hidden Inside web prototype
  * 
  * @module components/Screen
  * 
- * CHANGELOG v2.2:
- * - ✅ FIXED: Modal screens no longer get unwanted tab bar padding
- * - ✅ Better detection of tab navigator context
- * - ✅ Smarter bottom padding calculation
- * 
- * CHANGELOG v2.1:
- * - ✅ FIXED: Automatic bottom padding for tab bar (no more hidden content!)
- * - ✅ Uses useBottomTabBarHeight() when available
- * - ✅ Fallback to theme-based tab bar height
- * - ✅ Developers no longer need to add paddingBottom manually
+ * CHANGELOG v2.3:
+ * - ✅ Integrated BackgroundPattern component
+ * - ✅ Enhanced HUD decorations with grid overlay
+ * - ✅ Preserves all existing functionality
  */
 
 import React from 'react';
@@ -30,10 +25,8 @@ import {
 import { SafeAreaView, useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useBottomTabBarHeight } from '@react-navigation/bottom-tabs';
 import { Theme } from '../constants/theme';
+import { BackgroundPattern } from './BackgroundPattern'; // ✅ NEW IMPORT
 
-/**
- * Screen props
- */
 export interface ScreenProps {
   children: React.ReactNode;
   scroll?: boolean;
@@ -47,34 +40,24 @@ export interface ScreenProps {
   style?: ViewStyle;
   contentContainerStyle?: ViewStyle;
   testID?: string;
-  /**
-   * Show the tactical vertical ruler on the left
-   * @default true
-   */
   showRuler?: boolean;
-  /**
-   * Disable automatic bottom tab bar spacing
-   * Use this ONLY if screen is not within tab navigator
-   * @default false
-   */
   disableTabBarSpacing?: boolean;
   refreshControl?: React.ReactElement<RefreshControlProps>;
+  /**
+   * ✅ NEW: Enable/disable background pattern
+   * @default true
+   */
+  showBackgroundPattern?: boolean;
 }
 
-/**
- * Hook to get tab bar height with fallback
- * Returns both the height and whether we're actually in a tab navigator
- */
 function useTabBarHeightSafe(): { height: number; isInTabNavigator: boolean } {
   try {
-    // Try to get actual tab bar height from navigation
     const tabBarHeight = useBottomTabBarHeight();
     return { 
       height: tabBarHeight, 
       isInTabNavigator: true 
     };
   } catch {
-    // Not in a tab navigator context
     return { 
       height: 0, 
       isInTabNavigator: false 
@@ -84,30 +67,7 @@ function useTabBarHeightSafe(): { height: number; isInTabNavigator: boolean } {
 
 /**
  * Screen Component
- * "The Mainframe Canvas" - Now with automatic tab bar spacing!
- * 
- * @example
- * ```tsx
- * // Scrollable screen in tab navigator (automatic bottom spacing)
- * <Screen scroll>
- *   <Text>Content will automatically clear the tab bar!</Text>
- * </Screen>
- * 
- * // Non-scrollable screen
- * <Screen>
- *   <View>Content here</View>
- * </Screen>
- * 
- * // Modal (no tab bar spacing - automatically detected)
- * <Screen>
- *   <Text>Modal content - no extra padding added!</Text>
- * </Screen>
- * 
- * // Force disable tab bar spacing
- * <Screen disableTabBarSpacing>
- *   <Text>Manual override</Text>
- * </Screen>
- * ```
+ * Now with tactical grid overlay from Hidden Inside prototype
  */
 export function Screen({
   children,
@@ -125,56 +85,46 @@ export function Screen({
   showRuler = true,
   disableTabBarSpacing = false,
   refreshControl,
+  showBackgroundPattern = true, // ✅ NEW
 }: ScreenProps) {
   
-  // Get safe area insets
   const insets = useSafeAreaInsets();
-  
-  // Get tab bar height and context
   const { height: tabBarHeight, isInTabNavigator } = useTabBarHeightSafe();
   
-  /**
-   * Calculate bottom padding
-   * This ensures content is visible above the tab bar
-   * 
-   * ✅ FIXED: Only adds padding if we're actually in a tab navigator
-   */
   const bottomPadding = React.useMemo(() => {
-    // If disabled explicitly, return 0
     if (!safeAreaBottom || disableTabBarSpacing) {
       return 0;
     }
     
-    // ✅ NEW: Only add tab bar padding if we're in a tab navigator
     if (!isInTabNavigator) {
-      // For modals/non-tab screens, just use safe area inset
       return insets.bottom;
     }
     
-    // For tab navigator screens: tab bar height + extra spacing
     return Math.max(insets.bottom, tabBarHeight) + Theme.spacing.m;
   }, [safeAreaBottom, disableTabBarSpacing, isInTabNavigator, insets.bottom, tabBarHeight]);
   
-  // Base Container Style
   const containerStyle: ViewStyle = {
     flex: 1,
     backgroundColor,
   };
   
-  // Safe area edges (now we handle bottom manually for better control)
   const safeAreaEdges: Array<'top' | 'bottom' | 'left' | 'right'> = [];
   if (safeAreaTop) safeAreaEdges.push('top');
-  // Note: We don't add 'bottom' here because we handle it with padding
 
   /**
-   * HUD Decorations (Passive Visuals)
+   * ✅ ENHANCED: HUD Decorations with BackgroundPattern
    */
   const HudDecorations = () => (
     <View 
       style={[StyleSheet.absoluteFill, { zIndex: -1 }]} 
       pointerEvents="none"
     >
-      {/* 1. Global Tint/Scanline Overlay */}
+      {/* ✅ NEW: Background grid pattern */}
+      {showBackgroundPattern && (
+        <BackgroundPattern intensity={0.03} animated={true} gridSize={40} />
+      )}
+      
+      {/* Legacy scanline overlay (now supplemental) */}
       <View 
         style={{ 
           flex: 1, 
@@ -182,7 +132,7 @@ export function Screen({
         }} 
       />
       
-      {/* 2. Tactical Ruler (Visual Anchor) */}
+      {/* Tactical ruler */}
       {showRuler && (
         <View 
           style={{
@@ -198,7 +148,6 @@ export function Screen({
     </View>
   );
   
-  // Render content based on scroll behavior
   const renderContent = () => {
     if (scroll) {
       return (
@@ -237,7 +186,6 @@ export function Screen({
     );
   };
   
-  // Wrap with keyboard avoiding view if needed
   const content = keyboardAvoiding ? (
     <KeyboardAvoidingView
       style={styles.keyboardView}
@@ -250,7 +198,6 @@ export function Screen({
     renderContent()
   );
   
-  // Render Logic
   if (useSafeArea) {
     return (
       <>

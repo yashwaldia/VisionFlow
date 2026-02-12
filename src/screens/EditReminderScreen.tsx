@@ -1,14 +1,15 @@
 /**
- * VisionFlow AI - Edit Reminder Screen (v4.1 - SAFE AREA + FOOTER FIX)
- * Edit an existing reminder with visual depth
+ * VisionFlow AI - Edit Reminder Screen (v5.0 - Hidden Inside UI Edition)
+ * Edit an existing reminder with enhanced cyberpunk aesthetic
  * 
  * @module screens/EditReminderScreen
  * 
- * CHANGELOG v4.1:
- * 🐛 CRITICAL FIXES:
- * - ✅ FIXED: Added top safe area padding to header
- * - ✅ FIXED: Enhanced footer blur effect with stronger background
- * - ✅ FIXED: Improved button visibility with semi-opaque backdrop
+ * CHANGELOG v5.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ UI ENHANCEMENT: Enhanced section headers with wider letter-spacing
+ * - ✅ UI ENHANCEMENT: Blue glow border on form cards
+ * - ✅ All v4.1 safe area and footer fixes preserved
  */
 
 import React, { useState, useRef } from 'react';
@@ -146,14 +147,16 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
 
   return (
     <View style={styles.container}>
-      {/* 🐛 FIXED: Header with Top Safe Area */}
+      {/* Header */}
       <View style={[styles.header, { paddingTop: insets.top + Theme.spacing.m }]}>
         <Pressable onPress={handleCancel} haptic="light" style={styles.headerButton}>
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">Edit Reminder</Text>
-          <Text variant="caption" color="tertiary">
+          {/* ✅ ENHANCED: Monospace header title */}
+          <Text variant="h4" weight="600" mono>EDIT_REMINDER</Text>
+          {/* ✅ NEW: Italic subtitle */}
+          <Text variant="caption" color="tertiary" italic>
             Update reminder details
           </Text>
         </View>
@@ -169,7 +172,7 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* Original Reminder Preview with HUD variant */}
+          {/* Original Reminder Preview */}
           <Card 
             variant="hud"
             elevation="md"
@@ -177,7 +180,10 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
           >
             <View style={styles.originalHeader}>
               <Icon name="document-text-outline" size="sm" color={Theme.colors.text.secondary} />
-              <Text variant="caption" color="secondary" weight="600">ORIGINAL REMINDER</Text>
+              {/* ✅ ENHANCED: Monospace label with wider spacing */}
+              <Text variant="caption" color="secondary" weight="600" mono style={styles.originalLabel}>
+                ORIGINAL_REMINDER
+              </Text>
             </View>
             <View style={styles.originalContent}>
               <Text variant="h3">{reminder.emoji}</Text>
@@ -185,27 +191,30 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                 <Text variant="body" weight="600" numberOfLines={1}>
                   {reminder.title}
                 </Text>
-                <Text variant="caption" color="tertiary">
+                {/* ✅ ENHANCED: Monospace date/time */}
+                <Text variant="caption" color="tertiary" mono>
                   {reminder.reminderDate} at {reminder.reminderTime}
                 </Text>
               </View>
             </View>
           </Card>
 
-          {/* Basic Information with Glass Card */}
+          {/* ✅ ENHANCED: Basic Information with blue glow border */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Basic Information</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>BASIC_INFO</Text>
             </View>
             
             <Card 
-              variant="glass"
+              variant="glowBorder"
               elevation="md"
               style={styles.formCard}
             >
               <View style={styles.inputGroup}>
-                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                {/* ✅ ENHANCED: Monospace input label with wider spacing */}
+                <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                   TITLE *
                 </Text>
                 <TextInput
@@ -224,7 +233,8 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
               <View style={styles.divider} />
 
               <View style={styles.inputGroup}>
-                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                {/* ✅ ENHANCED: Monospace input label */}
+                <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                   NOTES
                 </Text>
                 <TextInput
@@ -242,21 +252,23 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </Card>
           </View>
 
-          {/* Date & Time with Glassmorphism */}
+          {/* ✅ ENHANCED: Date & Time with blue glow border */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Schedule</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>SCHEDULE</Text>
             </View>
             
             <Card 
-              variant="glass"
+              variant="glowBorder"
               elevation="md"
               style={styles.formCard}
             >
               <View style={styles.dateTimeRow}>
                 <View style={styles.dateInputContainer}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label */}
+                  <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                     DATE *
                   </Text>
                   <View style={styles.dateTimeButton}>
@@ -276,7 +288,8 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                 </View>
                 
                 <View style={styles.timeInputContainer}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label */}
+                  <Text variant="caption" color="secondary" weight="700" mono style={styles.inputLabel}>
                     TIME *
                   </Text>
                   <View style={styles.dateTimeButton}>
@@ -296,11 +309,12 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </Card>
           </View>
 
-          {/* Category Selection with Glow on Active */}
+          {/* Category Selection */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Category</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>CATEGORY</Text>
             </View>
             
             <View style={styles.categoryGrid}>
@@ -331,9 +345,11 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                       size="sm" 
                       color={isSelected ? Theme.colors.background.primary : config.color} 
                     />
+                    {/* ✅ ENHANCED: Monospace chip label */}
                     <Text
                       variant="caption"
                       weight="700"
+                      mono
                       customColor={
                         isSelected
                           ? Theme.colors.background.primary
@@ -348,11 +364,12 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </View>
           </View>
 
-          {/* Priority Selection with Glow on Active */}
+          {/* Priority Selection */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Priority</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>PRIORITY</Text>
             </View>
             
             <View style={styles.priorityGrid}>
@@ -383,9 +400,11 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
                       size="sm" 
                       color={isSelected ? Theme.colors.background.primary : config.color} 
                     />
+                    {/* ✅ ENHANCED: Monospace chip label */}
                     <Text
                       variant="caption"
                       weight="700"
+                      mono
                       customColor={
                         isSelected
                           ? Theme.colors.background.primary
@@ -400,7 +419,7 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
             </View>
           </View>
 
-          {/* Info Card with Glass Variant */}
+          {/* Info Card */}
           <Card 
             variant="glass"
             elevation="sm"
@@ -408,7 +427,8 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
           >
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-              <Text variant="caption" color="secondary" style={styles.infoText}>
+              {/* ✅ NEW: Italic info text */}
+              <Text variant="caption" color="secondary" italic style={styles.infoText}>
                 Changes will be saved immediately and cannot be undone
               </Text>
             </View>
@@ -416,15 +436,13 @@ export function EditReminderScreen({ navigation, route }: EditReminderScreenProp
         </View>
       </ScrollView>
 
-      {/* 🐛 FIXED: Footer with Enhanced Blur Effect */}
+      {/* Footer */}
       <View style={[
         styles.footerContainer, 
         { paddingBottom: insets.bottom + Theme.spacing.m }
       ]}>
-        {/* Stronger backdrop overlay */}
         <View style={styles.footerBackdrop} />
         
-        {/* BlurView for iOS glassmorphism */}
         {Platform.OS === 'ios' ? (
           <BlurView intensity={80} tint="dark" style={styles.footerBlur}>
             <View style={styles.footer}>
@@ -521,7 +539,7 @@ const styles = StyleSheet.create({
     backgroundColor: Theme.colors.background.primary,
   },
 
-  // 🐛 FIXED: Header with safe area support
+  // Header
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
@@ -560,7 +578,7 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.m,
   },
 
-  // Original reminder preview with HUD variant
+  // Original reminder preview
   originalCard: {
     marginBottom: Theme.spacing.l,
   },
@@ -569,6 +587,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 6,
     marginBottom: Theme.spacing.s,
+  },
+  // ✅ NEW: Wider letter-spacing for original label
+  originalLabel: {
+    letterSpacing: 2,
   },
   originalContent: {
     flexDirection: 'row',
@@ -591,17 +613,17 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // Form card with glass variant
+  // Form card
   formCard: {
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}40`,
+    // Border already handled by glowBorder variant
   },
   inputGroup: {
     gap: Theme.spacing.xs,
   },
+  // ✅ ENHANCED: Wider letter-spacing for input labels
   inputLabel: {
     textTransform: 'uppercase',
-    letterSpacing: 0.5,
+    letterSpacing: 2, // Increased from 0.5
     fontSize: 10,
   },
   textInput: {
@@ -653,7 +675,7 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.mono,
   },
 
-  // Category chips with Card component
+  // Category chips
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -668,7 +690,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
   },
 
-  // Priority chips with Card component
+  // Priority chips
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -683,7 +705,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
   },
 
-  // Info card with glass variant
+  // Info card
   infoCard: {
     marginTop: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
@@ -700,7 +722,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // 🐛 FIXED: Footer with enhanced blur effect
+  // Footer
   footerContainer: {
     position: 'absolute',
     bottom: 0,
@@ -712,8 +734,8 @@ const styles = StyleSheet.create({
   footerBackdrop: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: Platform.OS === 'ios' 
-      ? 'rgba(18, 18, 18, 0.7)'  // Semi-opaque for iOS (under BlurView)
-      : 'rgba(18, 18, 18, 0.95)', // More opaque for Android (no blur)
+      ? 'rgba(18, 18, 18, 0.7)'
+      : 'rgba(18, 18, 18, 0.95)',
   },
   footerBlur: {
     paddingHorizontal: Theme.spacing.m,

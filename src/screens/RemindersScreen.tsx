@@ -1,15 +1,16 @@
 /**
- * VisionFlow AI - Reminders List Screen (v2.2 - FULLY Harmonized Edition)
- * Display and manage all reminders
+ * VisionFlow AI - Reminders List Screen (v3.0 - Hidden Inside UI Edition)
+ * Display and manage all reminders with enhanced cyberpunk aesthetic
  * 
  * @module screens/RemindersScreen
  * 
- * CHANGELOG v2.2:
- * - ✅ Fixed inline status badge opacity (15% → 20%)
- * - ✅ Added header shadow for separation
- * - ✅ Added card elevation for visual depth
- * - ✅ Scroll padding already using theme constant (80px)
- * - ✅ Filter chips already using correct 20% opacity
+ * CHANGELOG v3.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels and filters
+ * - ✅ UI ENHANCEMENT: Italic smart note text (descriptive style)
+ * - ✅ UI ENHANCEMENT: Blue glow borders on reminder cards
+ * - ✅ UI ENHANCEMENT: Section label above main header
+ * - ✅ UI ENHANCEMENT: Enhanced filter chips with monospace
+ * - ✅ All v2.2 functionality and styling preserved
  */
 
 import React, { useState, useMemo } from 'react';
@@ -147,7 +148,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
     result.sort((a, b) => {
       const dateA = new Date(`${a.reminderDate} ${a.reminderTime || '00:00'}`).getTime();
       const dateB = new Date(`${b.reminderDate} ${b.reminderTime || '00:00'}`).getTime();
-      return dateA - dateB; // Sort ascending (earliest first)
+      return dateA - dateB;
     });
     
     return result;
@@ -164,7 +165,6 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
     };
   }, [reminders]);
   
-  // Pull to refresh handler
   const handleRefresh = async () => {
     setRefreshing(true);
     await refreshReminders();
@@ -188,6 +188,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
     
     return (
       <Card
+        variant="glowBorder" // ✅ NEW: Blue glow border
         elevation="sm"
         pressable
         onPress={() => handleReminderPress(item)}
@@ -199,7 +200,6 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             <View style={styles.emojiContainer}>
               <Text variant="h3">{item.emoji}</Text>
             </View>
-            {/* Status indicator dot */}
             <View style={[styles.statusDot, { backgroundColor: statusConfig.color }]} />
           </View>
           
@@ -208,7 +208,8 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             <Text variant="bodyLarge" weight="600" numberOfLines={1}>
               {item.title}
             </Text>
-            <Text variant="body" color="secondary" numberOfLines={2} style={styles.cardNote}>
+            {/* ✅ NEW: Italic smart note */}
+            <Text variant="body" color="secondary" italic numberOfLines={2} style={styles.cardNote}>
               {item.smartNote}
             </Text>
             
@@ -216,14 +217,15 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             <View style={styles.cardMeta}>
               <View style={styles.metaItem}>
                 <Icon name="pricetag-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                {/* ✅ NEW: Monospace meta text */}
+                <Text variant="caption" color="tertiary" mono>
                   {item.category}
                 </Text>
               </View>
               <View style={styles.metaDivider} />
               <View style={styles.metaItem}>
                 <Icon name="calendar-outline" size="xs" color={Theme.colors.text.tertiary} />
-                <Text variant="caption" color="tertiary">
+                <Text variant="caption" color="tertiary" mono>
                   {formatRelativeDate(item.reminderDate)}
                 </Text>
               </View>
@@ -232,7 +234,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
                   <View style={styles.metaDivider} />
                   <View style={styles.metaItem}>
                     <Icon name="time-outline" size="xs" color={Theme.colors.text.tertiary} />
-                    <Text variant="caption" color="tertiary">
+                    <Text variant="caption" color="tertiary" mono>
                       {item.reminderTime}
                     </Text>
                   </View>
@@ -241,7 +243,7 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             </View>
           </View>
           
-          {/* Right: Status badge - ✅ FIXED: Inline opacity 20% */}
+          {/* Right: Status badge */}
           <View style={styles.statusBadgeContainer}>
             <View style={[styles.statusBadge, { backgroundColor: `${statusConfig.color}20` }]}>
               <Icon name={statusConfig.icon} size="xs" color={statusConfig.color} />
@@ -256,13 +258,18 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
   return (
     <Screen>
       <Container padding="none">
-        {/* Fixed Header - ✅ ENHANCED: Added shadow */}
+        {/* Fixed Header */}
         <View style={styles.header}>
           <Container padding="m">
             <View style={styles.headerTop}>
               <View>
+                {/* ✅ NEW: Section label above title */}
+                <Text variant="caption" mono weight="700" color="tertiary" style={styles.sectionLabel}>
+                  REMINDER_HUB
+                </Text>
                 <Text variant="h2">Reminders</Text>
-                <Text variant="caption" color="tertiary">
+                {/* ✅ NEW: Monospace subtitle */}
+                <Text variant="caption" color="tertiary" mono>
                   {reminders.length} total • {statusCounts[ReminderStatus.UPCOMING]} upcoming
                 </Text>
               </View>
@@ -284,67 +291,80 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
             />
           </Container>
           
-          {/* Status Filters - ✅ Using consistent chip styling */}
-          <View style={styles.filtersContainer}>
-            <FlatList
-              horizontal
-              showsHorizontalScrollIndicator={false}
-              data={[
-                { key: 'all', label: 'All', count: statusCounts.all },
-                { key: ReminderStatus.UPCOMING, label: 'Upcoming', count: statusCounts[ReminderStatus.UPCOMING] },
-                { key: ReminderStatus.DONE, label: 'Done', count: statusCounts[ReminderStatus.DONE] },
-                { key: ReminderStatus.OVERDUE, label: 'Overdue', count: statusCounts[ReminderStatus.OVERDUE] },
-              ]}
-              keyExtractor={(item) => item.key}
-              renderItem={({ item }) => (
-                <Pressable
-                  onPress={() => setFilterStatus(item.key as ReminderStatus | 'all')}
-                  haptic="light"
-                >
-                  <View
-                    style={[
-                      styles.filterChip,
-                      filterStatus === item.key && styles.filterChipActive,
-                    ]}
+          {/* ✅ ENHANCED: Status Filters with section label */}
+          <View style={styles.filtersWrapper}>
+            {/* ✅ NEW: Filter section label */}
+            <Container padding="none" style={styles.filterLabelContainer}>
+              <Text variant="caption" mono weight="700" color="tertiary" style={styles.filterLabel}>
+                FILTER_BY_STATUS
+              </Text>
+            </Container>
+            
+            <View style={styles.filtersContainer}>
+              <FlatList
+                horizontal
+                showsHorizontalScrollIndicator={false}
+                data={[
+                  { key: 'all', label: 'All', count: statusCounts.all },
+                  { key: ReminderStatus.UPCOMING, label: 'Upcoming', count: statusCounts[ReminderStatus.UPCOMING] },
+                  { key: ReminderStatus.DONE, label: 'Done', count: statusCounts[ReminderStatus.DONE] },
+                  { key: ReminderStatus.OVERDUE, label: 'Overdue', count: statusCounts[ReminderStatus.OVERDUE] },
+                ]}
+                keyExtractor={(item) => item.key}
+                renderItem={({ item }) => (
+                  <Pressable
+                    onPress={() => setFilterStatus(item.key as ReminderStatus | 'all')}
+                    haptic="light"
                   >
-                    <Text
-                      variant="body"
-                      weight="600"
-                      customColor={
-                        filterStatus === item.key
-                          ? Theme.colors.primary[500]
-                          : Theme.colors.text.secondary
-                      }
+                    <View
+                      style={[
+                        styles.filterChip,
+                        filterStatus === item.key && styles.filterChipActive,
+                      ]}
                     >
-                      {item.label}
-                    </Text>
-                    <View style={[
-                      styles.countBadge,
-                      filterStatus === item.key && styles.countBadgeActive,
-                    ]}>
-                      <Text 
-                        variant="caption" 
-                        weight="700"
+                      {/* ✅ NEW: Monospace filter labels */}
+                      <Text
+                        variant="body"
+                        weight="600"
+                        mono
                         customColor={
                           filterStatus === item.key
                             ? Theme.colors.primary[500]
-                            : Theme.colors.text.tertiary
+                            : Theme.colors.text.secondary
                         }
                       >
-                        {item.count}
+                        {item.label}
                       </Text>
+                      <View style={[
+                        styles.countBadge,
+                        filterStatus === item.key && styles.countBadgeActive,
+                      ]}>
+                        {/* ✅ NEW: Monospace count */}
+                        <Text 
+                          variant="caption" 
+                          weight="700"
+                          mono
+                          customColor={
+                            filterStatus === item.key
+                              ? Theme.colors.primary[500]
+                              : Theme.colors.text.tertiary
+                          }
+                        >
+                          {item.count}
+                        </Text>
+                      </View>
                     </View>
-                  </View>
-                </Pressable>
-              )}
-              contentContainerStyle={styles.filtersContent}
-            />
+                  </Pressable>
+                )}
+                contentContainerStyle={styles.filtersContent}
+              />
+            </View>
           </View>
         </View>
         
         {/* Content */}
         {isLoading ? (
-          <LoadingSpinner text="Loading reminders..." />
+          <LoadingSpinner text="LOADING_REMINDERS..." />
         ) : filteredReminders.length === 0 ? (
           <EmptyState
             icon="document-text-outline"
@@ -379,18 +399,24 @@ export function RemindersScreen({ navigation, route }: RemindersScreenProps) {
 }
 
 const styles = StyleSheet.create({
-  // Header styles - ✅ ENHANCED: Added shadow
+  // Header styles
   header: {
     backgroundColor: Theme.colors.background.secondary,
     borderBottomWidth: 1,
     borderBottomColor: Theme.colors.border.light,
-    ...Theme.shadows.sm, // ✅ ADDED: Header shadow for depth
+    ...Theme.shadows.sm,
   },
   headerTop: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: Theme.spacing.m,
+  },
+  // ✅ NEW: Section label styling
+  sectionLabel: {
+    letterSpacing: 2,
+    marginBottom: Theme.spacing.xs,
+    opacity: 0.7,
   },
   headerActions: {
     flexDirection: 'row',
@@ -416,10 +442,20 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.s,
   },
   
-  // Filters styles - ✅ Already correct (20% opacity)
+  // ✅ NEW: Filters wrapper and label
+  filtersWrapper: {
+    backgroundColor: Theme.colors.background.primary,
+  },
+  filterLabelContainer: {
+    paddingHorizontal: Theme.spacing.m,
+    paddingTop: Theme.spacing.s,
+  },
+  filterLabel: {
+    letterSpacing: 2,
+    opacity: 0.7,
+  },
   filtersContainer: {
     paddingVertical: Theme.spacing.s,
-    backgroundColor: Theme.colors.background.primary,
   },
   filtersContent: {
     paddingHorizontal: Theme.spacing.m,
@@ -431,14 +467,20 @@ const styles = StyleSheet.create({
     gap: Theme.spacing.xs,
     paddingHorizontal: Theme.spacing.m,
     paddingVertical: Theme.spacing.s,
-    borderRadius: Theme.borderRadius.full,  // ✅ Consistent pill shape
+    borderRadius: Theme.borderRadius.full,
     backgroundColor: Theme.colors.background.tertiary,
     borderWidth: 1,
     borderColor: Theme.colors.border.medium,
   },
   filterChipActive: {
-    backgroundColor: `${Theme.colors.primary[500]}20`,  // ✅ Already correct 20% opacity
+    backgroundColor: `${Theme.colors.primary[500]}20`,
     borderColor: Theme.colors.primary[500],
+    // ✅ NEW: Subtle glow on active chips
+    shadowColor: Theme.colors.primary[500],
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 3,
   },
   countBadge: {
     minWidth: 24,
@@ -453,18 +495,17 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.primary[500]}25`,
   },
   
-  // List styles - ✅ Already correct (uses theme constant)
+  // List styles
   listContent: {
     padding: Theme.spacing.m,
-    paddingBottom: Theme.spacing.safeArea.bottomPadding,  // ✅ Already correct (80px)
+    paddingBottom: Theme.spacing.safeArea.bottomPadding,
     gap: Theme.spacing.s,
   },
   
-  // Card styles - ✅ Card elevation added via elevation="sm" prop
+  // Card styles
   reminderCard: {
     padding: Theme.spacing.m,
-    borderWidth: 1,
-    borderColor: `${Theme.colors.border.default}30`,
+    // Border already handled by glowBorder variant
   },
   cardContent: {
     flexDirection: 'row',

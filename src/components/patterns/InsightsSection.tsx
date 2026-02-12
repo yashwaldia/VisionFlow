@@ -1,8 +1,13 @@
 /**
- * VisionFlow AI - Insights Section Component
- * Display AI-generated insights, explanations, and secret messages
+ * VisionFlow AI - Insights Section Component (v2.0 - Hidden Inside UI Edition)
+ * Enhanced display of AI-generated insights with cyberpunk aesthetic
  * 
  * @module components/patterns/InsightsSection
+ * 
+ * CHANGELOG v2.0:
+ * - ✅ UI ENHANCEMENT: Monospace section headers
+ * - ✅ UI ENHANCEMENT: Italic insight text for all descriptive content
+ * - ✅ All original styling and colors preserved
  */
 
 import React from 'react';
@@ -22,11 +27,13 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
       <Card variant="hud" style={styles.insightCard}>
         <View style={styles.insightHeader}>
           <Icon name="bulb" size="sm" color={Theme.colors.semantic.warning} />
-          <Text variant="h4" weight="700">
+          {/* ✅ ENHANCED: Monospace header */}
+          <Text variant="h4" weight="700" mono>
             ANALYSIS
           </Text>
         </View>
-        <Text variant="body" color="secondary" style={styles.insightText}>
+        {/* ✅ NEW: Italic explanation text */}
+        <Text variant="body" color="secondary" italic style={styles.insightText}>
           {insights.explanation}
         </Text>
       </Card>
@@ -36,11 +43,13 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
         <Card variant="hud" style={[styles.insightCard, styles.secretCard]}>
           <View style={styles.insightHeader}>
             <Icon name="eye" size="sm" color={Theme.colors.primary[500]} />
-            <Text variant="h4" weight="700">
-              HIDDEN INSIGHT
+            {/* ✅ ENHANCED: Monospace header */}
+            <Text variant="h4" weight="700" mono>
+              HIDDEN_INSIGHT
             </Text>
           </View>
-          <Text variant="body" style={[styles.insightText, styles.secretText]}>
+          {/* ✅ Already italic via secretText style */}
+          <Text variant="body" italic style={[styles.insightText, styles.secretText]}>
             {insights.secretMessage}
           </Text>
         </Card>
@@ -51,11 +60,13 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
         <Card variant="hud" style={styles.shareCard}>
           <View style={styles.shareHeader}>
             <Icon name="share-social" size="sm" color={Theme.colors.secondary[500]} />
-            <Text variant="caption" color="secondary" weight="700">
-              SHARE CAPTION
+            {/* ✅ ENHANCED: Monospace header */}
+            <Text variant="caption" color="secondary" weight="700" mono>
+              SHARE_CAPTION
             </Text>
           </View>
-          <Text variant="body" color="secondary" style={styles.shareText}>
+          {/* ✅ NEW: Italic share caption */}
+          <Text variant="body" color="secondary" italic style={styles.shareText}>
             {insights.shareCaption}
           </Text>
         </Card>
@@ -66,11 +77,13 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
         <Card variant="hud" style={styles.contextCard}>
           <View style={styles.contextHeader}>
             <Icon name="calculator" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary" weight="700">
-              MATHEMATICAL CONTEXT
+            {/* ✅ ENHANCED: Monospace header */}
+            <Text variant="caption" color="tertiary" weight="700" mono>
+              MATHEMATICAL_CONTEXT
             </Text>
           </View>
-          <Text variant="caption" color="secondary" style={styles.contextText}>
+          {/* ✅ NEW: Italic context text */}
+          <Text variant="caption" color="secondary" italic style={styles.contextText}>
             {insights.mathematicalContext}
           </Text>
         </Card>
@@ -81,11 +94,13 @@ export function InsightsSection({ insights }: InsightsSectionProps) {
         <Card variant="hud" style={styles.contextCard}>
           <View style={styles.contextHeader}>
             <Icon name="library" size="xs" color={Theme.colors.text.tertiary} />
-            <Text variant="caption" color="tertiary" weight="700">
-              CULTURAL CONTEXT
+            {/* ✅ ENHANCED: Monospace header */}
+            <Text variant="caption" color="tertiary" weight="700" mono>
+              CULTURAL_CONTEXT
             </Text>
           </View>
-          <Text variant="caption" color="secondary" style={styles.contextText}>
+          {/* ✅ NEW: Italic context text */}
+          <Text variant="caption" color="secondary" italic style={styles.contextText}>
             {insights.culturalContext}
           </Text>
         </Card>
@@ -117,7 +132,7 @@ const styles = StyleSheet.create({
     backgroundColor: `${Theme.colors.primary[500]}05`,
   },
   secretText: {
-    fontStyle: 'italic',
+    // fontStyle: 'italic' removed, now using italic prop on Text component
     color: Theme.colors.primary[400],
   },
   shareCard: {

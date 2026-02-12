@@ -1,19 +1,13 @@
 /**
- * VisionFlow AI - Create Reminder Screen (v4.0 - CYBERPUNK TACTICAL ENHANCEMENT)
- * Manually create a reminder with visual depth
+ * VisionFlow AI - Create Reminder Screen (v5.0 - Hidden Inside UI Edition)
+ * Enhanced cyberpunk aesthetic with monospace and italic typography
  * 
  * @module screens/CreateReminderScreen
  * 
- * CHANGELOG v4.0:
- * ✨ VISUAL ENHANCEMENTS:
- * - ✅ Category-colored gradient on preview emoji container with glow
- * - ✅ Glassmorphism effect on form cards
- * - ✅ Selected category chips with glow effect
- * - ✅ Selected priority chips with glow effect
- * - ✅ Glassmorphism on date/time input containers
- * - ✅ Info card with glass variant
- * - ✅ Footer primary button with glow effect
- * - ✅ Enhanced input fields with focus glow
+ * CHANGELOG v5.0:
+ * - ✅ UI ENHANCEMENT: Monospace fonts for technical labels
+ * - ✅ UI ENHANCEMENT: Italic text for descriptive content
+ * - ✅ All v4.0 visual enhancements preserved (gradients, glassmorphism, glow)
  */
 
 import React, { useState, useRef } from 'react';
@@ -69,7 +63,7 @@ const getCategoryEmoji = (category: ReminderCategory): string => {
 };
 
 /**
- * ✨ NEW: Get category gradient colors
+ * Get category gradient colors
  */
 const getCategoryGradient = (category: ReminderCategory) => {
   const categoryKey = category.toLowerCase() as keyof typeof Theme.colors.category;
@@ -123,7 +117,6 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
   const [reminderTime, setReminderTime] = useState('');
   const [isSaving, setIsSaving] = useState(false);
 
-  // ✨ NEW: Get current category gradient
   const categoryGradient = getCategoryGradient(category);
 
   const handleSave = async () => {
@@ -207,8 +200,10 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
           <Icon name="close" size="md" color={Theme.colors.text.primary} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <Text variant="h4" weight="600">New Reminder</Text>
-          <Text variant="caption" color="tertiary">
+          {/* ✅ ENHANCED: Monospace header title */}
+          <Text variant="h4" weight="600" mono>NEW_REMINDER</Text>
+          {/* ✅ NEW: Italic subtitle */}
+          <Text variant="caption" color="tertiary" italic>
             Create a manual reminder
           </Text>
         </View>
@@ -224,7 +219,7 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.content}>
-          {/* ✨ ENHANCED: Preview Icon with Category Gradient & Glow */}
+          {/* Preview Icon with Category Gradient & Glow */}
           <View style={styles.previewSection}>
             <View
               style={[
@@ -242,16 +237,18 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             >
               <Text variant="h1">{getCategoryEmoji(category)}</Text>
             </View>
-            <Text variant="caption" color="tertiary" align="center">
+            {/* ✅ NEW: Italic caption */}
+            <Text variant="caption" color="tertiary" italic align="center">
               Emoji will be auto-selected based on category
             </Text>
           </View>
 
-          {/* ✨ ENHANCED: Basic Information with Glass Card */}
+          {/* Basic Information with Glass Card */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="create-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Basic Information</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>BASIC_INFORMATION</Text>
             </View>
             
             <Card 
@@ -260,7 +257,8 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
               style={styles.formCard}
             >
               <View style={styles.inputGroup}>
-                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                {/* ✅ ENHANCED: Monospace input label */}
+                <Text variant="caption" color="secondary" weight="600" mono style={styles.inputLabel}>
                   TITLE *
                 </Text>
                 <TextInput
@@ -280,7 +278,8 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
               <View style={styles.divider} />
 
               <View style={styles.inputGroup}>
-                <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                {/* ✅ ENHANCED: Monospace input label */}
+                <Text variant="caption" color="secondary" weight="600" mono style={styles.inputLabel}>
                   NOTES (OPTIONAL)
                 </Text>
                 <TextInput
@@ -298,11 +297,12 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </Card>
           </View>
 
-          {/* ✨ ENHANCED: Date & Time with Glassmorphism */}
+          {/* Date & Time with Glassmorphism */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="calendar-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Schedule</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>SCHEDULE</Text>
             </View>
             
             <Card 
@@ -312,7 +312,8 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             >
               <View style={styles.dateTimeRow}>
                 <View style={styles.dateInputContainer}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label */}
+                  <Text variant="caption" color="secondary" weight="600" mono style={styles.inputLabel}>
                     DATE *
                   </Text>
                   <View style={styles.dateTimeButton}>
@@ -332,7 +333,8 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
                 </View>
                 
                 <View style={styles.timeInputContainer}>
-                  <Text variant="caption" color="secondary" weight="600" style={styles.inputLabel}>
+                  {/* ✅ ENHANCED: Monospace input label */}
+                  <Text variant="caption" color="secondary" weight="600" mono style={styles.inputLabel}>
                     TIME *
                   </Text>
                   <View style={styles.dateTimeButton}>
@@ -352,11 +354,12 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </Card>
           </View>
 
-          {/* ✨ ENHANCED: Category Selection with Glow on Active */}
+          {/* Category Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="pricetag-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Category</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>CATEGORY</Text>
             </View>
             
             <View style={styles.categoryGrid}>
@@ -387,9 +390,11 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
                       size="sm" 
                       color={isSelected ? Theme.colors.background.primary : config.color} 
                     />
+                    {/* ✅ ENHANCED: Monospace category label */}
                     <Text
                       variant="caption"
                       weight="700"
+                      mono
                       customColor={
                         isSelected
                           ? Theme.colors.background.primary
@@ -404,11 +409,12 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </View>
           </View>
 
-          {/* ✨ ENHANCED: Priority Selection with Glow on Active */}
+          {/* Priority Selection with Glow on Active */}
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <Icon name="flag-outline" size="sm" color={Theme.colors.primary[500]} />
-              <Text variant="h4">Priority</Text>
+              {/* ✅ ENHANCED: Monospace section header */}
+              <Text variant="h4" mono>PRIORITY</Text>
             </View>
             
             <View style={styles.priorityGrid}>
@@ -439,9 +445,11 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
                       size="sm" 
                       color={isSelected ? Theme.colors.background.primary : config.color} 
                     />
+                    {/* ✅ ENHANCED: Monospace priority label */}
                     <Text
                       variant="caption"
                       weight="700"
+                      mono
                       customColor={
                         isSelected
                           ? Theme.colors.background.primary
@@ -456,7 +464,7 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
             </View>
           </View>
 
-          {/* ✨ ENHANCED: Info Card with Glass Variant */}
+          {/* Info Card with Glass Variant */}
           <Card 
             variant="glass"
             elevation="sm"
@@ -464,7 +472,8 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
           >
             <View style={styles.infoRow}>
               <Icon name="information-circle" size="sm" color={Theme.colors.semantic.info} />
-              <Text variant="caption" color="secondary" style={styles.infoText}>
+              {/* ✅ NEW: Italic info text */}
+              <Text variant="caption" color="secondary" italic style={styles.infoText}>
                 You'll receive a notification at the scheduled time. Make sure notifications are enabled in your device settings.
               </Text>
             </View>
@@ -472,7 +481,7 @@ export function CreateReminderScreen({ navigation, route }: CreateReminderScreen
         </View>
       </ScrollView>
 
-      {/* ✨ ENHANCED: Footer with Glassmorphism and Glow on Primary Button */}
+      {/* Footer with Glassmorphism and Glow on Primary Button */}
       <View style={[
         styles.footerContainer, 
         { 
@@ -570,7 +579,7 @@ const styles = StyleSheet.create({
     padding: Theme.spacing.m,
   },
 
-  // ✨ ENHANCED: Preview section with gradient & glow
+  // Preview section with gradient & glow
   previewSection: {
     alignItems: 'center',
     marginBottom: Theme.spacing.l,
@@ -596,7 +605,7 @@ const styles = StyleSheet.create({
     marginBottom: Theme.spacing.m,
   },
 
-  // ✨ ENHANCED: Form card with glass variant
+  // Form card with glass variant
   formCard: {
     borderWidth: 1,
     borderColor: `${Theme.colors.border.default}40`,
@@ -658,7 +667,7 @@ const styles = StyleSheet.create({
     fontFamily: Theme.typography.fontFamily.mono,
   },
 
-  // ✨ ENHANCED: Category chips with Card component
+  // Category chips with Card component
   categoryGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -673,7 +682,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
   },
 
-  // ✨ ENHANCED: Priority chips with Card component
+  // Priority chips with Card component
   priorityGrid: {
     flexDirection: 'row',
     flexWrap: 'wrap',
@@ -688,7 +697,7 @@ const styles = StyleSheet.create({
     borderColor: Theme.colors.border.medium,
   },
 
-  // ✨ ENHANCED: Info card with glass variant
+  // Info card with glass variant
   infoCard: {
     marginTop: Theme.spacing.m,
     backgroundColor: `${Theme.colors.semantic.info}10`,
@@ -705,7 +714,7 @@ const styles = StyleSheet.create({
     lineHeight: 18,
   },
 
-  // ✨ ENHANCED: Footer with glassmorphism
+  // Footer with glassmorphism
   footerContainer: {
     position: 'absolute',
     bottom: 0,
